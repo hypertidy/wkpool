@@ -1,6 +1,6 @@
 Package: wkpool
 Title: Vertex Pool Topology for Well-Known Geometry
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R: 
     person("Michael", "Sumner", , "mdsumner@gmail.com", role = c("aut", "cre"))
 Description: Establishes and maintains vertex pool topology for geometry 
@@ -15,7 +15,6 @@ Imports:
     vctrs,
     wk
 Suggests:
+    RTriangle,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-URL: https://github.com/hypertidy/wkpool
-BugReports: https://github.com/hypertidy/wkpool/issues
