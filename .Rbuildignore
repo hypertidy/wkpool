@@ -3,3 +3,4 @@
 ^LICENSE\.md$
 ^README\.Rmd$
 ^test_.*\.R$
+$test_minimal_mesh.R$
