@@ -1,34 +1,36 @@
+---
+output: github_document
+---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
 # wkpool
 
-Vertex pool topology for geometry handled by
-[wk](https://github.com/paleolimbot/wk).
+Vertex pool topology for geometry handled by [wk](https://github.com/paleolimbot/wk).
 
 ## Design philosophy
 
-Simple features throws away topology — every polygon stores its own
-coordinates, shared boundaries are duplicated, and expensive operations
-(GEOS) are needed to rediscover structure that was there all along.
+Simple features throws away topology — every polygon stores its own coordinates, shared boundaries are duplicated, and expensive operations (GEOS) are needed to rediscover structure that was there all along.
 
 **wkpool** takes a different approach:
 
-- **Segments are atomic**: Everything is edges (vertex pairs). Polygons,
-  linestrings, meshes — all just segments with different grouping.
-- **Vertices live in a pool**: Coordinates stored once, referenced by
-  integer ID (`.vx`).
-- **Observe, don’t correct**: `establish_topology()` represents the
-  truth of your input. Snapping/fixing is a separate, explicit decision.
-- **Topology is discoverable**: `merge_coincident()` finds shared
-  vertices. Shared boundaries, neighbour relations — they emerge from
-  the data.
-- **Feature provenance**: Segments track which feature they came from
-  (`.feature`), enabling adjacency and boundary queries.
+- **Segments are atomic**: Everything is edges (vertex pairs). Polygons, linestrings, meshes — all just segments with different grouping.
+- **Vertices live in a pool**: Coordinates stored once, referenced by integer ID (`.vx`).
+- **Observe, don't correct**: `establish_topology()` represents the truth of your input. Snapping/fixing is a separate, explicit decision.
+- **Topology is discoverable**: `merge_coincident()` finds shared vertices. Shared boundaries, neighbour relations — they emerge from the data.
+- **Feature provenance**: Segments track which feature they came from (`.feature`), enabling adjacency and boundary queries.
 
 ## Installation
-
-``` r
+```r
 # From local source
 devtools::install()
 
@@ -38,7 +40,7 @@ devtools::load_all()
 
 ## Usage
 
-``` r
+```r
 library(wkpool)
 library(wk)
 
@@ -72,9 +74,9 @@ pool_segments(merged)  # data.frame: .vx0, .vx1, .feature
 ## Key decisions
 
 | Decision | Choice | Rationale |
-|----|----|----|
+|----------|--------|-----------|
 | Pool scope | Per-vector, sidecar attribute | No wk core changes needed, n-geometry ready |
-| Snapping | Observe don’t correct | Represent truth, fixing is separate |
+| Snapping | Observe don't correct | Represent truth, fixing is separate |
 | Vertex identity | Minted `.vx` integer | Survives subset, lighter than UUID |
 | Segment identity | Derived from vertex pair | No ID to track, tuple IS identity |
 | Primary vctr | Segments | Geometry is what you subset, vertices follow |
@@ -83,10 +85,8 @@ pool_segments(merged)  # data.frame: .vx0, .vx1, .feature
 ## Next steps
 
 - [ ] `wk_handle.wkpool()` — round-trip back to wk geometry
-- [ ] Triangulation integration (decido) — indexed triangles from same
-  pool
-- [ ] Path reconstruction — derive linestrings/rings from segment
-  connectivity
+- [ ] Triangulation integration (decido) — indexed triangles from same pool
+- [ ] Path reconstruction — derive linestrings/rings from segment connectivity
 - [ ] Consider C++ for hot paths once API is stable
 
 ## License
@@ -94,8 +94,5 @@ pool_segments(merged)  # data.frame: .vx0, .vx1, .feature
 MIT
 
 ## Code of Conduct
-
-Please note that the wkpool project is released with a [Contributor Code
-of
-Conduct](https://contributor-covenant.org/version/2/1/CODE_OF_CONDUCT.html).
-By contributing to this project, you agree to abide by its terms.
+  
+Please note that the wkpool project is released with a [Contributor Code of Conduct](https://contributor-covenant.org/version/2/1/CODE_OF_CONDUCT.html). By contributing to this project, you agree to abide by its terms.
