@@ -1,3 +1,27 @@
+# wkpool 0.2.0
+
+## Round trip
+
+From cycles -> Polygons
+
+* Classify outer/hole
+* Associate holes with containing outer (by point-in-polygon or nesting)
+* Group by .feature
+
+From arcs → Linestrings
+
+* Each arc becomes a linestring
+
+## Arc-node topology
+
+* `vertex_degree()` counts segments touching each vertex
+* `find_nodes()` identifies branch points and endpoints (degree ≠ 2)
+* `find_arcs()` extracts maximal segment sequences between nodes
+* `as_arcs()` returns wkpool with `.arc` column for arc membership
+* `arc_node_summary()` reports arc/node structure statistics
+
+Arcs are the "uninterrupted lines" — sequences of segments passing only through degree-2 vertices. Useful for line simplification, network extraction, and efficient storage.
+
 # wkpool 0.1.0
 
 *Like sands through the hourglass, so are the segments of our geometries.*
