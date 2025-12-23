@@ -1,16 +1,10 @@
 # wkpool 0.2.0
 
-## Round trip
+## Round-trip to wk
 
-From cycles -> Polygons
-
-* Classify outer/hole
-* Associate holes with containing outer (by point-in-polygon or nesting)
-* Group by .feature
-
-From arcs → Linestrings
-
-* Each arc becomes a linestring
+* `arcs_to_wkt()` / `arcs_to_wkb()` — arcs become linestrings
+* `cycles_to_wkt()` / `cycles_to_wkb()` — cycles become polygons, with hole nesting
+* `segments_to_wkt()` / `segments_to_wkb()` — raw segments as linestrings, multilinestring, or points
 
 ## Arc-node topology
 
