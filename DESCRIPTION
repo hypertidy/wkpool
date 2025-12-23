@@ -1,0 +1,19 @@
+Package: wkpool
+Title: Vertex Pool Topology for Well-Known Geometry
+Version: 0.0.0.9000
+Authors@R: 
+    person("Michael", "Sumner", , "mdsumner@gmail.com", role = c("aut", "cre"))
+Description: Establishes and maintains vertex pool topology for geometry 
+    handled by 'wk'. Segments are the atomic unit, vertices are shared via
+    integer references into a pool. Topology is discoverable (via coincident
+    vertex detection) not imposed - representing the truth of the input.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports: 
+    vctrs,
+    wk
+Suggests:
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

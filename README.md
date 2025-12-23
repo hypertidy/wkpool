@@ -1,0 +1,79 @@
+# wkpool
+
+Vertex pool topology for geometry handled by [wk](https://github.com/paleolimbot/wk).
+
+## Design philosophy
+
+Simple features throws away topology — every polygon stores its own coordinates, shared boundaries are duplicated, and expensive operations (GEOS) are needed to rediscover structure that was there all along.
+
+**wkpool** takes a different approach:
+
+- **Segments are atomic**: Everything is edges (vertex pairs). Polygons, linestrings, meshes — all just segments with different grouping.
+- **Vertices live in a pool**: Coordinates stored once, referenced by integer ID (`.vx`).
+- **Observe, don't correct**: `establish_topology()` represents the truth of your input. Snapping/fixing is a separate, explicit decision.
+- **Topology is discoverable**: `merge_coincident()` finds shared vertices. Shared boundaries, neighbour relations — they emerge from the data.
+- **Feature provenance**: Segments track which feature they came from (`.feature`), enabling adjacency and boundary queries.
+
+## Installation
+```r
+# From local source
+devtools::install()
+
+# Or load for development
+devtools::load_all()
+```
+
+## Usage
+
+```r
+library(wkpool)
+library(wk)
+
+# Any wk-handleable geometry
+x <- wk::as_wkb(sf::st_geometry(your_sf_object))
+
+# Establish topology (no merging yet)
+pool <- establish_topology(x)
+
+# What do we have?
+topology_report(pool)
+
+# Merge coincident vertices (exact match)
+merged <- merge_coincident(pool, tolerance = 0)
+
+# Find shared boundaries
+shared <- find_shared_edges(merged)
+
+# Internal boundaries (edges shared by exactly 2 features)
+internal <- find_internal_boundaries(merged)
+
+# Neighbour relations
+neighbours <- find_neighbours(merged, type = "edge")    # share a boundary
+neighbours_v <- find_neighbours(merged, type = "vertex") # share any vertex
+
+# Access the raw structure
+pool_vertices(merged)  # data.frame: .vx, x, y
+pool_segments(merged)  # data.frame: .vx0, .vx1, .feature
+```
+
+## Key decisions
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Pool scope | Per-vector, sidecar attribute | No wk core changes needed, n-geometry ready |
+| Snapping | Observe don't correct | Represent truth, fixing is separate |
+| Vertex identity | Minted `.vx` integer | Survives subset, lighter than UUID |
+| Segment identity | Derived from vertex pair | No ID to track, tuple IS identity |
+| Primary vctr | Segments | Geometry is what you subset, vertices follow |
+| Foundation | vctrs | Principled combine/subset, tidyverse alignment |
+
+## Next steps
+
+- [ ] `wk_handle.wkpool()` — round-trip back to wk geometry
+- [ ] Triangulation integration (decido) — indexed triangles from same pool
+- [ ] Path reconstruction — derive linestrings/rings from segment connectivity
+- [ ] Consider C++ for hot paths once API is stable
+
+## License
+
+MIT
