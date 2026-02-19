@@ -1,0 +1,176 @@
+---
+title: "wkpool: Topology-based Geometry Handling"
+format: html
+---
+
+## Why topology?
+```{r}
+#| label: setup
+#| include: false
+library(wkpool)
+```
+
+Simple features store geometry as complete coordinate sequences per feature. Two adjacent polygons duplicate their shared boundary — wasteful in memory and requiring expensive spatial predicates (GEOS) to rediscover adjacency.
+
+**wkpool** represents geometry as segments referencing a shared vertex pool. Topology emerges naturally: shared edges, neighbours, and ring structure become simple lookups.
+
+## Basic workflow
+
+Create two adjacent squares sharing an edge:
+
+```{r}
+#| label: basic-setup
+library(wk)
+library(wkpool)
+
+# Two adjacent unit squares
+poly1 <- wkt("POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))")
+poly2 <- wkt("POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))")
+geoms <- c(poly1, poly2)
+```
+
+### Establish topology
+
+```{r}
+#| label: establish
+pool <- establish_topology(geoms)
+pool
+```
+
+At this stage, vertices are indexed but not yet merged — the shared edge exists as duplicate coordinate pairs.
+
+### Inspect the raw state
+
+```{r}
+#| label: report-before
+topology_report(pool)
+```
+
+### Merge coincident vertices
+
+```{r}
+#| label: merge
+pool <- merge_coincident(pool)
+topology_report(pool)
+```
+
+After merging, shared edge vertices reference the same pool indices.
+
+## Adjacency discovery
+
+### Shared edges
+
+```{r}
+#| label: shared-edges
+find_shared_edges(pool)
+```
+Returns segment indices that appear in multiple features.
+
+### Internal boundaries
+
+For polygon data, shared edges with *opposite* winding indicate true internal boundaries (not self-shared rings):
+
+```{r}
+#| label: internal-boundaries
+find_internal_boundaries(pool)
+```
+
+### Neighbour graph
+```{r}
+#| label: neighbours
+find_neighbours(pool)
+```
+
+Returns a list: for each feature, the indices of features sharing an edge.
+
+## Ring and cycle analysis
+
+Topology enables ring discovery without parsing WKT structure.
+
+### Find closed cycles
+
+```{r}
+#| label: cycles
+cycles <- find_cycles(pool)
+cycles
+```
+
+### Classify by winding
+
+Signed area distinguishes outer rings (positive, CCW) from holes (negative, CW):
+
+```{r}
+#| label: winding
+areas <- cycle_signed_area(pool, cycles)
+classify_cycles(areas)
+```
+
+Use `reverse_cycle()` to flip winding if needed.
+
+## Triangulation integration
+
+The pool maps directly to constrained triangulation inputs.
+
+### RTriangle (PSLG)
+
+```{r}
+#| label: pslg
+#| eval: false
+pslg <- as_pslg(pool)
+
+# For polygons with holes, generate interior points to exclude:
+# holes <- hole_points(pool, cycles, classify_cycles(areas))
+# RTriangle::triangulate(pslg, H = holes)
+```
+
+### decido (earcut)
+
+```{r}
+#| label: decido
+#| eval: false
+dec <- as_decido(pool)
+# decido::earcut(dec$xy, dec$holes)
+```
+
+## Real-world example
+
+```{r}
+#| label: real-data
+#| eval: false
+library(sf)
+
+# Use any polygon dataset with shared boundaries
+nc <- st_read(system.file("shape/nc.shp", package = "sf"), quiet = TRUE)
+pool <- establish_topology(st_geometry(nc))
+pool <- merge_coincident(pool)
+
+# Discover county adjacencies
+nbrs <- find_neighbours(pool)
+
+# How many neighbours does each county have?
+lengths(nbrs)
+```
+
+## Subsetting and combining
+
+Pools support `[` subsetting:
+
+```{r}
+#| label: subset
+pool[1]  
+```
+
+Combine pools from different sources:
+
+```{r}
+#| label: combine
+#| eval: false
+pool_combined <- pool_combine(pool_a, pool_b)
+```
+
+## Visualization
+
+```{r}
+#| label: plot
+plot(pool)
+```
