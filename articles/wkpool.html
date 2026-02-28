@@ -32,7 +32,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">wkpool</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.0.9002</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0</span>
       </span>
     </div>
 
@@ -93,13 +93,13 @@
 <div class="section level2">
 <h2 id="why-topology">Why topology?<a class="anchor" aria-label="anchor" href="#why-topology"></a>
 </h2>
-<p>Simple features store geometry as complete coordinate sequences per
-feature. Two adjacent polygons duplicate their shared boundary —
-wasteful in memory and requiring expensive spatial predicates (GEOS) to
-rediscover adjacency.</p>
 <p><strong>wkpool</strong> represents geometry as segments referencing a
 shared vertex pool. Topology emerges naturally: shared edges,
 neighbours, and ring structure become simple lookups.</p>
+<p>Simple features store geometry as complete coordinate sequences per
+feature. Two adjacent polygons duplicate their shared boundary —
+wasteful in entropy and requiring spatial predicates (GEOS) to
+rediscover adjacency.</p>
 </div>
 <div class="section level2">
 <h2 id="basic-workflow">Basic workflow<a class="anchor" aria-label="anchor" href="#basic-workflow"></a>
@@ -373,28 +373,18 @@ interior points that tell the triangulator which regions to exclude:</p>
 <span>  <span class="fu">RTriangle</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/RTriangle/man/pslg.html" class="external-link">pslg</a></span><span class="op">(</span>P <span class="op">=</span> <span class="va">pslg_h</span><span class="op">$</span><span class="va">P</span>, S <span class="op">=</span> <span class="va">pslg_h</span><span class="op">$</span><span class="va">S</span>, H <span class="op">=</span> <span class="va">holes</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="decido-earcut">decido (earcut)<a class="anchor" aria-label="anchor" href="#decido-earcut"></a>
-</h3>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dec</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_decido.html">as_decido</a></span><span class="op">(</span><span class="va">pool</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">dec</span><span class="op">)</span></span>
-<span><span class="co">#&gt; List of 2</span></span>
-<span><span class="co">#&gt;  $ xy      : num [1:6, 1:2] 0 1 1 0 2 2 0 0 1 1 ...</span></span>
-<span><span class="co">#&gt;  $ segments: int [1:8, 1:2] 0 1 2 3 1 4 5 2 1 2 ...</span></span></code></pre></div>
-</div>
 </div>
 <div class="section level2">
 <h2 id="subsetting-and-combining">Subsetting and combining<a class="anchor" aria-label="anchor" href="#subsetting-and-combining"></a>
 </h2>
 <p>Pools support <code>[</code> subsetting — the full vertex pool is
 retained:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pool</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span></span>
 <span><span class="co">#&gt; &lt;wkpool[4 segments, 6 vertices]&gt;</span></span>
 <span><span class="co">#&gt; [1] &lt;segment: 1-&gt;2&gt; &lt;segment: 2-&gt;3&gt; &lt;segment: 3-&gt;4&gt; &lt;segment: 4-&gt;1&gt;</span></span></code></pre></div>
 <p>Combine pools from different sources:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pool_a</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/establish_topology.html">establish_topology</a></span><span class="op">(</span><span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/wkt.html" class="external-link">wkt</a></span><span class="op">(</span><span class="st">"POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pool_b</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/establish_topology.html">establish_topology</a></span><span class="op">(</span><span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/wkt.html" class="external-link">wkt</a></span><span class="op">(</span><span class="st">"POLYGON ((5 5, 6 5, 6 6, 5 6, 5 5))"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/pool_combine.html">pool_combine</a></span><span class="op">(</span><span class="va">pool_a</span>, <span class="va">pool_b</span><span class="op">)</span></span>
@@ -405,7 +395,7 @@ retained:</p>
 <div class="section level2">
 <h2 id="visualization">Visualization<a class="anchor" aria-label="anchor" href="#visualization"></a>
 </h2>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">pool</span><span class="op">)</span></span></code></pre></div>
 <p><img src="wkpool_files/figure-html/plot-1.png" class="r-plt" alt="" width="576"></p>
 </div>
@@ -441,10 +431,10 @@ retained:</p>
 by silicate</td>
 </tr>
 <tr class="odd">
-<td><a href="https://CRAN.R-project.org/package=gibble" class="external-link">gibble</a></td>
+<td><a href="https://CRAN.R-project.org/package=wk" class="external-link">wk</a></td>
 <td>CRAN</td>
-<td>Path/geometry indexing — conceptually similar to wkpool’s segment
-provenance</td>
+<td>Path/geometry indexing via <code><a href="https://paleolimbot.github.io/wk/reference/wk_vertices.html" class="external-link">wk_coords()</a></code>
+</td>
 </tr>
 </tbody>
 </table>
@@ -474,7 +464,7 @@ target</td>
 <td><a href="https://CRAN.R-project.org/package=decido" class="external-link">decido</a></td>
 <td>CRAN</td>
 <td>Earcut — fast, returns vertex indices (implicit pool),
-<code><a href="../reference/as_decido.html">as_decido()</a></code> target</td>
+<code>as_decido()</code> target</td>
 </tr>
 <tr class="odd">
 <td><a href="https://CRAN.R-project.org/package=sfdct" class="external-link">sfdct</a></td>
@@ -500,11 +490,10 @@ target</td>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td><a href="https://CRAN.R-project.org/package=spdep" class="external-link">spdep</a></td>
+<td><a href="https://CRAN.R-project.org/package=sfdep" class="external-link">sfdep</a></td>
 <td>CRAN</td>
 <td>
-<code>poly2nb()</code> for queen/rook contiguity — computes
-on-demand</td>
+<code>st_contiguity()</code> computes on-demand</td>
 </tr>
 <tr class="even">
 <td><a href="https://CRAN.R-project.org/package=sf" class="external-link">sf</a></td>
@@ -512,39 +501,6 @@ on-demand</td>
 <td>
 <code>st_touches()</code>, <code>st_relate()</code> via GEOS —
 recomputes each time</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="section level3">
-<h3 id="other-useful-pieces">Other useful pieces<a class="anchor" aria-label="anchor" href="#other-useful-pieces"></a>
-</h3>
-<table class="table">
-<colgroup>
-<col width="39%">
-<col width="30%">
-<col width="30%">
-</colgroup>
-<thead><tr class="header">
-<th>Package</th>
-<th>Where</th>
-<th>Notes</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><a href="https://CRAN.R-project.org/package=vapour" class="external-link">vapour</a></td>
-<td>CRAN</td>
-<td>Low-level GDAL geometry access</td>
-</tr>
-<tr class="even">
-<td><a href="https://CRAN.R-project.org/package=geodist" class="external-link">geodist</a></td>
-<td>CRAN</td>
-<td>Fast distances for tolerance-based merging</td>
-</tr>
-<tr class="odd">
-<td><a href="https://github.com/hypertidy/controlledburn" class="external-link">controlledburn</a></td>
-<td>GitHub</td>
-<td>Rasterization using topology</td>
 </tr>
 </tbody>
 </table>

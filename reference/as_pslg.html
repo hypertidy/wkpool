@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">wkpool</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.0.9002</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0</span>
       </span>
     </div>
 
@@ -90,6 +90,10 @@
     <p>Produces a Planar Straight Line Graph suitable for constrained triangulation
 with RTriangle. The vertex pool maps directly to P, and segment indices
 map directly to S (both 1-indexed).</p>
+<p>Note: Hole detection is not currently supported. The returned pslg
+does not include hole points (H). For polygons with holes, you may
+need to identify hole points manually using <code><a href="find_cycles.html">find_cycles()</a></code> and
+<code><a href="cycle_signed_area.html">cycle_signed_area()</a></code>.</p>
     </div>
 
     <div id="ref-examples">

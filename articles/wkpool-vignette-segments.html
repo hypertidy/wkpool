@@ -32,7 +32,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">wkpool</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.0.9002</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0</span>
       </span>
     </div>
 
@@ -93,17 +93,17 @@
 <div class="section level2">
 <h2 id="what-is-a-segment">What is a segment?<a class="anchor" aria-label="anchor" href="#what-is-a-segment"></a>
 </h2>
-<p>Two connected vertices. That’s it.</p>
+<p>Two connected vertices.</p>
 <p>A segment is the atom of geometry. Every line is a sequence of
 segments. Every polygon boundary is a cycle of segments. Every track
 step between consecutive GPS fixes is a segment with a duration. It’s
 the simplest spatial primitive that encodes <em>connection</em> rather
 than just <em>position</em>.</p>
-<p>Simple Features — the dominant spatial data model — hides segments
+<p>Simple Features — a dominant spatial data model — hides segments
 inside sealed coordinate sequences. A polygon is a ring of coordinates.
 A line is a list of coordinates. The connections between consecutive
 vertices are implicit. To discover them you extract coordinates, pair
-consecutive points, and rebuild the structure yourself. Every time.</p>
+consecutive points, and rebuild the structure.</p>
 <p>wkpool makes segments explicit.</p>
 </div>
 <div class="section level2">
@@ -225,8 +225,7 @@ drift apart.</p>
 <div class="section level2">
 <h2 id="the-full-topology">The full topology<a class="anchor" aria-label="anchor" href="#the-full-topology"></a>
 </h2>
-<p>wkpool provides the complete arc-node decomposition that Simple
-Features leaves implicit.</p>
+<p>wkpool provides the arc-node decomposition.</p>
 <p><strong>Vertex degree</strong> tells you where topology is
 interesting:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
@@ -279,9 +278,11 @@ nodes:</p>
 <span><span class="co">#&gt; [1] 2</span></span></code></pre></div>
 <p>This is the arc-node model from computational geometry (de Berg et
 al. 2008), expressed as data frames rather than linked-list pointer
-structures. The same decomposition that PostGIS topology provides as a
-heavyweight extension, wkpool provides as a table operation on the
-segment pool.</p>
+structures. The same decomposition that PostGIS topology provides, and
+Arc/INFO is probably the most famous implementation, remnants exist in
+.e00 format and some other softwares. This linear-only topology also
+highlights clearly how polygons are <em>just lines</em>, they aren’t
+composed of 2D topology (triangles) in many modern geo software.</p>
 </div>
 <div class="section level2">
 <h2 id="cycles-and-winding">Cycles and winding<a class="anchor" aria-label="anchor" href="#cycles-and-winding"></a>
@@ -335,32 +336,19 @@ format.</p>
 <p>The vertex pool and segment table map directly to constrained
 triangulation inputs — no coordinate extraction or reformatting
 needed:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># RTriangle PSLG format</span></span>
-<span><span class="va">pslg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_pslg.html">as_pslg</a></span><span class="op">(</span><span class="va">pool</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">pslg</span><span class="op">)</span></span>
-<span><span class="co">#&gt; List of 2</span></span>
-<span><span class="co">#&gt;  $ P: num [1:6, 1:2] 0 1 1 0 2 2 0 0 1 1 ...</span></span>
-<span><span class="co">#&gt;  $ S: int [1:8, 1:2] 1 2 3 4 2 5 6 3 2 3 ...</span></span>
-<span></span>
-<span><span class="co"># decido (earcut) format</span></span>
-<span><span class="va">dec</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_decido.html">as_decido</a></span><span class="op">(</span><span class="va">pool</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">dec</span><span class="op">)</span></span>
-<span><span class="co">#&gt; List of 2</span></span>
-<span><span class="co">#&gt;  $ xy      : num [1:6, 1:2] 0 1 1 0 2 2 0 0 1 1 ...</span></span>
-<span><span class="co">#&gt;  $ segments: int [1:8, 1:2] 0 1 2 3 1 4 5 2 1 2 ...</span></span></code></pre></div>
+<p>RTriangle PSLG format (without classing)</p>
 <p>The pool <em>is</em> the PSLG. The mapping is structural, not a
 conversion.</p>
 </div>
 <div class="section level2">
 <h2 id="segments-in-movement-data">Segments in movement data<a class="anchor" aria-label="anchor" href="#segments-in-movement-data"></a>
 </h2>
-<p>wkpool’s insight applies beyond polygons. Track data — animal
-movement, vessel tracks, GPS logs — is inherently a sequence of
-segments. Each step between consecutive fixes carries a bearing,
-distance, speed, and duration.</p>
+<p>wkpool applies beyond polygons. Track data — animal movement, vessel
+tracks, GPS logs — is inherently a sequence of segments. Each step
+between consecutive fixes carries a bearing, distance, speed, and
+duration.</p>
 <p>The traipse package works directly on this segment view:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/AustralianAntarcticDivision/traipse" class="external-link">traipse</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># 5 GPS fixes from a Southern Ocean track</span></span>
@@ -395,26 +383,18 @@ applies in any language.</p>
 <div class="section level2">
 <h2 id="the-lineage">The lineage<a class="anchor" aria-label="anchor" href="#the-lineage"></a>
 </h2>
-<p>The ideas in wkpool trace back to the silicate package (2016), which
-explored topological data models for spatial data in R using PATH, ARC,
-and SC (segment-and-constraint) models. silicate was the right direction
-but required buying into a heavy ontology. wkpool is the lean successor:
-just the vertex pool and segment table, built on wk handlers, with none
-of the broader model machinery.</p>
-<p>As Mark Padgham observed when he found the silicate project:
-“segments are prime.” Every network edge, every polygon boundary, every
-track step reduces to a segment. They are the universal primitive that
-Simple Features was designed to hide.</p>
+<p>The ideas in wkpool trace back to experiences with Arc/INFO, Myriax
+Eonfusion, and the silicate package <a href="https://CRAN.R-project.org/package=silicate" class="external-link">10.32614/CRAN.package.silicate</a>,
+which explored topological data models for spatial data in R using
+PATH/PATH0, ARC/ARC0, SC/SC0, TRI/TRI0 (segment-and-constraint) models.
+wkpool is leaner: the vertex pool and segment table, built on wk
+handlers, without the full ontology of silicate. Every network edge,
+every polygon boundary, every track step reduces to a segment.</p>
 </div>
 <div class="section level2">
 <h2 id="further-reading">Further reading<a class="anchor" aria-label="anchor" href="#further-reading"></a>
 </h2>
 <ul>
-<li>
-<code><a href="../articles/wkpool.html">vignette("wkpool")</a></code> — complete API reference with all
-functions</li>
-<li>The <a href="https://github.com/hypertidy" class="external-link">hypertidy</a> ecosystem:
-composable spatial primitives for R</li>
 <li>de Berg, M. et al. (2008). <em>Computational Geometry: Algorithms
 and Applications</em>. Springer. (Arc-node topology, DCEL)</li>
 </ul>
