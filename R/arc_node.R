@@ -19,6 +19,7 @@
 #'
 #' @export
 vertex_degree <- function(x) {
+  check_wkpool(x)
   vx0 <- vctrs::field(x, ".vx0")
   vx1 <- vctrs::field(x, ".vx1")
   deg <- table(c(vx0, vx1))
@@ -48,6 +49,7 @@ vertex_degree <- function(x) {
 #'
 #' @export
 find_nodes <- function(x) {
+  check_wkpool(x)
   deg <- vertex_degree(x)
   as.integer(names(deg)[deg != 2])
 }
@@ -73,6 +75,7 @@ find_nodes <- function(x) {
 #'
 #' @export
 find_arcs <- function(x) {
+  check_wkpool(x)
   segs <- pool_segments(x)
   deg <- vertex_degree(x)
   nodes <- as.integer(names(deg)[deg != 2])
@@ -194,6 +197,7 @@ find_arcs <- function(x) {
 #'
 #' @export
 as_arcs <- function(x, arc_id = TRUE) {
+  check_wkpool(x)
   arcs <- find_arcs(x)
   pool <- pool_vertices(x)
 
@@ -240,6 +244,7 @@ as_arcs <- function(x, arc_id = TRUE) {
 #'
 #' @export
 arc_node_summary <- function(x) {
+  check_wkpool(x)
   deg <- vertex_degree(x)
   arcs <- find_arcs(x)
   nodes <- find_nodes(x)

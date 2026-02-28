@@ -6,7 +6,7 @@
 \alias{wkpool-package}
 \title{wkpool: Vertex Pool Topology for Well-Known Geometry}
 \description{
-Establishes and maintains vertex pool topology for geometry handled by 'wk'. Segments are the atomic unit, vertices are shared via integer references into a pool. Topology is discoverable (via coincident vertex detection) not imposed - representing the truth of the input. Topological data models follow principles described in Worboys and Duckham (2004, ISBN:978-0415283755).
+Establishes and maintains vertex pool topology for geometry handled by 'wk'. Segments are the atomic unit, vertices are shared via integer references into a pool. Topology is made discoverable via coincident vertex detection while not requiring modification of the input data. Topological data models follow principles described in Worboys and Duckham (2004, ISBN:978-0415283755). The edge-based topology geometry decomposed into vertices and directed edge pairs is a simplification of the quad-edge case in Guibas & Stolfi (1985) \doi{10.1145/282918.282923}.
 }
 \seealso{
 Useful links:

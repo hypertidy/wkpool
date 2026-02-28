@@ -31,7 +31,7 @@
 #'
 #' @export
 merge_coincident <- function(x, tolerance = 0) {
-
+  check_wkpool(x)
   pool <- pool_vertices(x)
   vx0 <- vctrs::field(x, ".vx0")
   vx1 <- vctrs::field(x, ".vx1")
@@ -108,7 +108,7 @@ merge_coincident <- function(x, tolerance = 0) {
 #'
 #' @export
 find_shared_edges <- function(x) {
-
+  check_wkpool(x)
   vx0 <- vctrs::field(x, ".vx0")
   vx1 <- vctrs::field(x, ".vx1")
   feature <- pool_feature(x)
@@ -167,6 +167,7 @@ find_shared_edges <- function(x) {
 #'
 #' @export
 find_internal_boundaries <- function(x) {
+  check_wkpool(x)
   s <- pool_segments(x)
 
   # Create directed edge key
@@ -261,6 +262,7 @@ as_decido <- function(x) {
 #'
 #' @export
 find_cycles <- function(x) {
+  check_wkpool(x)
   segs <- pool_segments(x)
   n <- nrow(segs)
 
@@ -348,6 +350,7 @@ cycle_signed_area <- function(cycle, pool) {
 #'
 #' @export
 classify_cycles <- function(x, convention = c("sf", "ogc")) {
+  check_wkpool(x)
   convention <- match.arg(convention)
   cycles <- find_cycles(x)
   pool <- pool_vertices(x)
@@ -418,6 +421,7 @@ reverse_cycle <- function(cycle) {
 #'
 #' @export
 hole_points <- function(x, convention = c("sf", "ogc")) {
+  check_wkpool(x)
   convention <- match.arg(convention)
   cycles <- find_cycles(x)
   pool <- pool_vertices(x)
@@ -464,7 +468,7 @@ hole_points <- function(x, convention = c("sf", "ogc")) {
 #'
 #' @export
 find_neighbours <- function(x, type = c("edge", "vertex")) {
-
+  check_wkpool(x)
   type <- match.arg(type)
   feature <- pool_feature(x)
 
@@ -540,7 +544,7 @@ find_neighbours <- function(x, type = c("edge", "vertex")) {
 #'
 #' @export
 topology_report <- function(x, tolerance = 1e-8) {
-
+  check_wkpool(x)
   pool <- pool_vertices(x)
   vx0 <- vctrs::field(x, ".vx0")
   vx1 <- vctrs::field(x, ".vx1")

@@ -1,6 +1,6 @@
 Package: wkpool
 Title: Vertex Pool Topology for Well-Known Geometry
-Version: 0.2.0
+Version: 0.2.0.9001
 Authors@R: 
     person("Michael", "Sumner", , "mdsumner@gmail.com", role = c("aut", "cre"))
 Description: Establishes and maintains vertex pool topology for geometry 
@@ -24,6 +24,7 @@ Suggests:
     knitr,
     rmarkdown,
     RTriangle,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    traipse
 VignetteBuilder: knitr
 Config/testthat/edition: 3

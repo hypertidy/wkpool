@@ -1,3 +1,7 @@
+# wkpool dev
+
+* Added check_wkpool helper function. 
+
 # wkpool 0.2.0
 
 ## Round-trip to wk
