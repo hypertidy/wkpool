@@ -51,11 +51,40 @@ wkpool_empty <- function() {
 
 # Accessors --------------------------------------------------------------
 
+#' Access components of a wkpool object
+#'
+#' Extract the vertex pool, segment table, or feature vector from a wkpool.
+#'
+#' @param x A wkpool object.
+#'
+#' @returns
+#' - `pool_vertices()`: A data frame with columns `.vx` (vertex ID), `x`, `y`,
+#'   and optionally `z`.
+#' - `pool_segments()`: A data frame with columns `.vx0`, `.vx1`, and
+#'   optionally `.feature`.
+#' - `pool_feature()`: An integer vector of feature IDs, or `NULL` if no
+#'   feature information is present.
+#'
+#' @examples
+#' x <- wk::as_wkb(c(
+#'   "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+#'   "POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))"
+#' ))
+#' pool <- establish_topology(x)
+#' pool_vertices(pool)
+#' pool_segments(pool)
+#' pool_feature(pool)
+#'
+#' @name wkpool-accessors
+NULL
+
+#' @rdname wkpool-accessors
 #' @export
 pool_vertices <- function(x) {
   attr(x, "pool")
 }
 
+#' @rdname wkpool-accessors
 #' @export
 pool_segments <- function(x) {
   out <- data.frame(
@@ -69,6 +98,7 @@ pool_segments <- function(x) {
   out
 }
 
+#' @rdname wkpool-accessors
 #' @export
 pool_feature <- function(x) {
   tryCatch(
@@ -122,6 +152,14 @@ vec_restore.wkpool <- function(x, to, ...) {
 #'
 #' @param ... wkpool objects to combine
 #' @return A single wkpool with merged pools and remapped segments
+#'
+#' @examples
+#' x <- wk::as_wkb("POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))")
+#' y <- wk::as_wkb("POLYGON ((2 0, 3 0, 3 1, 2 1, 2 0))")
+#' pool_a <- establish_topology(x)
+#' pool_b <- establish_topology(y)
+#' pool_combine(pool_a, pool_b)
+#'
 #' @export
 pool_combine <- function(...) {
   xs <- list(...)
@@ -184,6 +222,25 @@ vec_c.wkpool <- function(..., .ptype = NULL) {
 
 # Plotting ---------------------------------------------------------------
 
+#' Plot a wkpool object
+#'
+#' Draws segments coloured by feature membership.
+#'
+#' @param x A wkpool object.
+#' @param col Colour(s) for segments. If `NULL` (default), segments are
+#'   coloured by feature using a built-in palette.
+#' @param ... Further arguments passed to [plot.default()].
+#'
+#' @returns Invisibly returns `x`.
+#'
+#' @examples
+#' x <- wk::as_wkb(c(
+#'   "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+#'   "POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))"
+#' ))
+#' pool <- establish_topology(x)
+#' plot(pool)
+#'
 #' @export
 plot.wkpool <- function(x, col = NULL, ...) {
   v <- pool_vertices(x)

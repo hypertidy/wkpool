@@ -21,3 +21,13 @@ A data frame with cycle index, signed area, and type (outer/hole)
 \description{
 Classify cycles as outer rings or holes based on winding
 }
+\examples{
+x <- wk::as_wkb(c(
+  "MULTIPOLYGON (((0 0, 0 1, 0.75 1, 1 0.8, 0.5 0.7, 0.8 0.6, 0.69 0, 0 0), (0.2 0.2, 0.5 0.2, 0.5 0.4, 0.3 0.6, 0.2 0.4, 0.2 0.2)))",
+  "MULTIPOLYGON (((0.69 0, 0.8 0.6, 1.1 0.63, 1.23 0.3, 0.69 0)))"
+))
+pool <- establish_topology(x)
+merged <- merge_coincident(pool)
+classify_cycles(merged)
+
+}

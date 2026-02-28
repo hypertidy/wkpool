@@ -22,18 +22,19 @@ For use with RTriangle::triangulate(). Each row is the centroid of a hole,
 which tells the triangulator to exclude that region.
 }
 \examples{
-
 polygons_with_holes <- wk::as_wkb(c(
   "MULTIPOLYGON (((0 0, 0 1, 0.75 1, 1 0.8, 0.5 0.7, 0.8 0.6, 0.69 0, 0 0), (0.2 0.2, 0.5 0.2, 0.5 0.4, 0.3 0.6, 0.2 0.4, 0.2 0.2)))",
   "MULTIPOLYGON (((0.69 0, 0.8 0.6, 1.1 0.63, 1.23 0.3, 0.69 0)))"
 ))
 x <- establish_topology(polygons_with_holes)
 merged <- merge_coincident(x)
-pslg <- as_pslg(merged)
-holes <- hole_points(merged)
-tri <- RTriangle::triangulate(
-  RTriangle::pslg(P = pslg$P, S = pslg$S, H = holes)
-)
-
+hole_points(merged)
+if (requireNamespace("RTriangle", quietly = TRUE)) {
+  pslg <- as_pslg(merged)
+  holes <- hole_points(merged)
+  tri <- RTriangle::triangulate(
+    RTriangle::pslg(P = pslg$P, S = pslg$S, H = holes)
+  )
+}
 
 }

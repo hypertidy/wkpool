@@ -19,6 +19,16 @@
 #' Feature provenance (.feature) is preserved - segments keep their
 #' original feature assignment even after vertex merging.
 #'
+#' @examples
+#' x <- wk::as_wkb(c(
+#'   "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+#'   "POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))"
+#' ))
+#' pool <- establish_topology(x)
+#' topology_report(pool)
+#' merged <- merge_coincident(pool)
+#' topology_report(merged)
+#'
 #' @export
 merge_coincident <- function(x, tolerance = 0) {
 
@@ -87,6 +97,15 @@ merge_coincident <- function(x, tolerance = 0) {
 #' the same vertex pair. This function finds them and reports which
 #' features share each edge.
 #'
+#' @examples
+#' x <- wk::as_wkb(c(
+#'   "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+#'   "POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))"
+#' ))
+#' pool <- establish_topology(x)
+#' merged <- merge_coincident(pool)
+#' find_shared_edges(merged)
+#'
 #' @export
 find_shared_edges <- function(x) {
 
@@ -137,6 +156,15 @@ find_shared_edges <- function(x) {
 #' in opposite directions. This is the defining characteristic of a shared
 #' polygon boundary.
 #'
+#' @examples
+#' x <- wk::as_wkb(c(
+#'   "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+#'   "POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))"
+#' ))
+#' pool <- establish_topology(x)
+#' merged <- merge_coincident(pool)
+#' find_internal_boundaries(merged)
+#'
 #' @export
 find_internal_boundaries <- function(x) {
   s <- pool_segments(x)
@@ -166,11 +194,9 @@ find_internal_boundaries <- function(x) {
 #' map directly to S (both 1-indexed).
 #'
 #' @examples
-#' \dontrun{
-#' x <- establish_topology(my_polygons)
-#' pslg <- as_pslg(x)
-#' tri <- RTriangle::triangulate(RTriangle::pslg(P = pslg$P, S = pslg$S))
-#' }
+#' x <- wk::as_wkb("POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))")
+#' pool <- establish_topology(x)
+#' as_pslg(pool)
 #'
 #' @export
 as_pslg <- function(x, ...) {
@@ -193,6 +219,11 @@ as_pslg <- function(x, ...) {
 #' @details
 #' Produces format suitable for decido::earcut() constrained triangulation.
 #' Note: decido uses 0-indexed segments.
+#'
+#' @examples
+#' x <- wk::as_wkb("POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))")
+#' pool <- establish_topology(x)
+#' as_decido(pool)
 #'
 #' @export
 as_decido <- function(x) {
@@ -218,6 +249,15 @@ as_decido <- function(x) {
 #'
 #' Each cycle is a vector of vertex IDs in traversal order. The cycle is closed
 #' (first vertex connects back to last via a segment).
+#'
+#' @examples
+#' x <- wk::as_wkb(c(
+#'   "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+#'   "POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))"
+#' ))
+#' pool <- establish_topology(x)
+#' merged <- merge_coincident(pool)
+#' find_cycles(merged)
 #'
 #' @export
 find_cycles <- function(x) {
@@ -266,6 +306,13 @@ find_cycles <- function(x) {
 #'
 #' This is intrinsic to the geometry — we observe winding, not declare it.
 #'
+#' @examples
+#' x <- wk::as_wkb("POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))")
+#' pool <- establish_topology(x)
+#' merged <- merge_coincident(pool)
+#' cycles <- find_cycles(merged)
+#' cycle_signed_area(cycles[[1]], pool_vertices(merged))
+#'
 #' @export
 cycle_signed_area <- function(cycle, pool) {
   idx <- match(cycle, pool$.vx)
@@ -289,6 +336,15 @@ cycle_signed_area <- function(cycle, pool) {
 #'   - sf: negative area = outer, positive = hole
 #'   - ogc: positive area = outer, negative = hole
 #' @return A data frame with cycle index, signed area, and type (outer/hole)
+#'
+#' @examples
+#' x <- wk::as_wkb(c(
+#'   "MULTIPOLYGON (((0 0, 0 1, 0.75 1, 1 0.8, 0.5 0.7, 0.8 0.6, 0.69 0, 0 0), (0.2 0.2, 0.5 0.2, 0.5 0.4, 0.3 0.6, 0.2 0.4, 0.2 0.2)))",
+#'   "MULTIPOLYGON (((0.69 0, 0.8 0.6, 1.1 0.63, 1.23 0.3, 0.69 0)))"
+#' ))
+#' pool <- establish_topology(x)
+#' merged <- merge_coincident(pool)
+#' classify_cycles(merged)
 #'
 #' @export
 classify_cycles <- function(x, convention = c("sf", "ogc")) {
@@ -321,6 +377,13 @@ classify_cycles <- function(x, convention = c("sf", "ogc")) {
 #' Flips the traversal direction of a cycle without changing coordinates.
 #' Useful for converting between winding conventions.
 #'
+#' @examples
+#' x <- wk::as_wkb("POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))")
+#' pool <- establish_topology(x)
+#' merged <- merge_coincident(pool)
+#' cycles <- find_cycles(merged)
+#' reverse_cycle(cycles[[1]])
+#'
 #' @export
 reverse_cycle <- function(cycle) {
   rev(cycle)
@@ -338,19 +401,20 @@ reverse_cycle <- function(cycle) {
 #' which tells the triangulator to exclude that region.
 #'
 #' @examples
-#'
 #' polygons_with_holes <- wk::as_wkb(c(
 #'   "MULTIPOLYGON (((0 0, 0 1, 0.75 1, 1 0.8, 0.5 0.7, 0.8 0.6, 0.69 0, 0 0), (0.2 0.2, 0.5 0.2, 0.5 0.4, 0.3 0.6, 0.2 0.4, 0.2 0.2)))",
 #'   "MULTIPOLYGON (((0.69 0, 0.8 0.6, 1.1 0.63, 1.23 0.3, 0.69 0)))"
 #' ))
 #' x <- establish_topology(polygons_with_holes)
 #' merged <- merge_coincident(x)
-#' pslg <- as_pslg(merged)
-#' holes <- hole_points(merged)
-#' tri <- RTriangle::triangulate(
-#'   RTriangle::pslg(P = pslg$P, S = pslg$S, H = holes)
-#' )
-#'
+#' hole_points(merged)
+#' if (requireNamespace("RTriangle", quietly = TRUE)) {
+#'   pslg <- as_pslg(merged)
+#'   holes <- hole_points(merged)
+#'   tri <- RTriangle::triangulate(
+#'     RTriangle::pslg(P = pslg$P, S = pslg$S, H = holes)
+#'   )
+#' }
 #'
 #' @export
 hole_points <- function(x, convention = c("sf", "ogc")) {
@@ -381,11 +445,22 @@ hole_points <- function(x, convention = c("sf", "ogc")) {
 }
 
 
+
+
 #' Build adjacency from shared edges
 #'
 #' @param x A wkpool after merge_coincident
 #' @param type "edge" for features sharing an edge, "vertex" for features sharing any vertex
 #' @return Data frame of feature pairs that are neighbours
+#'
+#' @examples
+#' x <- wk::as_wkb(c(
+#'   "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+#'   "POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))"
+#' ))
+#' pool <- establish_topology(x)
+#' merged <- merge_coincident(pool)
+#' find_neighbours(merged)
 #'
 #' @export
 find_neighbours <- function(x, type = c("edge", "vertex")) {
@@ -454,6 +529,14 @@ find_neighbours <- function(x, type = c("edge", "vertex")) {
 #' @param x A wkpool
 #' @param tolerance Tolerance for "near miss" detection
 #' @return List of diagnostic information
+#'
+#' @examples
+#' x <- wk::as_wkb(c(
+#'   "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+#'   "POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))"
+#' ))
+#' pool <- establish_topology(x)
+#' topology_report(pool)
 #'
 #' @export
 topology_report <- function(x, tolerance = 1e-8) {

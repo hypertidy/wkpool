@@ -21,3 +21,13 @@ A wk_wkt vector
 \description{
 Convert wkpool segments to WKT
 }
+\examples{
+x <- wk::as_wkb(c(
+  "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+  "POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))"
+))
+pool <- establish_topology(x)
+segments_to_wkt(pool)
+segments_to_wkt(pool, type = "linestring")
+
+}

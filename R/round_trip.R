@@ -1,6 +1,11 @@
-# Round-trip: wkpool back to wk-handleable geometry
-#
-# Reconstruct linestrings from arcs, polygons from cycles
+#' @param ... Passed to [wk::as_wkb()]
+#' @rdname arcs_to_wkt
+#' @export
+arcs_to_wkb <- function(x, ...) {
+  wk::as_wkb(arcs_to_wkt(x), ...)
+}
+
+# Round-trip conversion: WKT/WKB from arcs, polygons from cycles
 
 #' Convert arcs to WKT linestrings
 #'
@@ -9,6 +14,15 @@
 #'
 #' @details
 #' Each arc (maximal segment sequence between nodes) becomes a linestring.
+#'
+#' @examples
+#' x <- wk::as_wkb(c(
+#'   "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+#'   "POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))"
+#' ))
+#' pool <- establish_topology(x)
+#' merged <- merge_coincident(pool)
+#' arcs_to_wkt(merged)
 #'
 #' @export
 arcs_to_wkt <- function(x) {
@@ -38,6 +52,15 @@ arcs_to_wkt <- function(x) {
 #' Converts cycles back to polygons. When feature = TRUE, attempts to
 #' reconstruct original polygon structure by grouping rings by feature
 #' and nesting holes within their containing outer ring.
+#'
+#' @examples
+#' x <- wk::as_wkb(c(
+#'   "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+#'   "POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))"
+#' ))
+#' pool <- establish_topology(x)
+#' merged <- merge_coincident(pool)
+#' cycles_to_wkt(merged)
 #'
 #' @export
 cycles_to_wkt <- function(x, feature = TRUE, convention = c("sf", "ogc")) {
@@ -138,6 +161,15 @@ cycles_to_wkt <- function(x, feature = TRUE, convention = c("sf", "ogc")) {
 #'   or "point" (vertices only)
 #' @return A wk_wkt vector
 #'
+#' @examples
+#' x <- wk::as_wkb(c(
+#'   "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+#'   "POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))"
+#' ))
+#' pool <- establish_topology(x)
+#' segments_to_wkt(pool)
+#' segments_to_wkt(pool, type = "linestring")
+#'
 #' @export
 segments_to_wkt <- function(x, type = c("multilinestring", "linestring", "point")) {
   type <- match.arg(type)
@@ -189,6 +221,7 @@ arcs_to_wkb <- function(x, ...) {
 }
 
 
+#' @param ... Passed to [wk::as_wkb()]
 #' @rdname cycles_to_wkt
 #' @export
 cycles_to_wkb <- function(x, feature = TRUE, convention = c("sf", "ogc"), ...) {
@@ -196,6 +229,7 @@ cycles_to_wkb <- function(x, feature = TRUE, convention = c("sf", "ogc"), ...) {
 }
 
 
+#' @param ... Passed to [wk::as_wkb()]
 #' @rdname segments_to_wkt
 #' @export
 segments_to_wkb <- function(x, type = c("multilinestring", "linestring", "point"), ...) {

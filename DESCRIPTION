@@ -7,14 +7,21 @@ Description: Establishes and maintains vertex pool topology for geometry
     handled by 'wk'. Segments are the atomic unit, vertices are shared via
     integer references into a pool. Topology is discoverable (via coincident
     vertex detection) not imposed - representing the truth of the input.
+    Topological data models follow principles described in Worboys and
+    Duckham (2004, ISBN:978-0415283755).
 License: MIT + file LICENSE
+URL: https://github.com/hypertidy/wkpool
+BugReports: https://github.com/hypertidy/wkpool/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Imports: 
     vctrs,
-    wk
+    wk (>= 0.9.4)
 Suggests:
+    knitr,
+    rmarkdown,
     RTriangle,
     testthat (>= 3.0.0)
+VignetteBuilder: knitr
 Config/testthat/edition: 3

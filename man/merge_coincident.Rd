@@ -28,3 +28,14 @@ network connectivity, mesh topology, etc.
 Feature provenance (.feature) is preserved - segments keep their
 original feature assignment even after vertex merging.
 }
+\examples{
+x <- wk::as_wkb(c(
+  "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+  "POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))"
+))
+pool <- establish_topology(x)
+topology_report(pool)
+merged <- merge_coincident(pool)
+topology_report(merged)
+
+}

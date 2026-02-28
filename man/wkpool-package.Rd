@@ -6,7 +6,15 @@
 \alias{wkpool-package}
 \title{wkpool: Vertex Pool Topology for Well-Known Geometry}
 \description{
-Establishes and maintains vertex pool topology for geometry handled by 'wk'. Segments are the atomic unit, vertices are shared via integer references into a pool. Topology is discoverable (via coincident vertex detection) not imposed - representing the truth of the input.
+Establishes and maintains vertex pool topology for geometry handled by 'wk'. Segments are the atomic unit, vertices are shared via integer references into a pool. Topology is discoverable (via coincident vertex detection) not imposed - representing the truth of the input. Topological data models follow principles described in Worboys and Duckham (2004, ISBN:978-0415283755).
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/hypertidy/wkpool}
+  \item Report bugs at \url{https://github.com/hypertidy/wkpool/issues}
+}
+
 }
 \author{
 \strong{Maintainer}: Michael Sumner \email{mdsumner@gmail.com}

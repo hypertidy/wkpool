@@ -1,0 +1,246 @@
+---
+title: "wkpool: Topology-based Geometry Handling"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{wkpool: Topology-based Geometry Handling}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(wkpool)
+```
+
+## Why topology?
+
+Simple features store geometry as complete coordinate sequences per feature.
+Two adjacent polygons duplicate their shared boundary — wasteful in memory and
+requiring expensive spatial predicates (GEOS) to rediscover adjacency.
+
+**wkpool** represents geometry as segments referencing a shared vertex pool.
+Topology emerges naturally: shared edges, neighbours, and ring structure become
+simple lookups.
+
+## Basic workflow
+
+Create two adjacent squares sharing an edge:
+
+```{r basic-setup}
+library(wk)
+library(wkpool)
+
+# Two adjacent unit squares
+poly1 <- wkt("POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))")
+poly2 <- wkt("POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))")
+geoms <- c(poly1, poly2)
+```
+
+### Establish topology
+
+```{r establish}
+pool <- establish_topology(geoms)
+pool
+```
+
+At this stage, vertices are indexed but not yet merged — the shared edge
+exists as duplicate coordinate pairs.
+
+### Inspect the raw state
+
+```{r report-before}
+topology_report(pool)
+```
+
+### Access the pool components
+
+```{r accessors}
+pool_vertices(pool)
+pool_segments(pool)
+pool_feature(pool)
+```
+
+### Merge coincident vertices
+
+```{r merge}
+pool <- merge_coincident(pool)
+topology_report(pool)
+```
+
+After merging, shared edge vertices reference the same pool indices.
+
+## Adjacency discovery
+
+### Shared edges
+
+```{r shared-edges}
+find_shared_edges(pool)
+```
+
+Returns segment indices that appear in multiple features.
+
+### Internal boundaries
+
+For polygon data, shared edges with *opposite* winding indicate true internal
+boundaries (not self-shared rings):
+
+```{r internal-boundaries}
+find_internal_boundaries(pool)
+```
+
+### Neighbour graph
+
+```{r neighbours}
+find_neighbours(pool)
+```
+
+Returns a data frame of feature pairs that share an edge.
+
+## Ring and cycle analysis
+
+Topology enables ring discovery without parsing WKT structure.
+
+### Find closed cycles
+
+```{r cycles}
+cycles <- find_cycles(pool)
+cycles
+```
+
+### Classify by winding
+
+Signed area distinguishes outer rings from holes. Following the SF convention,
+negative area indicates an outer ring, positive indicates a hole:
+
+```{r winding}
+# Area of the first cycle
+cycle_signed_area(cycles[[1]], pool_vertices(pool))
+
+# Classify all cycles
+classify_cycles(pool)
+```
+
+Use `reverse_cycle()` to flip winding if needed.
+
+## Arc-node topology
+
+Arcs are maximal sequences of segments passing through degree-2 vertices.
+Nodes are vertices where degree ≠ 2 (branch points or endpoints).
+
+```{r arc-node}
+vertex_degree(pool)
+find_nodes(pool)
+find_arcs(pool)
+arc_node_summary(pool)
+```
+
+## Round-trip to WKT
+
+Convert topology back to standard geometry formats:
+
+```{r round-trip}
+# Arcs as linestrings
+arcs_to_wkt(pool)
+
+# Cycles as polygons
+cycles_to_wkt(pool)
+
+# Raw segments
+segments_to_wkt(pool, type = "linestring")[1:3]
+```
+
+## Triangulation integration
+
+The pool maps directly to constrained triangulation inputs.
+
+### RTriangle (PSLG)
+
+```{r pslg}
+pslg <- as_pslg(pool)
+str(pslg)
+```
+
+For polygons with holes, use `hole_points()` to generate interior points that
+tell the triangulator which regions to exclude:
+
+```{r triangulate, eval = requireNamespace("RTriangle", quietly = TRUE)}
+# A polygon with a hole
+holed <- wk::as_wkb(
+  "POLYGON ((0 0, 4 0, 4 4, 0 4, 0 0), (1 1, 3 1, 3 3, 1 3, 1 1))"
+)
+hp <- establish_topology(holed)
+hp <- merge_coincident(hp)
+pslg_h <- as_pslg(hp)
+holes <- hole_points(hp)
+tri <- RTriangle::triangulate(
+  RTriangle::pslg(P = pslg_h$P, S = pslg_h$S, H = holes)
+)
+```
+
+### decido (earcut)
+
+```{r decido}
+dec <- as_decido(pool)
+str(dec)
+```
+
+## Subsetting and combining
+
+Pools support `[` subsetting — the full vertex pool is retained:
+```{r subset}
+pool[1:4]
+```
+
+Combine pools from different sources:
+
+```{r combine}
+pool_a <- establish_topology(wk::wkt("POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))"))
+pool_b <- establish_topology(wk::wkt("POLYGON ((5 5, 6 5, 6 6, 5 6, 5 5))"))
+pool_combine(pool_a, pool_b)
+```
+
+## Visualization
+
+```{r plot, fig.width = 6, fig.height = 4}
+plot(pool)
+```
+
+## Related Work
+
+### Core topology/vertex-pool (hypertidy ecosystem)
+
+| Package | Where | Relationship to wkpool |
+|---------|-------|------------------------|
+| [silicate](https://CRAN.R-project.org/package=silicate) | CRAN | Mature predecessor — `SC` (edge-vertex), `ARC` (shared boundaries), `PATH` models. wkpool is the `wk`-native successor |
+| [unjoin](https://CRAN.R-project.org/package=unjoin) | CRAN | Vertex deduplication via data frame normalization — used internally by silicate |
+| [gibble](https://CRAN.R-project.org/package=gibble) | CRAN | Path/geometry indexing — conceptually similar to wkpool's segment provenance |
+
+### Mesh/triangulation
+
+| Package | Where | Notes |
+|---------|-------|-------|
+| [RTriangle](https://CRAN.R-project.org/package=RTriangle) | CRAN | Shewchuk's Triangle — constrained Delaunay, `as_pslg()` target |
+| [decido](https://CRAN.R-project.org/package=decido) | CRAN | Earcut — fast, returns vertex indices (implicit pool), `as_decido()` target |
+| [sfdct](https://CRAN.R-project.org/package=sfdct) | CRAN | RTriangle wrapper for sf objects |
+
+### Adjacency (computed, not stored)
+
+| Package | Where | Approach |
+|---------|-------|----------|
+| [spdep](https://CRAN.R-project.org/package=spdep) | CRAN | `poly2nb()` for queen/rook contiguity — computes on-demand |
+| [sf](https://CRAN.R-project.org/package=sf) | CRAN | `st_touches()`, `st_relate()` via GEOS — recomputes each time |
+
+### Other useful pieces
+
+| Package | Where | Notes |
+|---------|-------|-------|
+| [vapour](https://CRAN.R-project.org/package=vapour) | CRAN | Low-level GDAL geometry access |
+| [geodist](https://CRAN.R-project.org/package=geodist) | CRAN | Fast distances for tolerance-based merging |
+| [controlledburn](https://github.com/hypertidy/controlledburn) | GitHub | Rasterization using topology |
+
+**Key distinction**: wkpool differs from sf/spdep by *storing* topology (shared
+edges are explicit) rather than *computing* it on demand via GEOS. It's a
+lightweight, `wk`-native evolution of silicate's approach.

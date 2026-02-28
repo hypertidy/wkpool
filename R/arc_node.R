@@ -8,6 +8,15 @@
 #' @param x A wkpool (ideally after merge_coincident)
 #' @return Named integer vector: names are .vx, values are degree
 #'
+#' @examples
+#' x <- wk::as_wkb(c(
+#'   "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+#'   "POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))"
+#' ))
+#' pool <- establish_topology(x)
+#' merged <- merge_coincident(pool)
+#' vertex_degree(merged)
+#'
 #' @export
 vertex_degree <- function(x) {
   vx0 <- vctrs::field(x, ".vx0")
@@ -28,6 +37,15 @@ vertex_degree <- function(x) {
 #' Nodes are branch points (degree 3+) or endpoints (degree 1).
 #' Degree-2 vertices are pass-through points within an arc.
 #'
+#' @examples
+#' x <- wk::as_wkb(c(
+#'   "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+#'   "POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))"
+#' ))
+#' pool <- establish_topology(x)
+#' merged <- merge_coincident(pool)
+#' find_nodes(merged)
+#'
 #' @export
 find_nodes <- function(x) {
   deg <- vertex_degree(x)
@@ -43,6 +61,15 @@ find_nodes <- function(x) {
 #' @details
 #' Arcs are maximal paths through degree-2 vertices. They start and end
 #' at nodes (degree != 2) or form closed loops through degree-2 vertices.
+#'
+#' @examples
+#' x <- wk::as_wkb(c(
+#'   "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+#'   "POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))"
+#' ))
+#' pool <- establish_topology(x)
+#' merged <- merge_coincident(pool)
+#' find_arcs(merged)
 #'
 #' @export
 find_arcs <- function(x) {
@@ -156,6 +183,15 @@ find_arcs <- function(x) {
 #' @param arc_id Logical: add .arc column to track arc membership?
 #' @return A wkpool with segments grouped by arc
 #'
+#' @examples
+#' x <- wk::as_wkb(c(
+#'   "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+#'   "POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))"
+#' ))
+#' pool <- establish_topology(x)
+#' merged <- merge_coincident(pool)
+#' as_arcs(merged)
+#'
 #' @export
 as_arcs <- function(x, arc_id = TRUE) {
   arcs <- find_arcs(x)
@@ -192,6 +228,15 @@ as_arcs <- function(x, arc_id = TRUE) {
 #'
 #' @param x A wkpool (ideally after merge_coincident)
 #' @return List with counts and degree distribution
+#'
+#' @examples
+#' x <- wk::as_wkb(c(
+#'   "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+#'   "POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))"
+#' ))
+#' pool <- establish_topology(x)
+#' merged <- merge_coincident(pool)
+#' arc_node_summary(merged)
 #'
 #' @export
 arc_node_summary <- function(x) {

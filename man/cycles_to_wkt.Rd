@@ -29,3 +29,13 @@ Converts cycles back to polygons. When feature = TRUE, attempts to
 reconstruct original polygon structure by grouping rings by feature
 and nesting holes within their containing outer ring.
 }
+\examples{
+x <- wk::as_wkb(c(
+  "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+  "POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))"
+))
+pool <- establish_topology(x)
+merged <- merge_coincident(pool)
+cycles_to_wkt(merged)
+
+}

@@ -15,3 +15,14 @@ A wkpool with only referenced vertices, .vx remapped
 \description{
 Compact a pool by removing unreferenced vertices
 }
+\examples{
+x <- wk::as_wkb(c(
+  "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+  "POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))"
+))
+pool <- establish_topology(x)
+merged <- merge_coincident(pool)
+compact <- pool_compact(merged)
+nrow(pool_vertices(compact))
+
+}

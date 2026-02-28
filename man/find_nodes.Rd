@@ -19,3 +19,13 @@ Find nodes (vertices where degree != 2)
 Nodes are branch points (degree 3+) or endpoints (degree 1).
 Degree-2 vertices are pass-through points within an arc.
 }
+\examples{
+x <- wk::as_wkb(c(
+  "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+  "POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))"
+))
+pool <- establish_topology(x)
+merged <- merge_coincident(pool)
+find_nodes(merged)
+
+}

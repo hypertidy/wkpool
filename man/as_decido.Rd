@@ -19,3 +19,9 @@ Convert wkpool to decido-ready format
 Produces format suitable for decido::earcut() constrained triangulation.
 Note: decido uses 0-indexed segments.
 }
+\examples{
+x <- wk::as_wkb("POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))")
+pool <- establish_topology(x)
+as_decido(pool)
+
+}

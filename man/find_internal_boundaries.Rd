@@ -21,3 +21,13 @@ another feature has (v1→v0) — i.e., they share the edge but traverse it
 in opposite directions. This is the defining characteristic of a shared
 polygon boundary.
 }
+\examples{
+x <- wk::as_wkb(c(
+  "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+  "POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))"
+))
+pool <- establish_topology(x)
+merged <- merge_coincident(pool)
+find_internal_boundaries(merged)
+
+}

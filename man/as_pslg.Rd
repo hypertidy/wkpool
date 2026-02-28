@@ -23,10 +23,8 @@ with RTriangle. The vertex pool maps directly to P, and segment indices
 map directly to S (both 1-indexed).
 }
 \examples{
-\dontrun{
-x <- establish_topology(my_polygons)
-pslg <- as_pslg(x)
-tri <- RTriangle::triangulate(RTriangle::pslg(P = pslg$P, S = pslg$S))
-}
+x <- wk::as_wkb("POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))")
+pool <- establish_topology(x)
+as_pslg(pool)
 
 }

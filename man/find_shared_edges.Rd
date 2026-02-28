@@ -21,3 +21,13 @@ across features (e.g., shared polygon boundaries) will reference
 the same vertex pair. This function finds them and reports which
 features share each edge.
 }
+\examples{
+x <- wk::as_wkb(c(
+  "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
+  "POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))"
+))
+pool <- establish_topology(x)
+merged <- merge_coincident(pool)
+find_shared_edges(merged)
+
+}

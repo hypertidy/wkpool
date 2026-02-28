@@ -19,3 +19,11 @@ Reverse a cycle's winding direction
 Flips the traversal direction of a cycle without changing coordinates.
 Useful for converting between winding conventions.
 }
+\examples{
+x <- wk::as_wkb("POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))")
+pool <- establish_topology(x)
+merged <- merge_coincident(pool)
+cycles <- find_cycles(merged)
+reverse_cycle(cycles[[1]])
+
+}
