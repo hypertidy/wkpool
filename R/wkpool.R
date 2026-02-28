@@ -225,10 +225,9 @@ pool_combine <- function(...) {
 #' Attempts to combine wkpool vectors with vec_c will suggest
 #' using [pool_combine()' instead.
 #' @inheritParams vctrs::vec_c
-#' @inheritDotParams vctrs::vec_c
 #' @export
 #' @importFrom vctrs vec_c
-#' @export vec_c
+#' @exportS3Method vctrs::vec_c
 #' @name vec_c
 #' @return nothing, used for a message side-effect (see Details)
 #' @seealso [pool_combine()]

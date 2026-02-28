@@ -8,23 +8,17 @@
 arcs_to_wkb(x, ...)
 
 arcs_to_wkt(x)
-
-arcs_to_wkb(x, ...)
 }
 \arguments{
-\item{x}{A wkpool}
+\item{x}{A wkpool (ideally after merge_coincident)}
 
-\item{...}{Passed to wk::as_wkb}
+\item{...}{Passed to \code{\link[wk:wkb]{wk::as_wkb()}}}
 }
 \value{
 A wk_wkt vector of LINESTRING geometries
-
-A wk_wkb vector
 }
 \description{
 Convert arcs to WKT linestrings
-
-Convert wkpool to wkb
 }
 \details{
 Each arc (maximal segment sequence between nodes) becomes a linestring.

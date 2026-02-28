@@ -35,6 +35,7 @@ arcs_to_wkt <- function(x) {
     return(wk::wkt(character(0)))
   }
   arcs <- find_arcs(x)
+  if (length(arcs) == 0) return(wk::wkt(character(0)))
   pool <- pool_vertices(x)
 
   wkts <- vapply(arcs, function(arc) {
@@ -75,6 +76,7 @@ cycles_to_wkt <- function(x, feature = TRUE, convention = c("sf", "ogc")) {
   check_wkpool(x)
   convention <- match.arg(convention)
   cycles <- find_cycles(x)
+  if (length(cycles) == 0) return(wk::wkt(character(0)))
   pool <- pool_vertices(x)
   segs <- pool_segments(x)
 
@@ -189,7 +191,7 @@ segments_to_wkt <- function(x, type = c("multilinestring", "linestring", "point"
   type <- match.arg(type)
   pool <- pool_vertices(x)
   segs <- pool_segments(x)
-
+  if (length(segs) == 0) return(wk::wkt(character(0)))
   if (type == "point") {
     wkts <- paste0("POINT (", pool$x, " ", pool$y, ")")
     return(wk::wkt(wkts))
@@ -221,22 +223,6 @@ segments_to_wkt <- function(x, type = c("multilinestring", "linestring", "point"
   wk::wkt(wkt)
 }
 
-
-#' Convert wkpool to wkb
-#'
-#' @param x A wkpool
-#' @param ... Passed to wk::as_wkb
-#' @return A wk_wkb vector
-#'
-#' @rdname arcs_to_wkt
-#' @export
-arcs_to_wkb <- function(x, ...) {
-  check_wkpool(x)
-  if (length(x) < 1) {
-    return(wk::as_wkb(wk::wkt(character(0))))
-  }
-  wk::as_wkb(arcs_to_wkt(x), ...)
-}
 
 
 #' @param ... Passed to [wk::as_wkb()]

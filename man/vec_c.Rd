@@ -5,42 +5,10 @@
 \alias{vec_c.wkpool}
 \title{Combine many wkpool vectors into one vector}
 \usage{
-vec_c.wkpool(..., .ptype = NULL)
+\method{vec_c}{wkpool}(..., .ptype = NULL)
 }
 \arguments{
-\item{...}{
-  Arguments passed on to \code{\link[vctrs:vec_c]{vctrs::vec_c}}
-  \describe{
-    \item{\code{.name_spec}}{A name specification for combining
-inner and outer names. This is relevant for inputs passed with a
-name, when these inputs are themselves named, like \code{outer = c(inner = 1)}, or when they have length greater than 1: \code{outer = 1:2}. By default, these cases trigger an error. You can resolve
-the error by providing a specification that describes how to
-combine the names or the indices of the inner vector with the
-name of the input. This specification can be:
-\itemize{
-\item A function of two arguments. The outer name is passed as a
-string to the first argument, and the inner names or positions
-are passed as second argument.
-\item An anonymous function as a purrr-style formula.
-\item A glue specification of the form \code{"{outer}_{inner}"}.
-\item \code{"inner"}, in which case outer names are ignored, and inner
-names are used if they exist. Note that outer names may still
-be used to provide informative error messages.
-\item An \code{\link[rlang:zap]{rlang::zap()}} object, in which case both outer and inner
-names are ignored and the result is unnamed.
-}
-
-See the \link[vctrs:name_spec]{name specification topic}.}
-    \item{\code{.name_repair}}{How to repair names, see \code{repair} options in
-\code{\link[vctrs:vec_as_names]{vec_as_names()}}.}
-    \item{\code{.error_arg}}{An argument name as a string. This argument
-will be mentioned in error messages as the input that is at the
-origin of a problem.}
-    \item{\code{.error_call}}{The execution environment of a currently
-running function, e.g. \code{caller_env()}. The function will be
-mentioned in error messages as the source of the error. See the
-\code{call} argument of \code{\link[rlang:abort]{abort()}} for more information.}
-  }}
+\item{...}{Vectors to coerce.}
 
 \item{.ptype}{If \code{NULL}, the default, the output type is determined by
 computing the common type across all elements of \code{...}.

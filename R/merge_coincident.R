@@ -486,7 +486,7 @@ find_neighbours <- function(x, type = c("edge", "vertex")) {
   feature <- pool_feature(x)
 
   if (is.null(feature)) {
-    stop("wkpool has no feature information")
+    stop("wkpool object has no feature information.", call. = FALSE)
   }
 
   if (type == "edge") {
