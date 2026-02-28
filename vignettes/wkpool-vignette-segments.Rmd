@@ -191,21 +191,19 @@ Simple Features is the interchange format. Segments are the working format.
 The vertex pool and segment table map directly to constrained triangulation
 inputs --- no coordinate extraction or reformatting needed:
 
-```{r pslg}
-# RTriangle PSLG format
+RTriangle PSLG format (without classing)
+
+```{r interch, include = FALSE}
 pslg <- as_pslg(pool)
 str(pslg)
+#RTriangle::pslg(P = pslg$P, S = pslg$S)
 
-# decido (earcut) format
-dec <- as_decido(pool)
-str(dec)
 ```
-
 The pool *is* the PSLG. The mapping is structural, not a conversion.
 
 ## Segments in movement data
 
-wkpool's insight applies beyond polygons. Track data --- animal movement, vessel
+wkpool applies beyond polygons. Track data --- animal movement, vessel
 tracks, GPS logs --- is inherently a sequence of segments. Each step between
 consecutive fixes carries a bearing, distance, speed, and duration.
 

@@ -17,13 +17,13 @@ library(wkpool)
 
 ## Why topology?
 
-Simple features store geometry as complete coordinate sequences per feature.
-Two adjacent polygons duplicate their shared boundary — wasteful in memory and
-requiring expensive spatial predicates (GEOS) to rediscover adjacency.
-
 **wkpool** represents geometry as segments referencing a shared vertex pool.
 Topology emerges naturally: shared edges, neighbours, and ring structure become
 simple lookups.
+
+Simple features store geometry as complete coordinate sequences per feature.
+Two adjacent polygons duplicate their shared boundary — wasteful in entropy and
+requiring spatial predicates (GEOS) to rediscover adjacency.
 
 ## Basic workflow
 
@@ -180,9 +180,10 @@ tri <- RTriangle::triangulate(
 )
 ```
 
+
+```{r decido, include = FALSE, eval = FALSE}
 ### decido (earcut)
 
-```{r decido}
 dec <- as_decido(pool)
 str(dec)
 ```
@@ -216,7 +217,7 @@ plot(pool)
 |---------|-------|------------------------|
 | [silicate](https://CRAN.R-project.org/package=silicate) | CRAN | Mature predecessor — `SC` (edge-vertex), `ARC` (shared boundaries), `PATH` models. wkpool is the `wk`-native successor |
 | [unjoin](https://CRAN.R-project.org/package=unjoin) | CRAN | Vertex deduplication via data frame normalization — used internally by silicate |
-| [gibble](https://CRAN.R-project.org/package=gibble) | CRAN | Path/geometry indexing — conceptually similar to wkpool's segment provenance |
+| [wk](https://CRAN.R-project.org/package=wk) | CRAN | Path/geometry indexing via `wk_coords()` |
 
 ### Mesh/triangulation
 
@@ -230,16 +231,8 @@ plot(pool)
 
 | Package | Where | Approach |
 |---------|-------|----------|
-| [spdep](https://CRAN.R-project.org/package=spdep) | CRAN | `poly2nb()` for queen/rook contiguity — computes on-demand |
+| [sfdep](https://CRAN.R-project.org/package=sfdep) | CRAN | `st_contiguity()` computes on-demand |
 | [sf](https://CRAN.R-project.org/package=sf) | CRAN | `st_touches()`, `st_relate()` via GEOS — recomputes each time |
-
-### Other useful pieces
-
-| Package | Where | Notes |
-|---------|-------|-------|
-| [vapour](https://CRAN.R-project.org/package=vapour) | CRAN | Low-level GDAL geometry access |
-| [geodist](https://CRAN.R-project.org/package=geodist) | CRAN | Fast distances for tolerance-based merging |
-| [controlledburn](https://github.com/hypertidy/controlledburn) | GitHub | Rasterization using topology |
 
 **Key distinction**: wkpool differs from sf/spdep by *storing* topology (shared
 edges are explicit) rather than *computing* it on demand via GEOS. It's a

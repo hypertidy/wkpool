@@ -194,6 +194,11 @@ find_internal_boundaries <- function(x) {
 #' with RTriangle. The vertex pool maps directly to P, and segment indices
 #' map directly to S (both 1-indexed).
 #'
+#' Note: Hole detection is not currently supported. The returned pslg
+#' does not include hole points (H). For polygons with holes, you may
+#' need to identify hole points manually using `find_cycles()` and
+#' `cycle_signed_area()`.
+#'
 #' @examples
 #' x <- wk::as_wkb("POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))")
 #' pool <- establish_topology(x)
@@ -204,7 +209,6 @@ as_pslg <- function(x, ...) {
   x <- merge_coincident(x, ...)
   v <- pool_vertices(x)
   s <- pool_segments(x)
-
   list(
     P = cbind(v$x, v$y),
     S = cbind(s$.vx0, s$.vx1)
@@ -226,7 +230,8 @@ as_pslg <- function(x, ...) {
 #' pool <- establish_topology(x)
 #' as_decido(pool)
 #'
-#' @export
+#' @noRd
+#' @keywords internal
 as_decido <- function(x) {
  x <- merge_coincident(x)
   v <- pool_vertices(x)

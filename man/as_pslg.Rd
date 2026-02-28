@@ -21,6 +21,11 @@ Convert wkpool to RTriangle pslg format
 Produces a Planar Straight Line Graph suitable for constrained triangulation
 with RTriangle. The vertex pool maps directly to P, and segment indices
 map directly to S (both 1-indexed).
+
+Note: Hole detection is not currently supported. The returned pslg
+does not include hole points (H). For polygons with holes, you may
+need to identify hole points manually using \code{find_cycles()} and
+\code{cycle_signed_area()}.
 }
 \examples{
 x <- wk::as_wkb("POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))")

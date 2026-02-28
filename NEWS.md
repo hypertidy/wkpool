@@ -1,4 +1,6 @@
-# wkpool dev
+# wkpool 0.3.0
+
+* Removed `as_decido()` which wasn't fully worked out. 
 
 * Fixed `wkpool()` which never worked before. 
 
