@@ -19,7 +19,7 @@ Vertex pool topology for geometry handled by [wk](https://github.com/paleolimbot
 
 ## Design philosophy
 
-Simple features throws away topology — every polygon stores its own coordinates, shared boundaries are duplicated, and expensive operations (GEOS) are needed to rediscover structure that was there all along.
+Simple features throws away topology — every polygon stores its own coordinates, shared boundaries are duplicated, and expensive operations (GEOS) are needed to rediscover this structure which is then again discarded. 
 
 **wkpool** takes a different approach:
 
@@ -30,24 +30,38 @@ Simple features throws away topology — every polygon stores its own coordinate
 - **Feature provenance**: Segments track which feature they came from (`.feature`), enabling adjacency and boundary queries.
 
 ## Installation
-```r
-# From local source
-devtools::install()
 
-# Or load for development
-devtools::load_all()
+From CRAN use
+
+```r
+install.packages("wkpool")
 ```
+
+For development version use
+
+```r
+#install.packages("remotes")
+remotes::install_github("hypertidy/wkpool")
+```
+
 
 ## Usage
 
-```r
+```{r usage}
 library(wkpool)
 library(wk)
 
 # Any wk-handleable geometry
-x <- wk::as_wkb(sf::st_geometry(your_sf_object))
+#x <- wk::as_wkb(<wk-compatible>)
+x <- wk::as_wkb(c(
+   paste0(
+     "MULTIPOLYGON (((0 0, 0 1, 0.75 1, 1 0.8, 0.5 0.7, ",
+     "0.8 0.6, 0.69 0, 0 0), (0.2 0.2, 0.5 0.2, ",
+     "0.5 0.4, 0.3 0.6, 0.2 0.4, 0.2 0.2)))"),
+ "MULTIPOLYGON (((0.69 0, 0.8 0.6, 1.1 0.63, 1.23 0.3, 0.69 0)))"
+))
 
-# Establish topology (no merging yet)
+# Establish topology (no coordinate merging yet)
 pool <- establish_topology(x)
 
 # What do we have?
@@ -84,14 +98,12 @@ pool_segments(merged)  # data.frame: .vx0, .vx1, .feature
 
 ## Next steps
 
-- [ ] `wk_handle.wkpool()` — round-trip back to wk geometry
+- [x] `wk_handle.wkpool()` — round-trip back to wk geometry
+- [x] Path reconstruction — derive linestrings/rings from segment connectivity
+- [ ] Apply to production package (trip)
 - [ ] Triangulation integration (decido) — indexed triangles from same pool
-- [ ] Path reconstruction — derive linestrings/rings from segment connectivity
-- [ ] Consider C++ for hot paths once API is stable
+- [ ] Consider C++ once API is stable
 
-## License
-
-MIT
 
 ## Code of Conduct
   

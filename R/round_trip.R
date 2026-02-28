@@ -3,6 +3,9 @@
 #' @export
 arcs_to_wkb <- function(x, ...) {
   check_wkpool(x)
+  if (length(x) < 1) {
+    return(wk::as_wkb(wk::wkt(character(0))))
+  }
   wk::as_wkb(arcs_to_wkt(x), ...)
 }
 
@@ -28,6 +31,9 @@ arcs_to_wkb <- function(x, ...) {
 #' @export
 arcs_to_wkt <- function(x) {
   check_wkpool(x)
+  if (length(x) < 1) {
+    return(wk::wkt(character(0)))
+  }
   arcs <- find_arcs(x)
   pool <- pool_vertices(x)
 
@@ -176,6 +182,10 @@ cycles_to_wkt <- function(x, feature = TRUE, convention = c("sf", "ogc")) {
 #' @export
 segments_to_wkt <- function(x, type = c("multilinestring", "linestring", "point")) {
   check_wkpool(x)
+
+  if (length(x) < 1) {
+    return(wk::wkt(character(0)))
+  }
   type <- match.arg(type)
   pool <- pool_vertices(x)
   segs <- pool_segments(x)
@@ -222,6 +232,9 @@ segments_to_wkt <- function(x, type = c("multilinestring", "linestring", "point"
 #' @export
 arcs_to_wkb <- function(x, ...) {
   check_wkpool(x)
+  if (length(x) < 1) {
+    return(wk::as_wkb(wk::wkt(character(0))))
+  }
   wk::as_wkb(arcs_to_wkt(x), ...)
 }
 
@@ -240,5 +253,8 @@ cycles_to_wkb <- function(x, feature = TRUE, convention = c("sf", "ogc"), ...) {
 #' @export
 segments_to_wkb <- function(x, type = c("multilinestring", "linestring", "point"), ...) {
   check_wkpool(x)
+  if (length(x) < 1) {
+    return(wk::as_wkb(wk::wkt(character(0))))
+  }
   wk::as_wkb(segments_to_wkt(x, type = type), ...)
 }

@@ -1,5 +1,7 @@
 # wkpool dev
 
+* Fixed `wkpool()` which never worked before. 
+
 * Added check_wkpool helper function. 
 
 # wkpool 0.2.0

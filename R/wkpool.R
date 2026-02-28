@@ -33,7 +33,8 @@ new_wkpool <- function(vertices, vx0, vx1, feature = NULL) {
 # User constructor -------------------------------------------------------
 
 wkpool <- function(vertices, segments) {
-  vctrs::vec_assert(segments, data.frame())
+  #vctrs::vec_assert(segments, data.frame())
+  if (!is.data.frame(segments)) stop("`segments` must be a data.frame")
   feature <- if (".feature" %in% names(segments)) segments$.feature else NULL
   new_wkpool(vertices, segments$.vx0, segments$.vx1, feature = feature)
 }
@@ -217,10 +218,26 @@ pool_combine <- function(...) {
              feature = if (has_feature) new_feature else NULL)
 }
 
+#' Combine many wkpool vectors into one vector
+#'
+#' This is non-functional, wkpool does not currently support [vec_c()].
+#'
+#' Attempts to combine wkpool vectors with vec_c will suggest
+#' using [pool_combine()' instead.
+#' @inheritParams vctrs::vec_c
+#' @inheritDotParams vctrs::vec_c
 #' @export
+#' @importFrom vctrs vec_c
+#' @export vec_c
+#' @name vec_c
+#' @return nothing, used for a message side-effect (see Details)
+#' @seealso [pool_combine()]
 vec_c.wkpool <- function(..., .ptype = NULL) {
- # vctrs may not dispatch here for rcrd - use pool_combine() directly if issues
-  pool_combine(...)
+  stop(
+    "Use pool_combine() to combine wkpool objects.\n",
+    "vec_c() is not supported yet.",
+    call. = FALSE
+  )
 }
 
 # Plotting ---------------------------------------------------------------
