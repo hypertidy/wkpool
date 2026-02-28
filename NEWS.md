@@ -18,8 +18,6 @@ Arcs are the "uninterrupted lines" — sequences of segments passing only throug
 
 # wkpool 0.1.0
 
-*Like sands through the hourglass, so are the segments of our geometries.*
-
 Initial release. Vertex pool topology for wk-handleable geometry.
 
 ## Core functions

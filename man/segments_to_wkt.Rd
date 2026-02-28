@@ -14,6 +14,8 @@ segments_to_wkb(x, type = c("multilinestring", "linestring", "point"), ...)
 
 \item{type}{Output type: "linestring" (segments as paths), "multilinestring" (all segments),
 or "point" (vertices only)}
+
+\item{...}{Passed to \code{\link[wk:wkb]{wk::as_wkb()}}}
 }
 \value{
 A wk_wkt vector

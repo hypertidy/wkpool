@@ -1,0 +1,265 @@
+---
+title: "Segments: the atoms of geometry"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Segments: the atoms of geometry}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## What is a segment?
+
+Two connected vertices. That's it.
+
+A segment is the atom of geometry. Every line is a sequence of segments. Every
+polygon boundary is a cycle of segments. Every track step between consecutive
+GPS fixes is a segment with a duration. It's the simplest spatial primitive that
+encodes *connection* rather than just *position*.
+
+Simple Features --- the dominant spatial data model --- hides segments inside
+sealed coordinate sequences. A polygon is a ring of coordinates. A line is a
+list of coordinates. The connections between consecutive vertices are implicit.
+To discover them you extract coordinates, pair consecutive points, and rebuild
+the structure yourself. Every time.
+
+wkpool makes segments explicit.
+
+## The cost of sealed geometry
+
+Consider two adjacent polygons sharing a boundary:
+
+```{r setup}
+library(wkpool)
+library(wk)
+
+two_squares <- c(
+  wkt("POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))"),
+  wkt("POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))")
+)
+```
+
+In Simple Features, these are two independent geometries. Each owns its
+coordinates. The shared edge from (1,0) to (1,1) is duplicated --- encoded
+separately in both polygons with no structural record that they share a
+boundary. To discover the shared edge, you'd need `sf::st_intersection()` or
+equivalent, which runs the full GEOS machinery on every coordinate.
+
+With wkpool, decompose to segments and the structure is *visible*:
+
+```{r decompose}
+pool <- establish_topology(two_squares)
+pool
+```
+
+At this stage every coordinate has been minted as a vertex with an integer ID,
+and every consecutive pair within a ring has become a segment. But the vertices
+from different features are still separate --- the shared edge exists as
+duplicate coordinate pairs. `topology_report()` shows the raw state:
+
+```{r report-raw}
+topology_report(pool)
+```
+
+Now merge coincident vertices:
+
+```{r merge}
+pool <- merge_coincident(pool)
+topology_report(pool)
+```
+
+After merging, the two copies of (1,0) are now the same vertex ID, and the
+two copies of (1,1) are the same vertex ID. The shared boundary is a structural
+fact --- two segments in different features that reference the same vertex pair.
+
+## What becomes easy
+
+With segments as explicit objects, operations that are expensive on Simple
+Features become table lookups.
+
+**Shared boundaries** --- segments that appear in more than one feature:
+
+```{r shared}
+find_shared_edges(pool)
+```
+
+In Simple Features this requires geometric intersection tests. Here it's a
+grouped count on vertex-pair indices.
+
+**Neighbours** --- which features share structure:
+
+```{r neighbours}
+find_neighbours(pool)
+```
+
+The adjacency graph falls out of a self-join on shared segments.
+
+**Internal boundaries** --- shared edges with opposite winding, the defining
+signature of a true polygon boundary (as opposed to a self-touching ring):
+
+```{r internal}
+find_internal_boundaries(pool)
+```
+
+**Topology-preserving simplification** --- reduce vertex count while keeping
+shared boundaries aligned. With wkpool, shared vertices are identified by index.
+Simplify the vertex pool, and every feature that references those vertices
+updates together. In Simple Features you simplify each geometry independently,
+and shared boundaries drift apart.
+
+## The full topology
+
+wkpool provides the complete arc-node decomposition that Simple Features
+leaves implicit.
+
+**Vertex degree** tells you where topology is interesting:
+
+```{r degree}
+vertex_degree(pool)
+```
+
+Degree-2 vertices are interior to an arc --- they're the "pass-through" points.
+Degree != 2 means a node: a branch point, an endpoint, or a junction where
+multiple features meet.
+
+**Nodes** --- the vertices where topology happens:
+
+```{r nodes}
+find_nodes(pool)
+```
+
+**Arcs** --- maximal sequences of segments between nodes:
+
+```{r arcs}
+find_arcs(pool)
+arc_node_summary(pool)
+```
+
+This is the arc-node model from computational geometry (de Berg et al. 2008),
+expressed as data frames rather than linked-list pointer structures. The same
+decomposition that PostGIS topology provides as a heavyweight extension, wkpool
+provides as a table operation on the segment pool.
+
+## Cycles and winding
+
+Cycles are closed loops in the segment graph. For polygon data, they correspond
+to rings:
+
+```{r cycles}
+cycles <- find_cycles(pool)
+cycles
+```
+
+Signed area from the shoelace formula distinguishes outer rings from holes
+--- negative area is an outer ring in the SF convention:
+
+```{r classify}
+classify_cycles(pool)
+```
+
+This is *intrinsic* --- we observe winding from the coordinate order, we don't
+declare it via metadata. The geometry tells you what it is.
+
+## The round trip
+
+wkpool decomposes Simple Features into vertices and segments. It goes back too:
+
+```{r roundtrip}
+# Arcs as linestrings (the topological boundary representation)
+arcs_to_wkt(pool)
+
+# Cycles as polygons
+cycles_to_wkt(pool)
+```
+
+This is the "SF at the edges" principle. Read geometry in any format wk can
+handle (WKT, WKB, sf, geos, s2). Decompose to vertices and segments for
+analysis. Recompose to Simple Features when you need to write, plot, or hand
+off to another tool.
+
+Simple Features is the interchange format. Segments are the working format.
+
+## Integration: triangulation
+
+The vertex pool and segment table map directly to constrained triangulation
+inputs --- no coordinate extraction or reformatting needed:
+
+```{r pslg}
+# RTriangle PSLG format
+pslg <- as_pslg(pool)
+str(pslg)
+
+# decido (earcut) format
+dec <- as_decido(pool)
+str(dec)
+```
+
+The pool *is* the PSLG. The mapping is structural, not a conversion.
+
+## Segments in movement data
+
+wkpool's insight applies beyond polygons. Track data --- animal movement, vessel
+tracks, GPS logs --- is inherently a sequence of segments. Each step between
+consecutive fixes carries a bearing, distance, speed, and duration.
+
+The traipse package works directly on this segment view:
+
+```{r tracks, eval = requireNamespace("traipse", quietly = TRUE)}
+library(traipse)
+
+# 5 GPS fixes from a Southern Ocean track
+x <- c(147.0, 147.5, 148.1, 148.3, 148.0)
+y <- c(-42.0, -42.3, -42.5, -42.2, -41.9)
+
+# Each function operates on the implicit segment between consecutive points
+track_bearing(x, y)
+track_distance(x, y)
+```
+
+traipse doesn't construct a LINESTRING and decompose it. It works directly
+on the consecutive vertex pairs. The segments *are* the data. The trip package
+builds on this: a trip is a grouped tibble of ordered coordinates, and every
+analytical operation runs on the segment view via `dplyr::lead()` and
+`dplyr::lag()` within groups. No geometry column, no format conversion, no
+decomposition/reconstruction cycle.
+
+## Why this matters now
+
+Apache Arrow is becoming the universal columnar memory format, and GeoArrow is
+defining how geometry lives in Arrow's layout. A GeoArrow polygon is already
+stored as coordinate arrays with offset indices --- structurally closer to a
+vertex pool than to a sealed WKB blob.
+
+wkpool is a proof of concept for what GeoArrow-native analysis could look like:
+work on decomposed vertices and segments directly, without round-tripping through
+Simple Features semantics. The same principle applies in any language.
+
+## The lineage
+
+The ideas in wkpool trace back to the silicate package (2016), which explored
+topological data models for spatial data in R using PATH, ARC, and SC
+(segment-and-constraint) models. silicate was the right direction but required
+buying into a heavy ontology. wkpool is the lean successor: just the vertex pool
+and segment table, built on wk handlers, with none of the broader model
+machinery.
+
+As Mark Padgham observed when he found the silicate project: "segments are
+prime." Every network edge, every polygon boundary, every track step reduces to
+a segment. They are the universal primitive that Simple Features was designed to
+hide.
+
+## Further reading
+
+- `vignette("wkpool")` --- complete API reference with all functions
+- The [hypertidy](https://github.com/hypertidy) ecosystem: composable spatial
+  primitives for R
+- de Berg, M. et al. (2008). *Computational Geometry: Algorithms and
+  Applications*. Springer. (Arc-node topology, DCEL)
+- Sumner et al. (in prep). "Simple Features is a Rendering Format" ---
+  the full argument for primitives-first spatial data architecture
