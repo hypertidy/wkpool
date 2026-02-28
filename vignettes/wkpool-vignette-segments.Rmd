@@ -16,18 +16,18 @@ knitr::opts_chunk$set(
 
 ## What is a segment?
 
-Two connected vertices. That's it.
+Two connected vertices. 
 
 A segment is the atom of geometry. Every line is a sequence of segments. Every
 polygon boundary is a cycle of segments. Every track step between consecutive
 GPS fixes is a segment with a duration. It's the simplest spatial primitive that
 encodes *connection* rather than just *position*.
 
-Simple Features --- the dominant spatial data model --- hides segments inside
+Simple Features --- a dominant spatial data model --- hides segments inside
 sealed coordinate sequences. A polygon is a ring of coordinates. A line is a
 list of coordinates. The connections between consecutive vertices are implicit.
 To discover them you extract coordinates, pair consecutive points, and rebuild
-the structure yourself. Every time.
+the structure. 
 
 wkpool makes segments explicit.
 
@@ -115,8 +115,7 @@ and shared boundaries drift apart.
 
 ## The full topology
 
-wkpool provides the complete arc-node decomposition that Simple Features
-leaves implicit.
+wkpool provides the arc-node decomposition.   
 
 **Vertex degree** tells you where topology is interesting:
 
@@ -143,8 +142,10 @@ arc_node_summary(pool)
 
 This is the arc-node model from computational geometry (de Berg et al. 2008),
 expressed as data frames rather than linked-list pointer structures. The same
-decomposition that PostGIS topology provides as a heavyweight extension, wkpool
-provides as a table operation on the segment pool.
+decomposition that PostGIS topology provides, and Arc/INFO is probably the most
+famous implementation, remnants exist in .e00 format and some other softwares. This
+linear-only topology also highlights clearly how polygons are *just lines*, they aren't
+composed of 2D topology (triangles) in many modern geo software. 
 
 ## Cycles and winding
 
@@ -242,23 +243,17 @@ Simple Features semantics. The same principle applies in any language.
 
 ## The lineage
 
-The ideas in wkpool trace back to the silicate package (2016), which explored
-topological data models for spatial data in R using PATH, ARC, and SC
-(segment-and-constraint) models. silicate was the right direction but required
-buying into a heavy ontology. wkpool is the lean successor: just the vertex pool
-and segment table, built on wk handlers, with none of the broader model
-machinery.
-
-As Mark Padgham observed when he found the silicate project: "segments are
-prime." Every network edge, every polygon boundary, every track step reduces to
-a segment. They are the universal primitive that Simple Features was designed to
-hide.
+The ideas in wkpool trace back to experiences with Arc/INFO, Myriax Eonfusion, and the
+silicate package
+[10.32614/CRAN.package.silicate](https://CRAN.R-project.org/package=silicate),
+which explored topological data models for spatial data in R using PATH/PATH0,
+ARC/ARC0, SC/SC0, TRI/TRI0 (segment-and-constraint) models. wkpool is leaner:
+the vertex pool and segment table, built on wk handlers, without the full
+ontology of silicate. Every network edge, every polygon boundary, every
+track step reduces to a segment. 
 
 ## Further reading
 
-- `vignette("wkpool")` --- complete API reference with all functions
-- The [hypertidy](https://github.com/hypertidy) ecosystem: composable spatial
-  primitives for R
 - de Berg, M. et al. (2008). *Computational Geometry: Algorithms and
   Applications*. Springer. (Arc-node topology, DCEL)
 
