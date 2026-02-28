@@ -13,6 +13,11 @@ knitr::opts_chunk$set(
 )
 ```
 
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/hypertidy/wkpool/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/hypertidy/wkpool/actions/workflows/R-CMD-check.yaml)
+[![CRAN status](https://www.r-pkg.org/badges/version/wkpool)](https://CRAN.R-project.org/package=wkpool)
+<!-- badges: end -->
+  
 # wkpool
 
 Vertex pool topology for geometry handled by [wk](https://github.com/paleolimbot/wk).
