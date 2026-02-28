@@ -6,7 +6,8 @@ library(vctrs)
 
 # The minimal_mesh from silicate - two adjacent multipolygons
 x <- wk::as_wkb(c(
-  "MULTIPOLYGON (((0 0, 0 1, 0.75 1, 1 0.8, 0.5 0.7, 0.8 0.6, 0.6899999999999999 0, 0 0), (0.2 0.2, 0.5 0.2, 0.5 0.4, 0.3 0.6, 0.2 0.4, 0.2 0.2)))",
+  "MULTIPOLYGON (((0 0, 0 1, 0.75 1, 1 0.8, 0.5 0.7, 0.8 0.6, 0.6899999999999999 0, 0 0),
+  (0.2 0.2, 0.5 0.2, 0.5 0.4, 0.3 0.6, 0.2 0.4, 0.2 0.2)))",
   "MULTIPOLYGON (((0.6899999999999999 0, 0.8 0.6, 1.1 0.63, 1.23 0.3, 0.6899999999999999 0)))"
 ))
 
@@ -83,21 +84,21 @@ cat("\n=== Plotting (if interactive) ===\n")
 if (interactive()) {
   vertices <- pool_vertices(merged)
   segs <- pool_segments(merged)
-  
+
   # Color by feature
   feature_cols <- c("steelblue", "coral", "forestgreen", "purple")[segs$.feature]
-  
+
   plot(vertices$x, vertices$y, pch = 19, cex = 0.5,
        xlab = "x", ylab = "y", main = "minimal_mesh as wkpool (colored by feature)")
-  
+
   # Lookup vertex coords and draw all segments at once
   idx0 <- match(segs$.vx0, vertices$.vx)
   idx1 <- match(segs$.vx1, vertices$.vx)
   segments(vertices$x[idx0], vertices$y[idx0],
            vertices$x[idx1], vertices$y[idx1],
            col = feature_cols, lwd = 2)
-  
+
   text(vertices$x, vertices$y, vertices$.vx, cex = 0.7, pos = 3)
-  legend("topright", legend = paste("Feature", unique(segs$.feature)), 
+  legend("topright", legend = paste("Feature", unique(segs$.feature)),
          col = c("steelblue", "coral")[unique(segs$.feature)], lwd = 2)
 }

@@ -261,5 +261,4 @@ hide.
   primitives for R
 - de Berg, M. et al. (2008). *Computational Geometry: Algorithms and
   Applications*. Springer. (Arc-node topology, DCEL)
-- Sumner et al. (in prep). "Simple Features is a Rendering Format" ---
-  the full argument for primitives-first spatial data architecture
+
