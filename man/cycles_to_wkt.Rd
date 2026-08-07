@@ -18,7 +18,7 @@ If FALSE, each cycle becomes a separate polygon.}
 
 \item{convention}{Winding convention: "sf" (default) or "ogc"}
 
-\item{...}{Passed to \code{\link[wk:wkb]{wk::as_wkb()}}}
+\item{...}{Passed to \code{\link[wk:as_wkb]{wk::as_wkb()}}}
 }
 \value{
 A wk_wkt vector of POLYGON geometries

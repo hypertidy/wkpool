@@ -16,7 +16,6 @@ URL: https://github.com/hypertidy/wkpool
 BugReports: https://github.com/hypertidy/wkpool/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Imports: 
     vctrs,
     wk (>= 0.9.4)
@@ -30,3 +29,4 @@ Suggests:
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Language: en-GB
+Config/roxygen2/version: 8.0.0

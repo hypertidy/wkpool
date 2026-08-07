@@ -12,7 +12,7 @@ arcs_to_wkt(x)
 \arguments{
 \item{x}{A wkpool (ideally after merge_coincident)}
 
-\item{...}{Passed to \code{\link[wk:wkb]{wk::as_wkb()}}}
+\item{...}{Passed to \code{\link[wk:as_wkb]{wk::as_wkb()}}}
 }
 \value{
 A wk_wkt vector of LINESTRING geometries
