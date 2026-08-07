@@ -23,6 +23,12 @@ A wk_wkt vector
 \description{
 Convert wkpool segments to WKT
 }
+\details{
+Geometry is assembled natively via \code{\link[wk:wk_linestring]{wk::wk_linestring()}} and
+\code{\link[wk:wk_collection]{wk::wk_collection()}} (WKB first, WKT derived from it): coordinates
+are emitted at full double precision, z is carried when the pool has
+it, and the pool's crs and geodesic flag are attached to the output.
+}
 \examples{
 x <- wk::as_wkb(c(
   "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",

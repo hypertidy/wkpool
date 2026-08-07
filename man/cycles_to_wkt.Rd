@@ -30,6 +30,12 @@ Convert cycles to WKT polygons
 Converts cycles back to polygons. When feature = TRUE, attempts to
 reconstruct original polygon structure by grouping rings by feature
 and nesting holes within their containing outer ring.
+
+Geometry is assembled natively via \code{\link[wk:wk_polygon]{wk::wk_polygon()}} and
+\code{\link[wk:wk_collection]{wk::wk_collection()}} (WKB first, WKT derived from it): coordinates
+are emitted at full double precision, rings are closed by wk, z is
+carried when the pool has it, and the pool's crs and geodesic flag
+are attached to the output.
 }
 \examples{
 x <- wk::as_wkb(c(

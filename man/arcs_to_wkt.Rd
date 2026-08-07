@@ -22,6 +22,11 @@ Convert arcs to WKT linestrings
 }
 \details{
 Each arc (maximal segment sequence between nodes) becomes a linestring.
+
+Geometry is assembled natively via \code{\link[wk:wk_linestring]{wk::wk_linestring()}} (WKB first,
+WKT derived from it): coordinates are emitted at full double
+precision, z is carried when the pool has it, and the pool's crs and
+geodesic flag are attached to the output.
 }
 \examples{
 x <- wk::as_wkb(c(

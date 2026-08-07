@@ -1,5 +1,26 @@
 # wkpool (development version)
 
+## Native emitters
+
+* All round-trip emitters (`arcs_to_*()`, `cycles_to_*()`,
+  `segments_to_*()`) are rebuilt on wk's C-level construction filters
+  (`wk::wk_linestring()`, `wk::wk_polygon()`, `wk::wk_collection()`).
+  WKB is now the primary product and WKT is derived from it; no
+  coordinate text is assembled anywhere in wkpool.
+
+* Consequences: WKB output preserves coordinates at full double
+  precision (previously text formatting perturbed doubles at around
+  the 15th significant digit); z vertex values are carried through all
+  emitters (previously dropped); rings are closed by wk; crs and
+  geodesic ride along by construction. WKT output uses wk's writer
+  (16 significant digits, trimmed) - use the WKB emitters when
+  bit-exact coordinates matter.
+
+* Behaviour is otherwise unchanged, including the documented
+  simplifications in `cycles_to_wkb(feature = TRUE)` (all holes with
+  the first outer; holes dropped in the multi-outer MULTIPOLYGON
+  case).
+
 ## wk_handle: a wkpool is wk-handleable
 
 * `wk::wk_handle()` is implemented for wkpool: a pool presents as one
