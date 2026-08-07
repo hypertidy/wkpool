@@ -1,5 +1,19 @@
 # wkpool (development version)
 
+## wk_handle: a wkpool is wk-handleable
+
+* `wk::wk_handle()` is implemented for wkpool: a pool presents as one
+  LINESTRING per segment (length preserved), with crs and geodesic
+  attached. The wk ecosystem's generic conversions now work directly
+  on a pool: `wk::as_wkb()`, `wk::as_wkt()`, `wk::wk_coords()`,
+  `wk::wk_meta()`, `geos::as_geos_geometry()`, and anything else built
+  on `wk_handle()`. Arcs and cycles remain explicit conversions.
+
+* The handled path is built natively from the pool (`wk::xy()` indexed
+  by the segment table, through wk's C-level linestring filter): no
+  text round trip, coordinates at full double precision, XYZ when the
+  pool carries z.
+
 ## CRS round trip
 
 * A wkpool now participates in wk's CRS propagation model. The CRS and
