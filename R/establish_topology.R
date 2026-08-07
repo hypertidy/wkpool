@@ -17,6 +17,11 @@
 #' Segments track their feature origin via `.feature` attribute,
 #' enabling discovery of shared boundaries and neighbour relations.
 #'
+#' The coordinate reference system of the input (as reported by
+#' [wk::wk_crs()]) and its geodesic flag ([wk::wk_is_geodesic()]) are
+#' captured on the pool and travel with it through subsetting, merging
+#' and compaction, and back out through the round-trip functions.
+#'
 #' @examples
 #' x <- wk::as_wkb(c(
 #'   paste0(
@@ -30,6 +35,11 @@
 #'
 #' @export
 establish_topology <- function(x, ...) {
+
+  # Capture the wk contract before decomposition: crs is opaque and
+  # carried, never interpreted; geodesic records edge interpretation
+  crs <- tryCatch(wk::wk_crs(x), error = function(e) NULL)
+  geodesic <- tryCatch(wk::wk_is_geodesic(x), error = function(e) FALSE)
 
  # wk_coords works on anything handleable
   coords <- wk::wk_coords(x)
@@ -57,7 +67,7 @@ establish_topology <- function(x, ...) {
   # We need segment from row i to row i+1 ONLY if they're in the same path
 
   if (n < 2) {
-    return(wkpool_empty())
+    return(wkpool_empty(crs = crs, geodesic = geodesic))
   }
 
   # Check which consecutive rows share the same path
@@ -75,7 +85,8 @@ establish_topology <- function(x, ...) {
   # Track feature provenance
   feature_id <- coords$feature_id[seg_idx]
 
-  new_wkpool(vertices, vx0, vx1, feature = feature_id)
+  new_wkpool(vertices, vx0, vx1, feature = feature_id,
+             crs = crs, geodesic = geodesic)
 }
 
 
@@ -117,5 +128,7 @@ pool_compact <- function(x) {
   new_vx0 <- new_pool$.vx[match(vx0, active)]
   new_vx1 <- new_pool$.vx[match(vx1, active)]
 
-  new_wkpool(new_pool, new_vx0, new_vx1, feature = feature)
+  new_wkpool(new_pool, new_vx0, new_vx1, feature = feature,
+             crs = attr(x, "crs", exact = TRUE),
+             geodesic = attr(x, "geodesic", exact = TRUE))
 }

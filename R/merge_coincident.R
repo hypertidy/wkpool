@@ -82,7 +82,9 @@ merge_coincident <- function(x, tolerance = 0) {
   final_vx0 <- unname(final_remap[as.character(new_vx0)])
   final_vx1 <- unname(final_remap[as.character(new_vx1)])
 
-  new_wkpool(new_pool, final_vx0, final_vx1, feature = feature)
+  new_wkpool(new_pool, final_vx0, final_vx1, feature = feature,
+             crs = attr(x, "crs", exact = TRUE),
+             geodesic = attr(x, "geodesic", exact = TRUE))
 }
 
 

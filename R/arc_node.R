@@ -215,15 +215,20 @@ as_arcs <- function(x, arc_id = TRUE) {
     arc_ids <- c(arc_ids, rep(i, n - 1))
   }
 
+  crs <- attr(x, "crs", exact = TRUE)
+  geodesic <- attr(x, "geodesic", exact = TRUE)
+
   if (arc_id) {
     # Construct with arc tracking
     vctrs::new_rcrd(
       list(.vx0 = vx0, .vx1 = vx1, .arc = arc_ids),
       pool = pool,
+      crs = crs,
+      geodesic = geodesic,
       class = "wkpool"
     )
   } else {
-    new_wkpool(pool, vx0, vx1)
+    new_wkpool(pool, vx0, vx1, crs = crs, geodesic = geodesic)
   }
 }
 

@@ -1,3 +1,26 @@
+# wkpool (development version)
+
+## CRS round trip
+
+* A wkpool now participates in wk's CRS propagation model. The CRS and
+  geodesic flag of the input are captured by `establish_topology()`
+  (via `wk::wk_crs()` and `wk::wk_is_geodesic()`), carried through
+  subsetting, `merge_coincident()`, `pool_compact()`, `as_arcs()` and
+  `pool_combine()`, and restored onto the output of `segments_to_wkt()`,
+  `arcs_to_wkt()`, `cycles_to_wkt()` and their WKB counterparts.
+
+* Methods for `wk::wk_crs()`, `wk::wk_set_crs()`, `wk::wk_is_geodesic()`
+  and `wk::wk_set_geodesic()` are provided for wkpool objects. The CRS is
+  opaque and carried, never interpreted, per wk convention.
+
+* `pool_combine()` resolves the CRS across inputs with
+  `wk::wk_crs_output()`: inherit values give way to concrete values, and
+  combining pools with unequal concrete CRS is an error.
+
+* `new_wkpool()` is now exported, so downstream packages that construct
+  pools directly (e.g. bigcurve) can do so through a supported
+  constructor that checks invariants and carries crs/geodesic.
+
 # wkpool 0.3.0
 
 * Removed `as_decido()` which wasn't fully worked out. 

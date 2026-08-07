@@ -7,10 +7,51 @@
 #   - Segment identity: derived from (.vx0, .vx1) pair
 #   - Primary vctr: segments (geometry is what you subset)
 #   - Vertices follow as attribute
+#   - CRS: opaque, carried in the "crs" attribute per wk convention
+#   - Geodesic: carried in the "geodesic" attribute per wk convention
+#     (NULL when FALSE, otherwise TRUE or NA)
 
-# Constructor (internal) -------------------------------------------------
+`%||%` <- function(a, b) if (is.null(a)) b else a
 
-new_wkpool <- function(vertices, vx0, vx1, feature = NULL) {
+# Mirror wk's storage convention for the geodesic attribute:
+# FALSE is stored as NULL so that the attribute is absent in the
+# common case; TRUE and NA (inherit) are stored as-is.
+geodesic_attr <- function(geodesic) {
+  if (!is.logical(geodesic) || (length(geodesic) != 1L)) {
+    stop("`geodesic` must be TRUE, FALSE, or NA", call. = FALSE)
+  }
+  if (identical(geodesic, FALSE)) NULL else geodesic
+}
+
+# Constructor ------------------------------------------------------------
+
+#' Construct a wkpool from validated components
+#'
+#' A low-level constructor for wkpool objects, for use by packages that
+#' build pools directly (for example after refining or transforming an
+#' existing pool). Inputs are checked against the wkpool invariants:
+#' every segment endpoint must be a vertex id present in the pool.
+#'
+#' @param vertices A data.frame with columns `.vx` (integer vertex ids),
+#'   `x`, `y`, and optionally `z`.
+#' @param vx0,vx1 Integer vectors of segment start/end vertex ids, each
+#'   value present in `vertices$.vx`.
+#' @param feature Optional integer vector of feature ids, one per segment.
+#' @param crs A CRS object (commonly an authority string such as
+#'   "EPSG:4326"), carried but never interpreted, per wk's CRS
+#'   propagation model. Use `NULL` for none, or [wk::wk_crs_inherit()].
+#' @param geodesic `TRUE` if segments should be interpreted as geodesics
+#'   when coordinates are spherical, `FALSE` otherwise, `NA` to inherit.
+#'
+#' @returns A wkpool object.
+#'
+#' @examples
+#' v <- data.frame(.vx = 1:3, x = c(0, 1, 1), y = c(0, 0, 1))
+#' new_wkpool(v, vx0 = c(1L, 2L), vx1 = c(2L, 3L), crs = "EPSG:4326")
+#'
+#' @export
+new_wkpool <- function(vertices, vx0, vx1, feature = NULL,
+                       crs = NULL, geodesic = FALSE) {
 
   stopifnot(is.data.frame(vertices))
   stopifnot(".vx" %in% names(vertices))
@@ -26,28 +67,91 @@ new_wkpool <- function(vertices, vx0, vx1, feature = NULL) {
   vctrs::new_rcrd(
     fields,
     pool = vertices,
+    crs = crs,
+    geodesic = if (is.null(geodesic)) NULL else geodesic_attr(geodesic),
     class = "wkpool"
   )
 }
 
 # User constructor -------------------------------------------------------
 
-wkpool <- function(vertices, segments) {
+wkpool <- function(vertices, segments, crs = NULL, geodesic = FALSE) {
   #vctrs::vec_assert(segments, data.frame())
   if (!is.data.frame(segments)) stop("`segments` must be a data.frame")
   feature <- if (".feature" %in% names(segments)) segments$.feature else NULL
-  new_wkpool(vertices, segments$.vx0, segments$.vx1, feature = feature)
+  new_wkpool(vertices, segments$.vx0, segments$.vx1, feature = feature,
+             crs = crs, geodesic = geodesic)
 }
 
 # Empty pool -------------------------------------------------------------
 
-wkpool_empty <- function() {
+wkpool_empty <- function(crs = wk::wk_crs_inherit(), geodesic = NA) {
   new_wkpool(
     vertices = data.frame(.vx = integer(), x = numeric(), y = numeric()),
     vx0 = integer(),
     vx1 = integer(),
-    feature = integer()
+    feature = integer(),
+    crs = crs,
+    geodesic = geodesic
   )
+}
+
+# CRS and geodesic -------------------------------------------------------
+
+#' CRS and geodesic handling for wkpool
+#'
+#' A wkpool participates in wk's CRS propagation model: the CRS is an
+#' opaque object carried in an attribute, never interpreted, and checked
+#' for equality when pools are combined. Likewise the geodesic flag
+#' records whether segments should be interpreted as geodesics when
+#' coordinates are spherical. Both are captured from the input by
+#' [establish_topology()], survive subsetting, merging and compaction,
+#' and are restored onto geometry produced by [segments_to_wkt()],
+#' [arcs_to_wkt()], [cycles_to_wkt()] and their WKB counterparts.
+#'
+#' @param x A wkpool object.
+#' @param crs A CRS object (commonly an authority string such as
+#'   "EPSG:4326"), or `NULL`.
+#' @param geodesic `TRUE`, `FALSE`, or `NA` (inherit).
+#'
+#' @returns
+#' - `wk_crs()`: the CRS object, or `NULL`.
+#' - `wk_set_crs()`, `wk_set_geodesic()`: `x` with the attribute replaced.
+#' - `wk_is_geodesic()`: `TRUE`, `FALSE`, or `NA`.
+#'
+#' @examples
+#' x <- wk::wkt("LINESTRING (0 0, 1 1)", crs = "EPSG:4326")
+#' pool <- establish_topology(x)
+#' wk::wk_crs(pool)
+#' wk::wk_crs(wk::wk_set_crs(pool, "EPSG:3031"))
+#'
+#' @name wkpool-crs
+NULL
+
+#' @rdname wkpool-crs
+#' @exportS3Method wk::wk_crs
+wk_crs.wkpool <- function(x) {
+  attr(x, "crs", exact = TRUE)
+}
+
+#' @rdname wkpool-crs
+#' @exportS3Method wk::wk_set_crs
+wk_set_crs.wkpool <- function(x, crs) {
+  attr(x, "crs") <- crs
+  x
+}
+
+#' @rdname wkpool-crs
+#' @exportS3Method wk::wk_is_geodesic
+wk_is_geodesic.wkpool <- function(x) {
+  attr(x, "geodesic", exact = TRUE) %||% FALSE
+}
+
+#' @rdname wkpool-crs
+#' @exportS3Method wk::wk_set_geodesic
+wk_set_geodesic.wkpool <- function(x, geodesic) {
+  attr(x, "geodesic") <- geodesic_attr(geodesic)
+  x
 }
 
 # Accessors --------------------------------------------------------------
@@ -125,7 +229,15 @@ vec_ptype_abbr.wkpool <- function(x, ...) "wkpl"
 obj_print_header.wkpool <- function(x, ...) {
   n_seg <- length(x)
   n_vtx <- nrow(pool_vertices(x))
-  cat(sprintf("<wkpool[%d segments, %d vertices]>\n", n_seg, n_vtx))
+  crs <- wk::wk_crs(x)
+  crs_label <- if (is.null(crs) || inherits(crs, "wk_crs_inherit")) {
+    ""
+  } else {
+    sprintf(" CRS=%s", format(crs)[1])
+  }
+  geo_label <- if (isTRUE(wk::wk_is_geodesic(x))) " geodesic" else ""
+  cat(sprintf("<wkpool[%d segments, %d vertices]%s%s>\n",
+              n_seg, n_vtx, crs_label, geo_label))
 }
 
 # vctrs boilerplate ------------------------------------------------------
@@ -142,10 +254,14 @@ vec_cast.wkpool.wkpool <- function(x, to, ...) {
 
 #' @export
 vec_restore.wkpool <- function(x, to, ...) {
-  # On subset: keep full pool, just subset segments
+  # On subset: keep full pool, just subset segments; crs and geodesic
+  # come along from the original vector
   pool <- pool_vertices(to)
   feature <- tryCatch(vctrs::field(x, ".feature"), error = function(e) NULL)
-  new_wkpool(pool, vctrs::field(x, ".vx0"), vctrs::field(x, ".vx1"), feature = feature)
+  new_wkpool(pool, vctrs::field(x, ".vx0"), vctrs::field(x, ".vx1"),
+             feature = feature,
+             crs = attr(to, "crs", exact = TRUE),
+             geodesic = attr(to, "geodesic", exact = TRUE))
 }
 
 # Combine pools ----------------------------------------------------------
@@ -170,6 +286,12 @@ pool_combine <- function(...) {
   }
   if (length(xs) == 0) return(wkpool_empty())
   if (length(xs) == 1) return(xs[[1]])
+
+  # Resolve crs/geodesic across inputs using wk's propagation rules:
+  # wk_crs_inherit()/NA give way to concrete values, unequal concrete
+  # values are an error
+  crs <- do.call(wk::wk_crs_output, xs)
+  geodesic <- do.call(wk::wk_is_geodesic_output, xs)
 
   # Build new pool and remap tables
   pools <- lapply(xs, pool_vertices)
@@ -215,7 +337,8 @@ pool_combine <- function(...) {
   }
 
   new_wkpool(new_pool, new_vx0, new_vx1,
-             feature = if (has_feature) new_feature else NULL)
+             feature = if (has_feature) new_feature else NULL,
+             crs = crs, geodesic = geodesic)
 }
 
 #' Combine many wkpool vectors into one vector

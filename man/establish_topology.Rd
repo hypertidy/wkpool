@@ -25,6 +25,11 @@ afterward to discover/establish shared topology.
 
 Segments track their feature origin via \code{.feature} attribute,
 enabling discovery of shared boundaries and neighbour relations.
+
+The coordinate reference system of the input (as reported by
+\code{\link[wk:wk_crs]{wk::wk_crs()}}) and its geodesic flag (\code{\link[wk:wk_is_geodesic]{wk::wk_is_geodesic()}}) are
+captured on the pool and travel with it through subsetting, merging
+and compaction, and back out through the round-trip functions.
 }
 \examples{
 x <- wk::as_wkb(c(

@@ -1,10 +1,22 @@
+# All emitters restore the pool's crs and geodesic flag onto the
+# output vector, so establish_topology() -> *_to_wkt()/*_to_wkb() is
+# crs-round-trip clean
+
+pool_wkt <- function(x, wkts) {
+  wk::wkt(wkts, crs = wk::wk_crs(x), geodesic = wk::wk_is_geodesic(x))
+}
+
+wkt_empty <- function(x) {
+  pool_wkt(x, character(0))
+}
+
 #' @param ... Passed to [wk::as_wkb()]
 #' @rdname arcs_to_wkt
 #' @export
 arcs_to_wkb <- function(x, ...) {
   check_wkpool(x)
   if (length(x) < 1) {
-    return(wk::as_wkb(wk::wkt(character(0))))
+    return(wk::as_wkb(wkt_empty(x)))
   }
   wk::as_wkb(arcs_to_wkt(x), ...)
 }
@@ -32,10 +44,10 @@ arcs_to_wkb <- function(x, ...) {
 arcs_to_wkt <- function(x) {
   check_wkpool(x)
   if (length(x) < 1) {
-    return(wk::wkt(character(0)))
+    return(wkt_empty(x))
   }
   arcs <- find_arcs(x)
-  if (length(arcs) == 0) return(wk::wkt(character(0)))
+  if (length(arcs) == 0) return(wkt_empty(x))
   pool <- pool_vertices(x)
 
   wkts <- vapply(arcs, function(arc) {
@@ -44,7 +56,7 @@ arcs_to_wkt <- function(x) {
     paste0("LINESTRING (", paste(coords, collapse = ", "), ")")
   }, character(1))
 
-  wk::wkt(wkts)
+  pool_wkt(x, wkts)
 }
 
 
@@ -76,7 +88,7 @@ cycles_to_wkt <- function(x, feature = TRUE, convention = c("sf", "ogc")) {
   check_wkpool(x)
   convention <- match.arg(convention)
   cycles <- find_cycles(x)
-  if (length(cycles) == 0) return(wk::wkt(character(0)))
+  if (length(cycles) == 0) return(wkt_empty(x))
   pool <- pool_vertices(x)
   segs <- pool_segments(x)
 
@@ -106,7 +118,7 @@ cycles_to_wkt <- function(x, feature = TRUE, convention = c("sf", "ogc")) {
       paste0("POLYGON (", ring, ")")
     }, character(1))
 
-    return(wk::wkt(wkts))
+    return(pool_wkt(x, wkts))
   }
 
   # Try to reconstruct features with holes
@@ -161,7 +173,7 @@ cycles_to_wkt <- function(x, feature = TRUE, convention = c("sf", "ogc")) {
     }
   }, character(1))
 
-  wk::wkt(wkts[!is.na(wkts)])
+  pool_wkt(x, wkts[!is.na(wkts)])
 }
 
 
@@ -186,15 +198,15 @@ segments_to_wkt <- function(x, type = c("multilinestring", "linestring", "point"
   check_wkpool(x)
 
   if (length(x) < 1) {
-    return(wk::wkt(character(0)))
+    return(wkt_empty(x))
   }
   type <- match.arg(type)
   pool <- pool_vertices(x)
   segs <- pool_segments(x)
-  if (length(segs) == 0) return(wk::wkt(character(0)))
+  if (length(segs) == 0) return(wkt_empty(x))
   if (type == "point") {
     wkts <- paste0("POINT (", pool$x, " ", pool$y, ")")
-    return(wk::wkt(wkts))
+    return(pool_wkt(x, wkts))
   }
 
   if (type == "linestring") {
@@ -207,7 +219,7 @@ segments_to_wkt <- function(x, type = c("multilinestring", "linestring", "point"
       pool$x[idx0], " ", pool$y[idx0], ", ",
       pool$x[idx1], " ", pool$y[idx1], ")"
     )
-    return(wk::wkt(wkts))
+    return(pool_wkt(x, wkts))
   }
 
   # multilinestring: all segments in one geometry
@@ -220,7 +232,7 @@ segments_to_wkt <- function(x, type = c("multilinestring", "linestring", "point"
   )
 
   wkt <- paste0("MULTILINESTRING (", paste(lines, collapse = ", "), ")")
-  wk::wkt(wkt)
+  pool_wkt(x, wkt)
 }
 
 
@@ -240,7 +252,7 @@ cycles_to_wkb <- function(x, feature = TRUE, convention = c("sf", "ogc"), ...) {
 segments_to_wkb <- function(x, type = c("multilinestring", "linestring", "point"), ...) {
   check_wkpool(x)
   if (length(x) < 1) {
-    return(wk::as_wkb(wk::wkt(character(0))))
+    return(wk::as_wkb(wkt_empty(x)))
   }
   wk::as_wkb(segments_to_wkt(x, type = type), ...)
 }
