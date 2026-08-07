@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">wkpool</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9000</span>
       </span>
     </div>
 
@@ -60,6 +60,21 @@
       <small>Source: <a href="https://github.com/hypertidy/wkpool/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="development version" id="wkpool-development-version">wkpool (development version)<a class="anchor" aria-label="anchor" href="#wkpool-development-version"></a></h2>
+<div class="section level3">
+<h3 id="wk_handle-a-wkpool-is-wk-handleable-development-version">wk_handle: a wkpool is wk-handleable<a class="anchor" aria-label="anchor" href="#wk_handle-a-wkpool-is-wk-handleable-development-version"></a></h3>
+<ul><li><p><code><a href="https://paleolimbot.github.io/wk/reference/wk_handle.html" class="external-link">wk::wk_handle()</a></code> is implemented for wkpool: a pool presents as one LINESTRING per segment (length preserved), with crs and geodesic attached. The wk ecosystem’s generic conversions now work directly on a pool: <code><a href="https://paleolimbot.github.io/wk/reference/wkb.html" class="external-link">wk::as_wkb()</a></code>, <code><a href="https://paleolimbot.github.io/wk/reference/wkt.html" class="external-link">wk::as_wkt()</a></code>, <code><a href="https://paleolimbot.github.io/wk/reference/wk_vertices.html" class="external-link">wk::wk_coords()</a></code>, <code><a href="https://paleolimbot.github.io/wk/reference/wk_meta.html" class="external-link">wk::wk_meta()</a></code>, <code>geos::as_geos_geometry()</code>, and anything else built on <code><a href="https://paleolimbot.github.io/wk/reference/wk_handle.html" class="external-link">wk_handle()</a></code>. Arcs and cycles remain explicit conversions.</p></li>
+<li><p>The handled path is built natively from the pool (<code><a href="https://paleolimbot.github.io/wk/reference/xy.html" class="external-link">wk::xy()</a></code> indexed by the segment table, through wk’s C-level linestring filter): no text round trip, coordinates at full double precision, XYZ when the pool carries z.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="crs-round-trip-development-version">CRS round trip<a class="anchor" aria-label="anchor" href="#crs-round-trip-development-version"></a></h3>
+<ul><li><p>A wkpool now participates in wk’s CRS propagation model. The CRS and geodesic flag of the input are captured by <code><a href="../reference/establish_topology.html">establish_topology()</a></code> (via <code><a href="https://paleolimbot.github.io/wk/reference/wk_crs.html" class="external-link">wk::wk_crs()</a></code> and <code><a href="https://paleolimbot.github.io/wk/reference/wk_is_geodesic.html" class="external-link">wk::wk_is_geodesic()</a></code>), carried through subsetting, <code><a href="../reference/merge_coincident.html">merge_coincident()</a></code>, <code><a href="../reference/pool_compact.html">pool_compact()</a></code>, <code><a href="../reference/as_arcs.html">as_arcs()</a></code> and <code><a href="../reference/pool_combine.html">pool_combine()</a></code>, and restored onto the output of <code><a href="../reference/segments_to_wkt.html">segments_to_wkt()</a></code>, <code><a href="../reference/arcs_to_wkt.html">arcs_to_wkt()</a></code>, <code><a href="../reference/cycles_to_wkt.html">cycles_to_wkt()</a></code> and their WKB counterparts.</p></li>
+<li><p>Methods for <code><a href="https://paleolimbot.github.io/wk/reference/wk_crs.html" class="external-link">wk::wk_crs()</a></code>, <code><a href="https://paleolimbot.github.io/wk/reference/wk_crs.html" class="external-link">wk::wk_set_crs()</a></code>, <code><a href="https://paleolimbot.github.io/wk/reference/wk_is_geodesic.html" class="external-link">wk::wk_is_geodesic()</a></code> and <code><a href="https://paleolimbot.github.io/wk/reference/wk_is_geodesic.html" class="external-link">wk::wk_set_geodesic()</a></code> are provided for wkpool objects. The CRS is opaque and carried, never interpreted, per wk convention.</p></li>
+<li><p><code><a href="../reference/pool_combine.html">pool_combine()</a></code> resolves the CRS across inputs with <code><a href="https://paleolimbot.github.io/wk/reference/wk_crs.html" class="external-link">wk::wk_crs_output()</a></code>: inherit values give way to concrete values, and combining pools with unequal concrete CRS is an error.</p></li>
+<li><p><code><a href="../reference/new_wkpool.html">new_wkpool()</a></code> is now exported, so downstream packages that construct pools directly (e.g. bigcurve) can do so through a supported constructor that checks invariants and carries crs/geodesic.</p></li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="0.3.0" id="wkpool-030">wkpool 0.3.0<small>2026-03-05</small><a class="anchor" aria-label="anchor" href="#wkpool-030"></a></h2>
 <ul><li><p>Removed <code>as_decido()</code> which wasn’t fully worked out.</p></li>
@@ -169,7 +184,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
       </footer></div>

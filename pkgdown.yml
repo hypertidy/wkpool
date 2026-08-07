@@ -1,7 +1,7 @@
-pandoc: 3.1.11
-pkgdown: 2.2.0
+pandoc: 3.8.3
+pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   wkpool-vignette-segments: wkpool-vignette-segments.html
   wkpool: wkpool.html
-last_built: 2026-03-05T22:11Z
+last_built: 2026-08-07T23:32Z

@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">wkpool</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9000</span>
       </span>
     </div>
 
@@ -216,38 +216,38 @@
 <col width="33%">
 <col width="33%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Decision</th>
 <th>Choice</th>
 <th>Rationale</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Pool scope</td>
 <td>Per-vector, sidecar attribute</td>
 <td>No wk core changes needed, n-geometry ready</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Snapping</td>
 <td>Observe don’t correct</td>
 <td>Represent truth, fixing is separate</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Vertex identity</td>
 <td>Minted <code>.vx</code> integer</td>
 <td>Survives subset, lighter than UUID</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Segment identity</td>
 <td>Derived from vertex pair</td>
 <td>No ID to track, tuple IS identity</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Primary vctr</td>
 <td>Segments</td>
 <td>Geometry is what you subset, vertices follow</td>
 </tr>
-<tr class="even">
+<tr>
 <td>Foundation</td>
 <td>vctrs</td>
 <td>Principled combine/subset, tidyverse alignment</td>
@@ -259,7 +259,7 @@
 <h2 id="next-steps">Next steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
 </h2>
 <ul class="task-list">
-<li><label><input type="checkbox" checked><code>wk_handle.wkpool()</code> — round-trip back to wk geometry</label></li>
+<li><label><input type="checkbox" checked><code><a href="reference/wk_handle.wkpool.html">wk_handle.wkpool()</a></code> — round-trip back to wk geometry</label></li>
 <li><label><input type="checkbox" checked>Path reconstruction — derive linestrings/rings from segment connectivity</label></li>
 <li><label><input type="checkbox">Apply to production package (trip)</label></li>
 <li><label><input type="checkbox">Triangulation integration (decido) — indexed triangles from same pool</label></li>
@@ -334,7 +334,7 @@
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
       </footer>

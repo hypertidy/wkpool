@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">wkpool</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9000</span>
       </span>
     </div>
 
@@ -93,6 +93,10 @@ the exact truth of the input geometry. Use merge_coincident()
 afterward to discover/establish shared topology.</p>
 <p>Segments track their feature origin via <code>.feature</code> attribute,
 enabling discovery of shared boundaries and neighbour relations.</p>
+<p>The coordinate reference system of the input (as reported by
+<code><a href="https://paleolimbot.github.io/wk/reference/wk_crs.html" class="external-link">wk::wk_crs()</a></code>) and its geodesic flag (<code><a href="https://paleolimbot.github.io/wk/reference/wk_is_geodesic.html" class="external-link">wk::wk_is_geodesic()</a></code>) are
+captured on the pool and travel with it through subsetting, merging
+and compaction, and back out through the round-trip functions.</p>
     </div>
 
     <div id="ref-examples">
@@ -121,7 +125,7 @@ enabling discovery of shared boundaries and neighbour relations.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
       </footer></div>
