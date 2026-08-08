@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">wkpool</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9002</span>
       </span>
     </div>
 
@@ -62,6 +62,12 @@
 
     <div class="section level2">
 <h2 class="page-header" data-toc-text="development version" id="wkpool-development-version">wkpool (development version)<a class="anchor" aria-label="anchor" href="#wkpool-development-version"></a></h2>
+<div class="section level3">
+<h3 id="native-emitters-development-version">Native emitters<a class="anchor" aria-label="anchor" href="#native-emitters-development-version"></a></h3>
+<ul><li><p>All round-trip emitters (<code>arcs_to_*()</code>, <code>cycles_to_*()</code>, <code>segments_to_*()</code>) are rebuilt on wk’s C-level construction filters (<code><a href="https://paleolimbot.github.io/wk/reference/wk_linestring.html" class="external-link">wk::wk_linestring()</a></code>, <code><a href="https://paleolimbot.github.io/wk/reference/wk_linestring.html" class="external-link">wk::wk_polygon()</a></code>, <code><a href="https://paleolimbot.github.io/wk/reference/wk_linestring.html" class="external-link">wk::wk_collection()</a></code>). WKB is now the primary product and WKT is derived from it; no coordinate text is assembled anywhere in wkpool.</p></li>
+<li><p>Consequences: WKB output preserves coordinates at full double precision (previously text formatting perturbed doubles at around the 15th significant digit); z vertex values are carried through all emitters (previously dropped); rings are closed by wk; crs and geodesic ride along by construction. WKT output uses wk’s writer (16 significant digits, trimmed) - use the WKB emitters when bit-exact coordinates matter.</p></li>
+<li><p>Behaviour is otherwise unchanged, including the documented simplifications in <code>cycles_to_wkb(feature = TRUE)</code> (all holes with the first outer; holes dropped in the multi-outer MULTIPOLYGON case).</p></li>
+</ul></div>
 <div class="section level3">
 <h3 id="wk_handle-a-wkpool-is-wk-handleable-development-version">wk_handle: a wkpool is wk-handleable<a class="anchor" aria-label="anchor" href="#wk_handle-a-wkpool-is-wk-handleable-development-version"></a></h3>
 <ul><li><p><code><a href="https://paleolimbot.github.io/wk/reference/wk_handle.html" class="external-link">wk::wk_handle()</a></code> is implemented for wkpool: a pool presents as one LINESTRING per segment (length preserved), with crs and geodesic attached. The wk ecosystem’s generic conversions now work directly on a pool: <code><a href="https://paleolimbot.github.io/wk/reference/wkb.html" class="external-link">wk::as_wkb()</a></code>, <code><a href="https://paleolimbot.github.io/wk/reference/wkt.html" class="external-link">wk::as_wkt()</a></code>, <code><a href="https://paleolimbot.github.io/wk/reference/wk_vertices.html" class="external-link">wk::wk_coords()</a></code>, <code><a href="https://paleolimbot.github.io/wk/reference/wk_meta.html" class="external-link">wk::wk_meta()</a></code>, <code>geos::as_geos_geometry()</code>, and anything else built on <code><a href="https://paleolimbot.github.io/wk/reference/wk_handle.html" class="external-link">wk_handle()</a></code>. Arcs and cycles remain explicit conversions.</p></li>

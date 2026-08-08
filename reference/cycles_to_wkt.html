@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">wkpool</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9002</span>
       </span>
     </div>
 
@@ -102,6 +102,11 @@ If FALSE, each cycle becomes a separate polygon.</p></dd>
     <p>Converts cycles back to polygons. When feature = TRUE, attempts to
 reconstruct original polygon structure by grouping rings by feature
 and nesting holes within their containing outer ring.</p>
+<p>Geometry is assembled natively via <code><a href="https://paleolimbot.github.io/wk/reference/wk_linestring.html" class="external-link">wk::wk_polygon()</a></code> and
+<code><a href="https://paleolimbot.github.io/wk/reference/wk_linestring.html" class="external-link">wk::wk_collection()</a></code> (WKB first, WKT derived from it): coordinates
+are emitted at full double precision, rings are closed by wk, z is
+carried when the pool has it, and the pool's crs and geodesic flag
+are attached to the output.</p>
     </div>
 
     <div id="ref-examples">
