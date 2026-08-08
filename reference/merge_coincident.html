@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">wkpool</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9003</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9004</span>
       </span>
     </div>
 
@@ -88,8 +88,18 @@ Default 0 means exact match only.</p></dd>
     </div>
     <div id="details">
     <h2>Details</h2>
-    <p>With tolerance = 0, only exactly identical coordinates are merged.
-The first occurrence becomes the canonical vertex.</p>
+    <p>With tolerance = 0, only exactly identical coordinates are merged -
+identity is the double-precision bit pattern (grouped at C level via
+vctrs), not a formatted representation, so values that differ only
+beyond printable precision remain distinct. The first occurrence
+becomes the canonical vertex; coordinates are never moved.</p>
+<p>With a nonzero tolerance, coordinates are snapped to a grid of cell
+size <code>tolerance</code> for matching (the canonical vertex keeps its
+original coordinates). Note this is a snap grid, not a distance
+guarantee: two vertices within <code>tolerance</code> of each other that
+straddle a grid-cell boundary do not merge.</p>
+<p>When the pool carries <code>z</code>, vertices are keyed on all coordinate
+columns: equal x/y with different z remain distinct vertices.</p>
 <p>This is where you discover shared boundaries between polygons,
 network connectivity, mesh topology, etc.</p>
 <p>Feature provenance (.feature) is preserved - segments keep their

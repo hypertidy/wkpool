@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">wkpool</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9003</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9004</span>
       </span>
     </div>
 
@@ -62,6 +62,14 @@
 
     <div class="section level2">
 <h2 class="page-header" data-toc-text="development version" id="wkpool-development-version">wkpool (development version)<a class="anchor" aria-label="anchor" href="#wkpool-development-version"></a></h2>
+<div class="section level3">
+<h3 id="exact-coordinate-identity-and-linear-internals-development-version">Exact coordinate identity and linear internals<a class="anchor" aria-label="anchor" href="#exact-coordinate-identity-and-linear-internals-development-version"></a></h3>
+<ul><li><p><code><a href="../reference/merge_coincident.html">merge_coincident()</a></code> now groups vertices on the double-precision bit pattern (via <code><a href="https://vctrs.r-lib.org/reference/vec_group.html" class="external-link">vctrs::vec_group_id()</a></code>) instead of formatted text keys. This fixes a silent correctness bug: the old keys went through <code><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character()</a></code> at ~15 significant digits, so distinct doubles differing only beyond printable precision merged even at <code>tolerance = 0</code>. Exact now means exact.</p></li>
+<li><p>When the pool carries <code>z</code>, vertices are keyed on all coordinate columns: equal x/y with different z no longer merge silently. Tolerance is documented honestly as a snap grid (cell size <code>tolerance</code>), not a distance guarantee, and canonical vertices keep their original coordinates.</p></li>
+<li><p><code><a href="../reference/topology_report.html">topology_report()</a></code> computes its counts directly from vertex groups instead of performing a full internal <code><a href="../reference/merge_coincident.html">merge_coincident()</a></code> plus <code><a href="../reference/find_shared_edges.html">find_shared_edges()</a></code>.</p></li>
+<li><p>The quadratic idioms are gone: <code><a href="../reference/find_arcs.html">find_arcs()</a></code> uses dense integer adjacency with amortized cursors and a preallocated walk buffer (was: character-keyed lists grown with <code><a href="https://rdrr.io/r/base/c.html" class="external-link">c()</a></code> in loops); <code><a href="../reference/pool_combine.html">pool_combine()</a></code> remaps by position with per-input offsets (was: character-named lookup tables and growing vectors); <code><a href="../reference/as_arcs.html">as_arcs()</a></code> and <code><a href="../reference/vertex_degree.html">vertex_degree()</a></code> are vectorized. On a 160x160 grid of squares (102400 segments) <code><a href="../reference/find_arcs.html">find_arcs()</a></code> drops from minutes to under half a second, and all core verbs now scale linearly.</p></li>
+<li><p><code><a href="../reference/pool_compact.html">pool_compact()</a></code> remap corrected for pools whose segment order does not follow pool order (latent indexing assumption).</p></li>
+</ul></div>
 <div class="section level3">
 <h3 id="path-provenance-path-development-version">Path provenance (.path)<a class="anchor" aria-label="anchor" href="#path-provenance-path-development-version"></a></h3>
 <ul><li><p><code><a href="../reference/establish_topology.html">establish_topology()</a></code> now mints a <code>.path</code> id per segment - one id per input ring or linestring - with a sidecar <code>paths</code> table (<code>.path</code>, <code>.feature</code>, <code>.part</code>, <code>.ring</code>, captured from <code><a href="https://paleolimbot.github.io/wk/reference/wk_vertices.html" class="external-link">wk::wk_coords()</a></code> identifiers). Provenance survives subsetting, <code><a href="../reference/merge_coincident.html">merge_coincident()</a></code>, <code><a href="../reference/pool_compact.html">pool_compact()</a></code> and <code><a href="../reference/pool_combine.html">pool_combine()</a></code> (which offsets path ids to keep them unique), and is exposed via the new accessors <code><a href="../reference/wkpool-accessors.html">pool_path()</a></code> and <code><a href="../reference/wkpool-accessors.html">pool_paths()</a></code>. <code><a href="../reference/new_wkpool.html">new_wkpool()</a></code> gains <code>path</code> and <code>paths</code> arguments.</p></li>
