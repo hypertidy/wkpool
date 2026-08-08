@@ -1,5 +1,26 @@
 # wkpool (development version)
 
+## Quotient boundary semantics
+
+* `vertex_degree()`, `find_nodes()`, `find_arcs()`, `as_arcs()`,
+  `arc_node_summary()`, `arcs_to_wkt()` and `arcs_to_wkb()` gain a
+  `quotient` argument (default FALSE, behaviour unchanged). In the
+  quotient graph, duplicated shared boundaries - the same undirected
+  vertex pair carried by more than one feature - count once: the
+  first occurrence keeps its direction, multiplicity is discarded
+  whatever its count. A vertex interior to a shared boundary has
+  quotient degree 2 (the degree-2 invariant holds at this level,
+  including for vertices minted by densification), true junctions
+  remain nodes, and `find_arcs(x, quotient = TRUE)` yields the
+  TopoJSON-style arc decomposition of a polygon layer: each shared
+  border once, not once per feature.
+
+* Characterization guards pin the default duplicated-boundary and
+  antimeridian-seam semantics as explicit contracts: boundary-interior
+  vertices are degree-4 by default, seams of a +-180 split stay
+  distinct through merge, and merge keys are exact coordinates with
+  no wrapping of any kind.
+
 ## Compiled arc kernel (first src/)
 
 * `find_arcs()` now runs on a cpp11 kernel (wkpool's first compiled

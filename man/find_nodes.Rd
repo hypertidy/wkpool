@@ -4,10 +4,17 @@
 \alias{find_nodes}
 \title{Find nodes (vertices where degree != 2)}
 \usage{
-find_nodes(x)
+find_nodes(x, quotient = FALSE)
 }
 \arguments{
 \item{x}{A wkpool (ideally after merge_coincident)}
+
+\item{quotient}{Count in the quotient graph: duplicated shared
+boundaries (the same undirected vertex pair carried by more than
+one feature) count once. A vertex interior to a shared boundary
+has quotient degree 2 - the degree-2 invariant holds at this
+level - while true junctions (three or more distinct edges) stay
+nodes. Default FALSE counts every segment.}
 }
 \value{
 Integer vector of .vx IDs that are nodes

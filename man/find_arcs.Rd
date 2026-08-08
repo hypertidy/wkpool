@@ -4,10 +4,18 @@
 \alias{find_arcs}
 \title{Find arcs (maximal segment sequences between nodes)}
 \usage{
-find_arcs(x)
+find_arcs(x, quotient = FALSE)
 }
 \arguments{
 \item{x}{A wkpool (ideally after merge_coincident)}
+
+\item{quotient}{Walk the quotient graph: duplicated shared
+boundaries collapse to a single undirected edge (first occurrence
+keeps its direction), so a boundary shared by two features
+becomes ONE arc rather than one per feature, and its interior
+vertices are degree-2 pass-throughs. This is the TopoJSON-style
+arc decomposition of a polygon layer. Default FALSE walks every
+segment.}
 }
 \value{
 A list of integer vectors, each containing .vx IDs forming an arc

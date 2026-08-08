@@ -4,10 +4,17 @@
 \alias{vertex_degree}
 \title{Calculate vertex degree (number of segments touching each vertex)}
 \usage{
-vertex_degree(x)
+vertex_degree(x, quotient = FALSE)
 }
 \arguments{
 \item{x}{A wkpool (ideally after merge_coincident)}
+
+\item{quotient}{Count in the quotient graph: duplicated shared
+boundaries (the same undirected vertex pair carried by more than
+one feature) count once. A vertex interior to a shared boundary
+has quotient degree 2 - the degree-2 invariant holds at this
+level - while true junctions (three or more distinct edges) stay
+nodes. Default FALSE counts every segment.}
 }
 \value{
 Named integer vector: names are .vx, values are degree

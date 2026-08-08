@@ -25,12 +25,12 @@ wkb_empty <- function(x) {
 #' @param ... Passed to [wk::as_wkb()]
 #' @rdname arcs_to_wkt
 #' @export
-arcs_to_wkb <- function(x, ...) {
+arcs_to_wkb <- function(x, quotient = FALSE, ...) {
   check_wkpool(x)
   if (length(x) < 1) {
     return(wk::as_wkb(wkb_empty(x), ...))
   }
-  arcs <- find_arcs(x)
+  arcs <- find_arcs(x, quotient = quotient)
   if (length(arcs) == 0) return(wk::as_wkb(wkb_empty(x), ...))
   v <- pool_vertices(x)
 
@@ -46,6 +46,7 @@ arcs_to_wkb <- function(x, ...) {
 #' Convert arcs to WKT linestrings
 #'
 #' @param x A wkpool (ideally after merge_coincident)
+#' @inheritParams find_arcs
 #' @return A wk_wkt vector of LINESTRING geometries
 #'
 #' @details
@@ -66,9 +67,9 @@ arcs_to_wkb <- function(x, ...) {
 #' arcs_to_wkt(merged)
 #'
 #' @export
-arcs_to_wkt <- function(x) {
+arcs_to_wkt <- function(x, quotient = FALSE) {
   check_wkpool(x)
-  wk::as_wkt(arcs_to_wkb(x))
+  wk::as_wkt(arcs_to_wkb(x, quotient = quotient))
 }
 
 

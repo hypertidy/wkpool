@@ -4,12 +4,20 @@
 \alias{as_arcs}
 \title{Convert arcs to a wkpool of arc segments}
 \usage{
-as_arcs(x, arc_id = TRUE)
+as_arcs(x, arc_id = TRUE, quotient = FALSE)
 }
 \arguments{
 \item{x}{A wkpool (ideally after merge_coincident)}
 
 \item{arc_id}{Logical: add .arc column to track arc membership?}
+
+\item{quotient}{Walk the quotient graph: duplicated shared
+boundaries collapse to a single undirected edge (first occurrence
+keeps its direction), so a boundary shared by two features
+becomes ONE arc rather than one per feature, and its interior
+vertices are degree-2 pass-throughs. This is the TopoJSON-style
+arc decomposition of a polygon layer. Default FALSE walks every
+segment.}
 }
 \value{
 A wkpool with segments grouped by arc

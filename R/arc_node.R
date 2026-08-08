@@ -6,6 +6,12 @@
 #' Calculate vertex degree (number of segments touching each vertex)
 #'
 #' @param x A wkpool (ideally after merge_coincident)
+#' @param quotient Count in the quotient graph: duplicated shared
+#'   boundaries (the same undirected vertex pair carried by more than
+#'   one feature) count once. A vertex interior to a shared boundary
+#'   has quotient degree 2 - the degree-2 invariant holds at this
+#'   level - while true junctions (three or more distinct edges) stay
+#'   nodes. Default FALSE counts every segment.
 #' @return Named integer vector: names are .vx, values are degree
 #'
 #' @examples
@@ -18,20 +24,37 @@
 #' vertex_degree(merged)
 #'
 #' @export
-vertex_degree <- function(x) {
+vertex_degree <- function(x, quotient = FALSE) {
   check_wkpool(x)
   vx0 <- vctrs::field(x, ".vx0")
   vx1 <- vctrs::field(x, ".vx1")
+  if (quotient) {
+    q <- quotient_edges(vx0, vx1)
+    vx0 <- q$vx0
+    vx1 <- q$vx1
+  }
   ids <- sort(unique(c(vx0, vx1)))
   out <- tabulate(match(c(vx0, vx1), ids), nbins = length(ids))
   names(out) <- ids
   out
 }
 
+# Collapse segments to unique undirected edges (the quotient graph of
+# a pool whose shared boundaries are duplicated per feature). The
+# first occurrence keeps its direction; multiplicity is discarded
+# whatever its count (2 for an ordinary shared boundary, more where
+# several features stack).
+quotient_edges <- function(vx0, vx1) {
+  gid <- vctrs::vec_group_id(data.frame(lo = pmin(vx0, vx1), hi = pmax(vx0, vx1)))
+  keep <- !duplicated(gid)
+  list(vx0 = vx0[keep], vx1 = vx1[keep])
+}
+
 
 #' Find nodes (vertices where degree != 2)
 #'
 #' @param x A wkpool (ideally after merge_coincident)
+#' @inheritParams vertex_degree
 #' @return Integer vector of .vx IDs that are nodes
 #'
 #' @details
@@ -48,9 +71,9 @@ vertex_degree <- function(x) {
 #' find_nodes(merged)
 #'
 #' @export
-find_nodes <- function(x) {
+find_nodes <- function(x, quotient = FALSE) {
   check_wkpool(x)
-  deg <- vertex_degree(x)
+  deg <- vertex_degree(x, quotient = quotient)
   as.integer(names(deg)[deg != 2])
 }
 
@@ -58,6 +81,13 @@ find_nodes <- function(x) {
 #' Find arcs (maximal segment sequences between nodes)
 #'
 #' @param x A wkpool (ideally after merge_coincident)
+#' @param quotient Walk the quotient graph: duplicated shared
+#'   boundaries collapse to a single undirected edge (first occurrence
+#'   keeps its direction), so a boundary shared by two features
+#'   becomes ONE arc rather than one per feature, and its interior
+#'   vertices are degree-2 pass-throughs. This is the TopoJSON-style
+#'   arc decomposition of a polygon layer. Default FALSE walks every
+#'   segment.
 #' @return A list of integer vectors, each containing .vx IDs forming an arc
 #'
 #' @details
@@ -74,7 +104,7 @@ find_nodes <- function(x) {
 #' find_arcs(merged)
 #'
 #' @export
-find_arcs <- function(x) {
+find_arcs <- function(x, quotient = FALSE) {
   check_wkpool(x)
   segs <- pool_segments(x)
 
@@ -83,6 +113,12 @@ find_arcs <- function(x) {
 
   vx0 <- segs$.vx0
   vx1 <- segs$.vx1
+
+  if (quotient) {
+    q <- quotient_edges(vx0, vx1)
+    vx0 <- q$vx0
+    vx1 <- q$vx1
+  }
 
   # Dense vertex indexing: work in positions 1..n_vertices, keep the
   # original ids for output
@@ -99,7 +135,7 @@ find_arcs <- function(x) {
 # Pure-R reference implementation of the arc walk. Retained as the
 # executable specification for the compiled kernel: the conformance
 # tests assert identical output on shared fixtures.
-find_arcs_walk_r <- function(x) {
+find_arcs_walk_r <- function(x, quotient = FALSE) {
   segs <- pool_segments(x)
 
   n_segs <- nrow(segs)
@@ -107,6 +143,13 @@ find_arcs_walk_r <- function(x) {
 
   vx0 <- segs$.vx0
   vx1 <- segs$.vx1
+
+  if (quotient) {
+    q <- quotient_edges(vx0, vx1)
+    vx0 <- q$vx0
+    vx1 <- q$vx1
+    n_segs <- length(vx0)
+  }
 
   ids <- sort(unique(c(vx0, vx1)))
   i0 <- match(vx0, ids)
@@ -186,6 +229,7 @@ find_arcs_walk_r <- function(x) {
 #'
 #' @param x A wkpool (ideally after merge_coincident)
 #' @param arc_id Logical: add .arc column to track arc membership?
+#' @inheritParams find_arcs
 #' @return A wkpool with segments grouped by arc
 #'
 #' @examples
@@ -198,9 +242,9 @@ find_arcs_walk_r <- function(x) {
 #' as_arcs(merged)
 #'
 #' @export
-as_arcs <- function(x, arc_id = TRUE) {
+as_arcs <- function(x, arc_id = TRUE, quotient = FALSE) {
   check_wkpool(x)
-  arcs <- find_arcs(x)
+  arcs <- find_arcs(x, quotient = quotient)
   pool <- pool_vertices(x)
 
   keep <- lengths(arcs) >= 2
@@ -231,6 +275,7 @@ as_arcs <- function(x, arc_id = TRUE) {
 #' Summarize arc-node structure
 #'
 #' @param x A wkpool (ideally after merge_coincident)
+#' @inheritParams find_arcs
 #' @return List with counts and degree distribution
 #'
 #' @examples
@@ -243,11 +288,11 @@ as_arcs <- function(x, arc_id = TRUE) {
 #' arc_node_summary(merged)
 #'
 #' @export
-arc_node_summary <- function(x) {
+arc_node_summary <- function(x, quotient = FALSE) {
   check_wkpool(x)
-  deg <- vertex_degree(x)
-  arcs <- find_arcs(x)
-  nodes <- find_nodes(x)
+  deg <- vertex_degree(x, quotient = quotient)
+  arcs <- find_arcs(x, quotient = quotient)
+  nodes <- find_nodes(x, quotient = quotient)
 
   arc_lengths <- lengths(arcs) - 1  # segments per arc
 
