@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">wkpool</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9004</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9005</span>
       </span>
     </div>
 
@@ -62,6 +62,11 @@
 
     <div class="section level2">
 <h2 class="page-header" data-toc-text="development version" id="wkpool-development-version">wkpool (development version)<a class="anchor" aria-label="anchor" href="#wkpool-development-version"></a></h2>
+<div class="section level3">
+<h3 id="compiled-arc-kernel-first-src-development-version">Compiled arc kernel (first src/)<a class="anchor" aria-label="anchor" href="#compiled-arc-kernel-first-src-development-version"></a></h3>
+<ul><li><p><code><a href="../reference/find_arcs.html">find_arcs()</a></code> now runs on a cpp11 kernel (wkpool’s first compiled code, LinkingTo: cpp11 only, no system requirements). The algorithm, adjacency ordering, node ordering and output are identical to the pure-R implementation, which is retained as the executable specification (<code>find_arcs_walk_r</code>, internal) and pinned to the kernel by conformance tests across nodes, loops, open lines, holes, grids, subsets and shuffled pools.</p></li>
+<li><p>Scale: the pathological all-nodes grid at 2.56 million segments runs in about 1 second (was ~10x that in R after the linear rewrite, and unboundedly worse before it); 2 million segments of long arcs walk in under a second, with remaining time dominated by the R-side dense-id mapping. Real-world effect: the CGAZ world admin boundaries (~10M segments) drop from ~44s to a few seconds.</p></li>
+</ul></div>
 <div class="section level3">
 <h3 id="exact-coordinate-identity-and-linear-internals-development-version">Exact coordinate identity and linear internals<a class="anchor" aria-label="anchor" href="#exact-coordinate-identity-and-linear-internals-development-version"></a></h3>
 <ul><li><p><code><a href="../reference/merge_coincident.html">merge_coincident()</a></code> now groups vertices on the double-precision bit pattern (via <code><a href="https://vctrs.r-lib.org/reference/vec_group.html" class="external-link">vctrs::vec_group_id()</a></code>) instead of formatted text keys. This fixes a silent correctness bug: the old keys went through <code><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character()</a></code> at ~15 significant digits, so distinct doubles differing only beyond printable precision merged even at <code>tolerance = 0</code>. Exact now means exact.</p></li>
