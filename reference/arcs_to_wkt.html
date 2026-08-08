@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">wkpool</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9005</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9006</span>
       </span>
     </div>
 
@@ -66,9 +66,9 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">arcs_to_wkb</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">arcs_to_wkb</span><span class="op">(</span><span class="va">x</span>, quotient <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">arcs_to_wkt</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">arcs_to_wkt</span><span class="op">(</span><span class="va">x</span>, quotient <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -77,6 +77,16 @@
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A wkpool (ideally after merge_coincident)</p></dd>
+
+
+<dt id="arg-quotient">quotient<a class="anchor" aria-label="anchor" href="#arg-quotient"></a></dt>
+<dd><p>Walk the quotient graph: duplicated shared
+boundaries collapse to a single undirected edge (first occurrence
+keeps its direction), so a boundary shared by two features
+becomes ONE arc rather than one per feature, and its interior
+vertices are degree-2 pass-throughs. This is the TopoJSON-style
+arc decomposition of a polygon layer. Default FALSE walks every
+segment.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

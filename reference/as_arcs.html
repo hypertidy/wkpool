@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">wkpool</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9005</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9006</span>
       </span>
     </div>
 
@@ -66,7 +66,7 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">as_arcs</span><span class="op">(</span><span class="va">x</span>, arc_id <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">as_arcs</span><span class="op">(</span><span class="va">x</span>, arc_id <span class="op">=</span> <span class="cn">TRUE</span>, quotient <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -79,6 +79,16 @@
 
 <dt id="arg-arc-id">arc_id<a class="anchor" aria-label="anchor" href="#arg-arc-id"></a></dt>
 <dd><p>Logical: add .arc column to track arc membership?</p></dd>
+
+
+<dt id="arg-quotient">quotient<a class="anchor" aria-label="anchor" href="#arg-quotient"></a></dt>
+<dd><p>Walk the quotient graph: duplicated shared
+boundaries collapse to a single undirected edge (first occurrence
+keeps its direction), so a boundary shared by two features
+becomes ONE arc rather than one per feature, and its interior
+vertices are degree-2 pass-throughs. This is the TopoJSON-style
+arc decomposition of a polygon layer. Default FALSE walks every
+segment.</p></dd>
 
 </dl></div>
     <div id="value">
