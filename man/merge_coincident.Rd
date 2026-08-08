@@ -19,8 +19,20 @@ A wkpool with shared vertices merged (fewer unique vertices)
 Merge coincident vertices in a pool
 }
 \details{
-With tolerance = 0, only exactly identical coordinates are merged.
-The first occurrence becomes the canonical vertex.
+With tolerance = 0, only exactly identical coordinates are merged -
+identity is the double-precision bit pattern (grouped at C level via
+vctrs), not a formatted representation, so values that differ only
+beyond printable precision remain distinct. The first occurrence
+becomes the canonical vertex; coordinates are never moved.
+
+With a nonzero tolerance, coordinates are snapped to a grid of cell
+size \code{tolerance} for matching (the canonical vertex keeps its
+original coordinates). Note this is a snap grid, not a distance
+guarantee: two vertices within \code{tolerance} of each other that
+straddle a grid-cell boundary do not merge.
+
+When the pool carries \code{z}, vertices are keyed on all coordinate
+columns: equal x/y with different z remain distinct vertices.
 
 This is where you discover shared boundaries between polygons,
 network connectivity, mesh topology, etc.

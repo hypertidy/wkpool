@@ -10,8 +10,20 @@
 #' @return A wkpool with shared vertices merged (fewer unique vertices)
 #'
 #' @details
-#' With tolerance = 0, only exactly identical coordinates are merged.
-#' The first occurrence becomes the canonical vertex.
+#' With tolerance = 0, only exactly identical coordinates are merged -
+#' identity is the double-precision bit pattern (grouped at C level via
+#' vctrs), not a formatted representation, so values that differ only
+#' beyond printable precision remain distinct. The first occurrence
+#' becomes the canonical vertex; coordinates are never moved.
+#'
+#' With a nonzero tolerance, coordinates are snapped to a grid of cell
+#' size `tolerance` for matching (the canonical vertex keeps its
+#' original coordinates). Note this is a snap grid, not a distance
+#' guarantee: two vertices within `tolerance` of each other that
+#' straddle a grid-cell boundary do not merge.
+#'
+#' When the pool carries `z`, vertices are keyed on all coordinate
+#' columns: equal x/y with different z remain distinct vertices.
 #'
 #' This is where you discover shared boundaries between polygons,
 #' network connectivity, mesh topology, etc.
@@ -37,56 +49,39 @@ merge_coincident <- function(x, tolerance = 0) {
   vx1 <- vctrs::field(x, ".vx1")
   feature <- pool_feature(x)
 
-  if (tolerance == 0) {
-    # Exact match: group by coordinate values
-    coord_key <- paste(pool$x, pool$y, sep = "_")
+  # Group vertices on coordinate identity (bit pattern, all coordinate
+  # columns, C level). Group ids are numbered by first appearance, so
+  # the first occurrence is the canonical vertex and the new contiguous
+  # .vx numbering follows pool order - same behaviour as before, minus
+  # the formatted-text keys (which silently collapsed doubles differing
+  # beyond ~15 significant digits).
+  g <- vertex_groups(pool, tolerance)
 
-    unique_keys <- unique(coord_key)
-    first_vx <- pool$.vx[match(unique_keys, coord_key)]
-    names(first_vx) <- unique_keys
-
-    canonical <- first_vx[coord_key]
-    names(canonical) <- pool$.vx
-
-    new_vx0 <- unname(canonical[as.character(vx0)])
-    new_vx1 <- unname(canonical[as.character(vx1)])
-
-    new_pool <- pool[pool$.vx %in% first_vx, , drop = FALSE]
-
-  } else {
-    # Tolerance-based: grid snap then exact match
-    grid_x <- round(pool$x / tolerance) * tolerance
-    grid_y <- round(pool$y / tolerance) * tolerance
-    coord_key <- paste(grid_x, grid_y, sep = "_")
-
-    unique_keys <- unique(coord_key)
-    first_vx <- pool$.vx[match(unique_keys, coord_key)]
-    names(first_vx) <- unique_keys
-
-    canonical <- first_vx[coord_key]
-    names(canonical) <- pool$.vx
-
-    new_vx0 <- unname(canonical[as.character(vx0)])
-    new_vx1 <- unname(canonical[as.character(vx1)])
-
-    new_pool <- pool[pool$.vx %in% first_vx, , drop = FALSE]
-  }
-
-  # Renumber .vx to be contiguous
-  old_vx <- new_pool$.vx
+  first <- !duplicated(g)
+  new_pool <- pool[first, , drop = FALSE]
   new_pool$.vx <- seq_len(nrow(new_pool))
 
-  final_remap <- new_pool$.vx
-  names(final_remap) <- old_vx
-
-  final_vx0 <- unname(final_remap[as.character(new_vx0)])
-  final_vx1 <- unname(final_remap[as.character(new_vx1)])
+  final_vx0 <- g[match(vx0, pool$.vx)]
+  final_vx1 <- g[match(vx1, pool$.vx)]
 
   new_wkpool(new_pool, final_vx0, final_vx1, feature = feature,
              path = pool_path(x),
              paths = pool_paths(x),
              crs = attr(x, "crs", exact = TRUE),
              geodesic = attr(x, "geodesic", exact = TRUE))
+}
+
+# Integer group id per pool row, keyed on the coordinate columns
+# (x, y, and z when present), exact on the double bit pattern.
+# tolerance > 0 keys on a snap grid of that cell size instead.
+# Group ids are numbered in order of first appearance.
+vertex_groups <- function(pool, tolerance = 0) {
+  cols <- intersect(c("x", "y", "z"), names(pool))
+  key <- pool[cols]
+  if (tolerance != 0) {
+    key <- as.data.frame(lapply(key, function(v) round(v / tolerance) * tolerance))
+  }
+  vctrs::vec_group_id(key)
 }
 
 
@@ -683,22 +678,33 @@ topology_report <- function(x, tolerance = 1e-8) {
   vx1 <- vctrs::field(x, ".vx1")
   feature <- pool_feature(x)
 
-  # Exact duplicates
-  coord_key <- paste(pool$x, pool$y, sep = "_")
-  n_unique_exact <- length(unique(coord_key))
+  # Exact duplicates (bit-pattern identity, same key as merge_coincident)
+  g <- vertex_groups(pool, 0)
+  n_unique_exact <- if (length(g)) max(g) else 0L
   n_dup_exact <- nrow(pool) - n_unique_exact
 
   # Near misses (would merge with tolerance)
-  grid_x <- round(pool$x / tolerance) * tolerance
-  grid_y <- round(pool$y / tolerance) * tolerance
-  grid_key <- paste(grid_x, grid_y, sep = "_")
-  n_unique_tol <- length(unique(grid_key))
+  gt <- vertex_groups(pool, tolerance)
+  n_unique_tol <- if (length(gt)) max(gt) else 0L
   n_near_miss <- n_unique_exact - n_unique_tol
 
-  # Shared edges (after notional merge)
-  merged <- merge_coincident(x, tolerance = 0)
-  shared <- find_shared_edges(merged)
-  n_shared_edges <- length(unique(shared$edge_key))
+  # Shared edges after a notional exact merge, computed directly from
+  # the vertex groups (no materialized merge): undirected edges on
+  # canonical vertex ids; shared = present in more than one feature
+  # (or, without feature info, simply duplicated)
+  if (length(vx0) > 0) {
+    a0 <- g[match(vx0, pool$.vx)]
+    a1 <- g[match(vx1, pool$.vx)]
+    ekey <- vctrs::vec_group_id(data.frame(lo = pmin(a0, a1), hi = pmax(a0, a1)))
+    if (!is.null(feature)) {
+      n_per_edge <- vapply(split(feature, ekey), function(f) length(unique(f)), integer(1))
+      n_shared_edges <- sum(n_per_edge > 1)
+    } else {
+      n_shared_edges <- sum(tabulate(ekey) > 1)
+    }
+  } else {
+    n_shared_edges <- 0L
+  }
 
   # Feature count
   n_features <- if (!is.null(feature)) length(unique(feature)) else NA

@@ -1,5 +1,36 @@
 # wkpool (development version)
 
+## Exact coordinate identity and linear internals
+
+* `merge_coincident()` now groups vertices on the double-precision bit
+  pattern (via `vctrs::vec_group_id()`) instead of formatted text
+  keys. This fixes a silent correctness bug: the old keys went through
+  `as.character()` at ~15 significant digits, so distinct doubles
+  differing only beyond printable precision merged even at
+  `tolerance = 0`. Exact now means exact.
+
+* When the pool carries `z`, vertices are keyed on all coordinate
+  columns: equal x/y with different z no longer merge silently.
+  Tolerance is documented honestly as a snap grid (cell size
+  `tolerance`), not a distance guarantee, and canonical vertices keep
+  their original coordinates.
+
+* `topology_report()` computes its counts directly from vertex groups
+  instead of performing a full internal `merge_coincident()` plus
+  `find_shared_edges()`.
+
+* The quadratic idioms are gone: `find_arcs()` uses dense integer
+  adjacency with amortized cursors and a preallocated walk buffer
+  (was: character-keyed lists grown with `c()` in loops);
+  `pool_combine()` remaps by position with per-input offsets (was:
+  character-named lookup tables and growing vectors); `as_arcs()` and
+  `vertex_degree()` are vectorized. On a 160x160 grid of squares
+  (102400 segments) `find_arcs()` drops from minutes to under half a
+  second, and all core verbs now scale linearly.
+
+* `pool_compact()` remap corrected for pools whose segment order does
+  not follow pool order (latent indexing assumption).
+
 ## Path provenance (.path)
 
 * `establish_topology()` now mints a `.path` id per segment - one id

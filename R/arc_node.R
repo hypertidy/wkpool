@@ -22,9 +22,9 @@ vertex_degree <- function(x) {
   check_wkpool(x)
   vx0 <- vctrs::field(x, ".vx0")
   vx1 <- vctrs::field(x, ".vx1")
-  deg <- table(c(vx0, vx1))
-  out <- as.integer(deg)
-  names(out) <- names(deg)
+  ids <- sort(unique(c(vx0, vx1)))
+  out <- tabulate(match(c(vx0, vx1), ids), nbins = length(ids))
+  names(out) <- ids
   out
 }
 
@@ -77,106 +77,86 @@ find_nodes <- function(x) {
 find_arcs <- function(x) {
   check_wkpool(x)
   segs <- pool_segments(x)
-  deg <- vertex_degree(x)
-  nodes <- as.integer(names(deg)[deg != 2])
 
   n_segs <- nrow(segs)
   if (n_segs == 0) return(list())
 
-  # Build adjacency: for each vertex, which segments touch it?
   vx0 <- segs$.vx0
   vx1 <- segs$.vx1
 
-  # Segment lookup by vertex
-  seg_by_vertex <- list()
-  for (i in seq_len(n_segs)) {
-    v0 <- as.character(vx0[i])
-    v1 <- as.character(vx1[i])
-    seg_by_vertex[[v0]] <- c(seg_by_vertex[[v0]], i)
-    seg_by_vertex[[v1]] <- c(seg_by_vertex[[v1]], i)
+  # Dense vertex indexing: work in positions 1..n_vertices, keep the
+  # original ids for output
+  ids <- sort(unique(c(vx0, vx1)))
+  i0 <- match(vx0, ids)
+  i1 <- match(vx1, ids)
+
+  deg <- tabulate(c(i0, i1), nbins = length(ids))
+  node_pos <- which(deg != 2)
+  is_node <- logical(length(ids))
+  is_node[node_pos] <- TRUE
+
+  # Adjacency: for each vertex position, the touching segments, in the
+  # same order the old per-segment append produced (segment ascending,
+  # start endpoint before end endpoint within a segment)
+  verts <- as.vector(rbind(i0, i1))
+  adj <- split(rep(seq_len(n_segs), each = 2L),
+               factor(verts, levels = seq_along(ids)))
+  # per-vertex cursor into adj, so each unused-segment scan is amortized
+  cursor <- rep(1L, length(ids))
+
+  next_unused <- function(v) {
+    a <- adj[[v]]
+    k <- cursor[v]
+    while (k <= length(a) && used[a[k]]) k <- k + 1L
+    cursor[v] <<- k
+    if (k <= length(a)) a[k] else 0L
   }
 
   used <- logical(n_segs)
-  arcs <- list()
+  arcs <- vector("list", n_segs)
+  n_arcs <- 0L
+  buf <- integer(n_segs + 1L)
+
+  walk <- function(start_pos, start_seg, stop_at_node) {
+    k <- 1L
+    buf[k] <<- start_pos
+    current <- start_pos
+    seg <- start_seg
+
+    repeat {
+      used[seg] <<- TRUE
+      nxt <- if (i0[seg] == current) i1[seg] else i0[seg]
+      k <- k + 1L
+      buf[k] <<- nxt
+
+      if (stop_at_node && is_node[nxt]) break
+      if (!stop_at_node && nxt == start_pos) break
+
+      seg <- next_unused(nxt)
+      if (seg == 0L) break
+      current <- nxt
+    }
+
+    ids[buf[seq_len(k)]]
+  }
 
   # Start arcs from nodes
-  for (node in nodes) {
-    node_segs <- seg_by_vertex[[as.character(node)]]
-    for (start_seg in node_segs) {
+  for (node in node_pos) {
+    for (start_seg in adj[[node]]) {
       if (used[start_seg]) next
-
-      # Walk from this node
-      arc_vx <- node
-      current_vx <- node
-      current_seg <- start_seg
-
-      repeat {
-        used[current_seg] <- TRUE
-
-        # Move to other end of segment
-        if (vx0[current_seg] == current_vx) {
-          next_vx <- vx1[current_seg]
-        } else {
-          next_vx <- vx0[current_seg]
-        }
-
-        arc_vx <- c(arc_vx, next_vx)
-
-        # Stop if we hit a node
-        if (next_vx %in% nodes) break
-
-        # Continue through degree-2 vertex
-        next_segs <- seg_by_vertex[[as.character(next_vx)]]
-        next_segs <- next_segs[!used[next_segs]]
-
-        if (length(next_segs) == 0) break
-
-        current_vx <- next_vx
-        current_seg <- next_segs[1]
-      }
-
-      arcs <- c(arcs, list(arc_vx))
+      n_arcs <- n_arcs + 1L
+      arcs[[n_arcs]] <- walk(node, start_seg, stop_at_node = TRUE)
     }
   }
 
   # Handle closed loops (all degree-2, no nodes)
-  remaining <- which(!used)
-  while (length(remaining) > 0) {
-    start_seg <- remaining[1]
-    start_vx <- vx0[start_seg]
-
-    arc_vx <- start_vx
-    current_vx <- start_vx
-    current_seg <- start_seg
-
-    repeat {
-      used[current_seg] <- TRUE
-
-      if (vx0[current_seg] == current_vx) {
-        next_vx <- vx1[current_seg]
-      } else {
-        next_vx <- vx0[current_seg]
-      }
-
-      arc_vx <- c(arc_vx, next_vx)
-
-      # Closed loop?
-      if (next_vx == start_vx) break
-
-      next_segs <- seg_by_vertex[[as.character(next_vx)]]
-      next_segs <- next_segs[!used[next_segs]]
-
-      if (length(next_segs) == 0) break
-
-      current_vx <- next_vx
-      current_seg <- next_segs[1]
-    }
-
-    arcs <- c(arcs, list(arc_vx))
-    remaining <- which(!used)
+  for (start_seg in seq_len(n_segs)) {
+    if (used[start_seg]) next
+    n_arcs <- n_arcs + 1L
+    arcs[[n_arcs]] <- walk(i0[start_seg], start_seg, stop_at_node = FALSE)
   }
 
-  arcs
+  arcs[seq_len(n_arcs)]
 }
 
 
@@ -201,19 +181,12 @@ as_arcs <- function(x, arc_id = TRUE) {
   arcs <- find_arcs(x)
   pool <- pool_vertices(x)
 
-  vx0 <- integer()
-  vx1 <- integer()
-  arc_ids <- integer()
-
-  for (i in seq_along(arcs)) {
-    arc <- arcs[[i]]
-    n <- length(arc)
-    if (n < 2) next
-
-    vx0 <- c(vx0, arc[-n])
-    vx1 <- c(vx1, arc[-1])
-    arc_ids <- c(arc_ids, rep(i, n - 1))
-  }
+  keep <- lengths(arcs) >= 2
+  vx0 <- unlist(lapply(arcs[keep], function(a) a[-length(a)]))
+  vx1 <- unlist(lapply(arcs[keep], function(a) a[-1]))
+  arc_ids <- rep(which(keep), lengths(arcs[keep]) - 1L)
+  if (is.null(vx0)) vx0 <- integer()
+  if (is.null(vx1)) vx1 <- integer()
 
   crs <- attr(x, "crs", exact = TRUE)
   geodesic <- attr(x, "geodesic", exact = TRUE)

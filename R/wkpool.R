@@ -341,68 +341,56 @@ pool_combine <- function(...) {
   crs <- do.call(wk::wk_crs_output, xs)
   geodesic <- do.call(wk::wk_is_geodesic_output, xs)
 
-  # Build new pool and remap tables
+  # Build new pool and remap tables: per-pool blocks of contiguous new
+  # ids, segments remapped by position (match) plus the block offset -
+  # no character keys, no growing vectors
   pools <- lapply(xs, pool_vertices)
-
-  # For each pool, we need to remap old .vx -> new .vx
-  remaps <- vector("list", length(pools))
-  new_vx_start <- 1L
-
-  for (i in seq_along(pools)) {
-    old_vx <- pools[[i]]$.vx
-    n <- length(old_vx)
-    new_vx <- seq.int(new_vx_start, length.out = n)
-
-    remaps[[i]] <- new_vx
-    names(remaps[[i]]) <- as.character(old_vx)
-
-    pools[[i]]$.vx <- new_vx
-    new_vx_start <- new_vx_start + n
-  }
-
-  new_pool <- vctrs::vec_rbind(!!!pools)
+  sizes <- vapply(pools, nrow, integer(1))
+  offsets <- cumsum(c(0L, sizes))[seq_along(pools)]
 
   # Path provenance combines only when every input carries it; path ids
   # are offset per input so they stay unique
   all_paths <- !any(vapply(xs, function(p) is.null(pool_path(p)) || is.null(pool_paths(p)), logical(1)))
   path_offset <- 0L
 
-  # Remap segment indices and collect features/paths
-  new_vx0 <- integer()
-  new_vx1 <- integer()
-  new_feature <- integer()
+  vx0_list <- vector("list", length(xs))
+  vx1_list <- vector("list", length(xs))
+  feature_list <- vector("list", length(xs))
   has_feature <- FALSE
-  new_path <- integer()
+  path_list <- vector("list", length(xs))
   new_paths <- vector("list", length(xs))
 
   for (i in seq_along(xs)) {
+    old_ids <- pools[[i]]$.vx
+    pools[[i]]$.vx <- offsets[i] + seq_len(sizes[i])
+
     old_vx0 <- vctrs::field(xs[[i]], ".vx0")
     old_vx1 <- vctrs::field(xs[[i]], ".vx1")
+    vx0_list[[i]] <- offsets[i] + match(old_vx0, old_ids)
+    vx1_list[[i]] <- offsets[i] + match(old_vx1, old_ids)
+
     feat <- pool_feature(xs[[i]])
-
-    new_vx0 <- c(new_vx0, unname(remaps[[i]][as.character(old_vx0)]))
-    new_vx1 <- c(new_vx1, unname(remaps[[i]][as.character(old_vx1)]))
-
     if (!is.null(feat)) {
       has_feature <- TRUE
-      new_feature <- c(new_feature, feat)
+      feature_list[[i]] <- feat
     } else {
-      new_feature <- c(new_feature, rep(NA_integer_, length(old_vx0)))
+      feature_list[[i]] <- rep(NA_integer_, length(old_vx0))
     }
 
     if (all_paths) {
-      p <- pool_path(xs[[i]])
       pt <- pool_paths(xs[[i]])
-      new_path <- c(new_path, p + path_offset)
+      path_list[[i]] <- pool_path(xs[[i]]) + path_offset
       pt$.path <- pt$.path + path_offset
       new_paths[[i]] <- pt
       path_offset <- path_offset + max(pt$.path, 0L)
     }
   }
 
-  new_wkpool(new_pool, new_vx0, new_vx1,
-             feature = if (has_feature) new_feature else NULL,
-             path = if (all_paths) new_path else NULL,
+  new_pool <- vctrs::vec_rbind(!!!pools)
+
+  new_wkpool(new_pool, unlist(vx0_list), unlist(vx1_list),
+             feature = if (has_feature) unlist(feature_list) else NULL,
+             path = if (all_paths) unlist(path_list) else NULL,
              paths = if (all_paths) vctrs::vec_rbind(!!!new_paths) else NULL,
              crs = crs, geodesic = geodesic)
 }

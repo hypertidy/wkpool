@@ -143,17 +143,14 @@ pool_compact <- function(x) {
   # Which vertices are actually used?
   active <- unique(c(vx0, vx1))
 
-  # Subset pool to active vertices
+  # Subset pool to active vertices (pool order)
   new_pool <- pool[pool$.vx %in% active, , drop = FALSE]
 
-  # Build remap: old .vx -> new .vx (1:n)
+  # Remap: old .vx -> new contiguous .vx by position in the kept pool
+  old_ids <- new_pool$.vx
   new_pool$.vx <- seq_len(nrow(new_pool))
-  remap <- match(active, pool$.vx)
-  names(remap) <- active
-
-  # Remap segment indices
-  new_vx0 <- new_pool$.vx[match(vx0, active)]
-  new_vx1 <- new_pool$.vx[match(vx1, active)]
+  new_vx0 <- match(vx0, old_ids)
+  new_vx1 <- match(vx1, old_ids)
 
   new_wkpool(new_pool, new_vx0, new_vx1, feature = feature,
              path = pool_path(x),
