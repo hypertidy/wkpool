@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">wkpool</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9002</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9003</span>
       </span>
     </div>
 
@@ -78,14 +78,25 @@
 
 
 <dt id="arg-convention">convention<a class="anchor" aria-label="anchor" href="#arg-convention"></a></dt>
-<dd><p>Which winding convention to use: "sf" (default) or "ogc"</p><ul><li><p>sf: negative area = outer, positive = hole</p></li>
+<dd><p>Which winding convention to use when the pool has
+no path provenance: "sf" (default) or "ogc"</p><ul><li><p>sf: negative area = outer, positive = hole</p></li>
 <li><p>ogc: positive area = outer, negative = hole</p></li>
 </ul></dd>
 
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A data frame with cycle index, signed area, and type (outer/hole)</p>
+    <p>A data frame with cycle index, signed area, and type
+(outer/hole); when path provenance is present, also <code>.path</code> and
+<code>.feature</code></p>
+    </div>
+    <div id="details">
+    <h2>Details</h2>
+    <p>When the pool carries path provenance, ring roles are structural:
+the first ring of each part is the exterior and later rings are its
+holes, regardless of winding, and <code>convention</code> is not consulted.
+The signed area still reports the observed winding. Pools without
+provenance are classified by winding under the requested convention.</p>
     </div>
 
     <div id="ref-examples">
@@ -101,10 +112,10 @@
 <span class="r-in"><span><span class="va">pool</span> <span class="op">&lt;-</span> <span class="fu"><a href="establish_topology.html">establish_topology</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">merged</span> <span class="op">&lt;-</span> <span class="fu"><a href="merge_coincident.html">merge_coincident</a></span><span class="op">(</span><span class="va">pool</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">classify_cycles</span><span class="op">(</span><span class="va">merged</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   cycle     area  type</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1 -0.76200 outer</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     2  0.09000  hole</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3     3 -0.19695 outer</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   cycle     area  type .path .feature</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1 -0.76200 outer     1        1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     2  0.09000  hole     2        1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     3 -0.19695 outer     3        2</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

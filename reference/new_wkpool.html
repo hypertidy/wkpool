@@ -20,7 +20,7 @@ every segment endpoint must be a vertex id present in the pool."><!-- mathjax --
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">wkpool</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9002</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9003</span>
       </span>
     </div>
 
@@ -72,7 +72,16 @@ every segment endpoint must be a vertex id present in the pool.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">new_wkpool</span><span class="op">(</span><span class="va">vertices</span>, <span class="va">vx0</span>, <span class="va">vx1</span>, feature <span class="op">=</span> <span class="cn">NULL</span>, crs <span class="op">=</span> <span class="cn">NULL</span>, geodesic <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">new_wkpool</span><span class="op">(</span></span>
+<span>  <span class="va">vertices</span>,</span>
+<span>  <span class="va">vx0</span>,</span>
+<span>  <span class="va">vx1</span>,</span>
+<span>  feature <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  path <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  paths <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  crs <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  geodesic <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -91,6 +100,19 @@ value present in <code>vertices$.vx</code>.</p></dd>
 
 <dt id="arg-feature">feature<a class="anchor" aria-label="anchor" href="#arg-feature"></a></dt>
 <dd><p>Optional integer vector of feature ids, one per segment.</p></dd>
+
+
+<dt id="arg-path">path<a class="anchor" aria-label="anchor" href="#arg-path"></a></dt>
+<dd><p>Optional integer vector of path ids, one per segment. A
+path is a maximal run of segments minted from one input ring or
+linestring; it is the provenance that lets cycles, ring roles and
+feature structure be recovered exactly.</p></dd>
+
+
+<dt id="arg-paths">paths<a class="anchor" aria-label="anchor" href="#arg-paths"></a></dt>
+<dd><p>Optional data.frame describing the paths: columns
+<code>.path</code>, <code>.feature</code>, <code>.part</code>, <code>.ring</code> (as captured from
+<code><a href="https://paleolimbot.github.io/wk/reference/wk_vertices.html" class="external-link">wk::wk_coords()</a></code> identifiers by <code><a href="establish_topology.html">establish_topology()</a></code>).</p></dd>
 
 
 <dt id="arg-crs">crs<a class="anchor" aria-label="anchor" href="#arg-crs"></a></dt>

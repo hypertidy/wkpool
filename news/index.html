@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">wkpool</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9002</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9003</span>
       </span>
     </div>
 
@@ -63,10 +63,17 @@
     <div class="section level2">
 <h2 class="page-header" data-toc-text="development version" id="wkpool-development-version">wkpool (development version)<a class="anchor" aria-label="anchor" href="#wkpool-development-version"></a></h2>
 <div class="section level3">
+<h3 id="path-provenance-path-development-version">Path provenance (.path)<a class="anchor" aria-label="anchor" href="#path-provenance-path-development-version"></a></h3>
+<ul><li><p><code><a href="../reference/establish_topology.html">establish_topology()</a></code> now mints a <code>.path</code> id per segment - one id per input ring or linestring - with a sidecar <code>paths</code> table (<code>.path</code>, <code>.feature</code>, <code>.part</code>, <code>.ring</code>, captured from <code><a href="https://paleolimbot.github.io/wk/reference/wk_vertices.html" class="external-link">wk::wk_coords()</a></code> identifiers). Provenance survives subsetting, <code><a href="../reference/merge_coincident.html">merge_coincident()</a></code>, <code><a href="../reference/pool_compact.html">pool_compact()</a></code> and <code><a href="../reference/pool_combine.html">pool_combine()</a></code> (which offsets path ids to keep them unique), and is exposed via the new accessors <code><a href="../reference/wkpool-accessors.html">pool_path()</a></code> and <code><a href="../reference/wkpool-accessors.html">pool_paths()</a></code>. <code><a href="../reference/new_wkpool.html">new_wkpool()</a></code> gains <code>path</code> and <code>paths</code> arguments.</p></li>
+<li><p><code><a href="../reference/find_cycles.html">find_cycles()</a></code> uses provenance when present: a cycle is a path whose segment chain closes. Rings are recovered exactly, in input order and input winding, robust to segment reordering (chains are rebuilt by connectivity), and a broken ring after subsetting is dropped rather than mis-walked. The result carries a <code>path</code> attribute mapping cycles to path ids. Pools without provenance keep the legacy storage-order walk.</p></li>
+<li><p>The winding-convention issue is resolved structurally: with provenance, ring roles are known (the first ring of each part is the exterior, later rings are its holes), so <code><a href="../reference/classify_cycles.html">classify_cycles()</a></code> and <code><a href="../reference/hole_points.html">hole_points()</a></code> no longer guess from winding and the <code>convention</code> argument is only consulted for provenance-free pools. <code><a href="../reference/hole_points.html">hole_points()</a></code> on a simple polygon now returns <code>NULL</code> as intended.</p></li>
+<li><p><code>cycles_to_wkb(feature = TRUE)</code> reconstructs original feature structure exactly when provenance is present: rings grouped into their original part (exterior first, then that part’s own holes), parts grouped into POLYGON or MULTIPOLYGON features. This replaces the heuristics (all holes with the first outer; holes dropped for multi-part features) for established pools; provenance-free pools keep the old behaviour.</p></li>
+</ul></div>
+<div class="section level3">
 <h3 id="native-emitters-development-version">Native emitters<a class="anchor" aria-label="anchor" href="#native-emitters-development-version"></a></h3>
 <ul><li><p>All round-trip emitters (<code>arcs_to_*()</code>, <code>cycles_to_*()</code>, <code>segments_to_*()</code>) are rebuilt on wk’s C-level construction filters (<code><a href="https://paleolimbot.github.io/wk/reference/wk_linestring.html" class="external-link">wk::wk_linestring()</a></code>, <code><a href="https://paleolimbot.github.io/wk/reference/wk_linestring.html" class="external-link">wk::wk_polygon()</a></code>, <code><a href="https://paleolimbot.github.io/wk/reference/wk_linestring.html" class="external-link">wk::wk_collection()</a></code>). WKB is now the primary product and WKT is derived from it; no coordinate text is assembled anywhere in wkpool.</p></li>
 <li><p>Consequences: WKB output preserves coordinates at full double precision (previously text formatting perturbed doubles at around the 15th significant digit); z vertex values are carried through all emitters (previously dropped); rings are closed by wk; crs and geodesic ride along by construction. WKT output uses wk’s writer (16 significant digits, trimmed) - use the WKB emitters when bit-exact coordinates matter.</p></li>
-<li><p>Behaviour is otherwise unchanged, including the documented simplifications in <code>cycles_to_wkb(feature = TRUE)</code> (all holes with the first outer; holes dropped in the multi-outer MULTIPOLYGON case).</p></li>
+<li><p>Behaviour is otherwise unchanged. (The documented simplifications in <code>cycles_to_wkb(feature = TRUE)</code> were retained at this stage and have since been superseded by path provenance for established pools - see above; they still describe the provenance-free fallback.)</p></li>
 </ul></div>
 <div class="section level3">
 <h3 id="wk_handle-a-wkpool-is-wk-handleable-development-version">wk_handle: a wkpool is wk-handleable<a class="anchor" aria-label="anchor" href="#wk_handle-a-wkpool-is-wk-handleable-development-version"></a></h3>

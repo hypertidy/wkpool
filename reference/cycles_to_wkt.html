@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">wkpool</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9002</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9003</span>
       </span>
     </div>
 
@@ -86,7 +86,8 @@ If FALSE, each cycle becomes a separate polygon.</p></dd>
 
 
 <dt id="arg-convention">convention<a class="anchor" aria-label="anchor" href="#arg-convention"></a></dt>
-<dd><p>Winding convention: "sf" (default) or "ogc"</p></dd>
+<dd><p>Winding convention: "sf" (default) or "ogc"; only
+consulted for pools without path provenance</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -99,9 +100,14 @@ If FALSE, each cycle becomes a separate polygon.</p></dd>
     </div>
     <div id="details">
     <h2>Details</h2>
-    <p>Converts cycles back to polygons. When feature = TRUE, attempts to
-reconstruct original polygon structure by grouping rings by feature
-and nesting holes within their containing outer ring.</p>
+    <p>Converts cycles back to polygons. When feature = TRUE and the pool
+carries path provenance (minted by <code><a href="establish_topology.html">establish_topology()</a></code>), the
+original feature structure is reconstructed exactly: rings are
+grouped into their original part (exterior first, then that part's
+holes) and parts into their original feature (POLYGON or
+MULTIPOLYGON), with winding emitted as stored and <code>convention</code> not
+consulted. Pools without provenance fall back to a heuristic that
+groups rings by feature and nests all holes with the first outer.</p>
 <p>Geometry is assembled natively via <code><a href="https://paleolimbot.github.io/wk/reference/wk_linestring.html" class="external-link">wk::wk_polygon()</a></code> and
 <code><a href="https://paleolimbot.github.io/wk/reference/wk_linestring.html" class="external-link">wk::wk_collection()</a></code> (WKB first, WKT derived from it): coordinates
 are emitted at full double precision, rings are closed by wk, z is
@@ -118,7 +124,8 @@ are attached to the output.</p>
 <span class="r-in"><span><span class="va">pool</span> <span class="op">&lt;-</span> <span class="fu"><a href="establish_topology.html">establish_topology</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">merged</span> <span class="op">&lt;-</span> <span class="fu"><a href="merge_coincident.html">merge_coincident</a></span><span class="op">(</span><span class="va">pool</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">cycles_to_wkt</span><span class="op">(</span><span class="va">merged</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;wk_wkt[0]&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;wk_wkt[2]&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0)) POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

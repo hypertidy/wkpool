@@ -32,7 +32,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">wkpool</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9002</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9003</span>
       </span>
     </div>
 
@@ -296,14 +296,17 @@ correspond to rings:</p>
 <span><span class="co">#&gt; [1] 1 2 3 4</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; [[2]]</span></span>
-<span><span class="co">#&gt; [1] 2 5 6 3</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 2 5 6 3</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; attr(,"path")</span></span>
+<span><span class="co">#&gt; [1] 1 2</span></span></code></pre></div>
 <p>Signed area from the shoelace formula distinguishes outer rings from
 holes — negative area is an outer ring in the SF convention:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/classify_cycles.html">classify_cycles</a></span><span class="op">(</span><span class="va">pool</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   cycle area type</span></span>
-<span><span class="co">#&gt; 1     1    1 hole</span></span>
-<span><span class="co">#&gt; 2     2    1 hole</span></span></code></pre></div>
+<span><span class="co">#&gt;   cycle area  type .path .feature</span></span>
+<span><span class="co">#&gt; 1     1    1 outer     1        1</span></span>
+<span><span class="co">#&gt; 2     2    1 outer     2        2</span></span></code></pre></div>
 <p>This is <em>intrinsic</em> — we observe winding from the coordinate
 order, we don’t declare it via metadata. The geometry tells you what it
 is.</p>
@@ -322,7 +325,8 @@ back too:</p>
 <span></span>
 <span><span class="co"># Cycles as polygons</span></span>
 <span><span class="fu"><a href="../reference/cycles_to_wkt.html">cycles_to_wkt</a></span><span class="op">(</span><span class="va">pool</span><span class="op">)</span></span>
-<span><span class="co">#&gt; &lt;wk_wkt[0]&gt;</span></span></code></pre></div>
+<span><span class="co">#&gt; &lt;wk_wkt[2]&gt;</span></span>
+<span><span class="co">#&gt; [1] POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0)) POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))</span></span></code></pre></div>
 <p>This is the “SF at the edges” principle. Read geometry in any format
 wk can handle (WKT, WKB, sf, geos, s2). Decompose to vertices and
 segments for analysis. Recompose to Simple Features when you need to

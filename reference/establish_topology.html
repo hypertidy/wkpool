@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">wkpool</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9002</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9003</span>
       </span>
     </div>
 
@@ -93,6 +93,13 @@ the exact truth of the input geometry. Use merge_coincident()
 afterward to discover/establish shared topology.</p>
 <p>Segments track their feature origin via <code>.feature</code> attribute,
 enabling discovery of shared boundaries and neighbour relations.</p>
+<p>Segments also carry a minted <code>.path</code> id - one id per input ring or
+linestring - with a sidecar table (see <code><a href="wkpool-accessors.html">pool_paths()</a></code>) recording each
+path's feature, part and ring identity as captured from
+<code><a href="https://paleolimbot.github.io/wk/reference/wk_vertices.html" class="external-link">wk::wk_coords()</a></code>. This provenance makes cycles, ring roles and
+feature structure recoverable exactly, in input order and input
+winding: see <code><a href="find_cycles.html">find_cycles()</a></code>, <code><a href="classify_cycles.html">classify_cycles()</a></code> and
+<code><a href="cycles_to_wkt.html">cycles_to_wkt()</a></code>.</p>
 <p>The coordinate reference system of the input (as reported by
 <code><a href="https://paleolimbot.github.io/wk/reference/wk_crs.html" class="external-link">wk::wk_crs()</a></code>) and its geodesic flag (<code><a href="https://paleolimbot.github.io/wk/reference/wk_is_geodesic.html" class="external-link">wk::wk_is_geodesic()</a></code>) are
 captured on the pool and travel with it through subsetting, merging

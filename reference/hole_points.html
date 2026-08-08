@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">wkpool</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9002</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9003</span>
       </span>
     </div>
 
@@ -78,7 +78,8 @@
 
 
 <dt id="arg-convention">convention<a class="anchor" aria-label="anchor" href="#arg-convention"></a></dt>
-<dd><p>Which winding convention to use: "sf" (default) or "ogc"</p></dd>
+<dd><p>Which winding convention to use when the pool has
+no path provenance: "sf" (default) or "ogc"</p></dd>
 
 </dl></div>
     <div id="value">
@@ -89,6 +90,9 @@
     <h2>Details</h2>
     <p>For use with RTriangle::triangulate(). Each row is the centroid of a hole,
 which tells the triangulator to exclude that region.</p>
+<p>When the pool carries path provenance, holes are identified
+structurally (non-first rings of their part) and <code>convention</code> is
+not consulted.</p>
     </div>
 
     <div id="ref-examples">

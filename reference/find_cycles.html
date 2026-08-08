@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">wkpool</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9002</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9003</span>
       </span>
     </div>
 
@@ -83,8 +83,13 @@
     </div>
     <div id="details">
     <h2>Details</h2>
-    <p>Walks the segment graph to discover closed loops. Relies on segments being
-in consecutive order within each ring (as produced by establish_topology).</p>
+    <p>When the pool carries path provenance (minted by
+<code><a href="establish_topology.html">establish_topology()</a></code>), a cycle is a path whose segment chain
+closes: rings are recovered exactly, in input order and input
+winding, robust to segment reordering, and the result carries a
+<code>path</code> attribute mapping each cycle to its path id. Pools without
+provenance fall back to walking the segment graph in storage order,
+which relies on segments being consecutive within each ring.</p>
 <p>Each cycle is a vector of vertex IDs in traversal order. The cycle is closed
 (first vertex connects back to last via a segment).</p>
     </div>
@@ -104,6 +109,8 @@ in consecutive order within each ring (as produced by establish_topology).</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[2]]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2 5 6 3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"path")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1 2</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
