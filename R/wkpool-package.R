@@ -4,6 +4,7 @@
 "_PACKAGE"
 
 ## usethis namespace: start
+#' @useDynLib wkpool, .registration = TRUE
 ## usethis namespace: end
 NULL
 

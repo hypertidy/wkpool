@@ -1,5 +1,22 @@
 # wkpool (development version)
 
+## Compiled arc kernel (first src/)
+
+* `find_arcs()` now runs on a cpp11 kernel (wkpool's first compiled
+  code, LinkingTo: cpp11 only, no system requirements). The algorithm,
+  adjacency ordering, node ordering and output are identical to the
+  pure-R implementation, which is retained as the executable
+  specification (`find_arcs_walk_r`, internal) and pinned to the
+  kernel by conformance tests across nodes, loops, open lines, holes,
+  grids, subsets and shuffled pools.
+
+* Scale: the pathological all-nodes grid at 2.56 million segments runs
+  in about 1 second (was ~10x that in R after the linear rewrite, and
+  unboundedly worse before it); 2 million segments of long arcs walk
+  in under a second, with remaining time dominated by the R-side
+  dense-id mapping. Real-world effect: the CGAZ world admin
+  boundaries (~10M segments) drop from ~44s to a few seconds.
+
 ## Exact coordinate identity and linear internals
 
 * `merge_coincident()` now groups vertices on the double-precision bit

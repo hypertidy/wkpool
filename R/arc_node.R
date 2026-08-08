@@ -90,6 +90,28 @@ find_arcs <- function(x) {
   i0 <- match(vx0, ids)
   i1 <- match(vx1, ids)
 
+  # compiled kernel: same algorithm, same ordering semantics, same
+  # output as the R reference below (find_arcs_walk_r); ids mapped
+  # back inside the kernel
+  return(find_arcs_cpp(i0 - 1L, i1 - 1L, ids))
+}
+
+# Pure-R reference implementation of the arc walk. Retained as the
+# executable specification for the compiled kernel: the conformance
+# tests assert identical output on shared fixtures.
+find_arcs_walk_r <- function(x) {
+  segs <- pool_segments(x)
+
+  n_segs <- nrow(segs)
+  if (n_segs == 0) return(list())
+
+  vx0 <- segs$.vx0
+  vx1 <- segs$.vx1
+
+  ids <- sort(unique(c(vx0, vx1)))
+  i0 <- match(vx0, ids)
+  i1 <- match(vx1, ids)
+
   deg <- tabulate(c(i0, i1), nbins = length(ids))
   node_pos <- which(deg != 2)
   is_node <- logical(length(ids))
