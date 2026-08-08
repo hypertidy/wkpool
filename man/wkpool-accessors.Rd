@@ -33,7 +33,7 @@ feature information is present.
 \item \code{pool_path()}: An integer vector of path IDs (one per segment), or
 \code{NULL} if no path provenance is present.
 \item \code{pool_paths()}: A data frame describing each path (\code{.path},
-\code{.feature}, \code{.part}, \code{.ring}, as captured from \code{\link[wk:wk_vertices]{wk::wk_coords()}}
+\code{.feature}, \code{.part}, \code{.ring}, as captured from \code{\link[wk:wk_coords]{wk::wk_coords()}}
 identifiers), or \code{NULL}.
 }
 }

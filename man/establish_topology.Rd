@@ -29,7 +29,7 @@ enabling discovery of shared boundaries and neighbour relations.
 Segments also carry a minted \code{.path} id - one id per input ring or
 linestring - with a sidecar table (see \code{\link[=pool_paths]{pool_paths()}}) recording each
 path's feature, part and ring identity as captured from
-\code{\link[wk:wk_vertices]{wk::wk_coords()}}. This provenance makes cycles, ring roles and
+\code{\link[wk:wk_coords]{wk::wk_coords()}}. This provenance makes cycles, ring roles and
 feature structure recoverable exactly, in input order and input
 winding: see \code{\link[=find_cycles]{find_cycles()}}, \code{\link[=classify_cycles]{classify_cycles()}} and
 \code{\link[=cycles_to_wkt]{cycles_to_wkt()}}.

@@ -31,7 +31,7 @@ feature structure be recovered exactly.}
 
 \item{paths}{Optional data.frame describing the paths: columns
 \code{.path}, \code{.feature}, \code{.part}, \code{.ring} (as captured from
-\code{\link[wk:wk_vertices]{wk::wk_coords()}} identifiers by \code{\link[=establish_topology]{establish_topology()}}).}
+\code{\link[wk:wk_coords]{wk::wk_coords()}} identifiers by \code{\link[=establish_topology]{establish_topology()}}).}
 
 \item{crs}{A CRS object (commonly an authority string such as
 "EPSG:4326"), carried but never interpreted, per wk's CRS
