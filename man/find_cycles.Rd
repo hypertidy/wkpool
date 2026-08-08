@@ -16,8 +16,13 @@ A list of integer vectors, each containing .vx IDs forming a closed cycle
 Find closed cycles (rings) in segment graph
 }
 \details{
-Walks the segment graph to discover closed loops. Relies on segments being
-in consecutive order within each ring (as produced by establish_topology).
+When the pool carries path provenance (minted by
+\code{\link[=establish_topology]{establish_topology()}}), a cycle is a path whose segment chain
+closes: rings are recovered exactly, in input order and input
+winding, robust to segment reordering, and the result carries a
+\code{path} attribute mapping each cycle to its path id. Pools without
+provenance fall back to walking the segment graph in storage order,
+which relies on segments being consecutive within each ring.
 
 Each cycle is a vector of vertex IDs in traversal order. The cycle is closed
 (first vertex connects back to last via a segment).

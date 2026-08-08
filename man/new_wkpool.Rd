@@ -4,7 +4,16 @@
 \alias{new_wkpool}
 \title{Construct a wkpool from validated components}
 \usage{
-new_wkpool(vertices, vx0, vx1, feature = NULL, crs = NULL, geodesic = FALSE)
+new_wkpool(
+  vertices,
+  vx0,
+  vx1,
+  feature = NULL,
+  path = NULL,
+  paths = NULL,
+  crs = NULL,
+  geodesic = FALSE
+)
 }
 \arguments{
 \item{vertices}{A data.frame with columns \code{.vx} (integer vertex ids),
@@ -14,6 +23,15 @@ new_wkpool(vertices, vx0, vx1, feature = NULL, crs = NULL, geodesic = FALSE)
 value present in \code{vertices$.vx}.}
 
 \item{feature}{Optional integer vector of feature ids, one per segment.}
+
+\item{path}{Optional integer vector of path ids, one per segment. A
+path is a maximal run of segments minted from one input ring or
+linestring; it is the provenance that lets cycles, ring roles and
+feature structure be recovered exactly.}
+
+\item{paths}{Optional data.frame describing the paths: columns
+\code{.path}, \code{.feature}, \code{.part}, \code{.ring} (as captured from
+\code{\link[wk:wk_vertices]{wk::wk_coords()}} identifiers by \code{\link[=establish_topology]{establish_topology()}}).}
 
 \item{crs}{A CRS object (commonly an authority string such as
 "EPSG:4326"), carried but never interpreted, per wk's CRS

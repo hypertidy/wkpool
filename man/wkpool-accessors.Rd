@@ -5,6 +5,8 @@
 \alias{pool_vertices}
 \alias{pool_segments}
 \alias{pool_feature}
+\alias{pool_path}
+\alias{pool_paths}
 \title{Access components of a wkpool object}
 \usage{
 pool_vertices(x)
@@ -12,6 +14,10 @@ pool_vertices(x)
 pool_segments(x)
 
 pool_feature(x)
+
+pool_path(x)
+
+pool_paths(x)
 }
 \arguments{
 \item{x}{A wkpool object.}
@@ -21,9 +27,14 @@ pool_feature(x)
 \item \code{pool_vertices()}: A data frame with columns \code{.vx} (vertex ID), \code{x}, \code{y},
 and optionally \code{z}.
 \item \code{pool_segments()}: A data frame with columns \code{.vx0}, \code{.vx1}, and
-optionally \code{.feature}.
+optionally \code{.feature} and \code{.path}.
 \item \code{pool_feature()}: An integer vector of feature IDs, or \code{NULL} if no
 feature information is present.
+\item \code{pool_path()}: An integer vector of path IDs (one per segment), or
+\code{NULL} if no path provenance is present.
+\item \code{pool_paths()}: A data frame describing each path (\code{.path},
+\code{.feature}, \code{.part}, \code{.ring}, as captured from \code{\link[wk:wk_vertices]{wk::wk_coords()}}
+identifiers), or \code{NULL}.
 }
 }
 \description{

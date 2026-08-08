@@ -9,17 +9,27 @@ classify_cycles(x, convention = c("sf", "ogc"))
 \arguments{
 \item{x}{A wkpool (ideally after merge_coincident)}
 
-\item{convention}{Which winding convention to use: "sf" (default) or "ogc"
+\item{convention}{Which winding convention to use when the pool has
+no path provenance: "sf" (default) or "ogc"
 \itemize{
 \item sf: negative area = outer, positive = hole
 \item ogc: positive area = outer, negative = hole
 }}
 }
 \value{
-A data frame with cycle index, signed area, and type (outer/hole)
+A data frame with cycle index, signed area, and type
+(outer/hole); when path provenance is present, also \code{.path} and
+\code{.feature}
 }
 \description{
 Classify cycles as outer rings or holes based on winding
+}
+\details{
+When the pool carries path provenance, ring roles are structural:
+the first ring of each part is the exterior and later rings are its
+holes, regardless of winding, and \code{convention} is not consulted.
+The signed area still reports the observed winding. Pools without
+provenance are classified by winding under the requested convention.
 }
 \examples{
 x <- wk::as_wkb(c(

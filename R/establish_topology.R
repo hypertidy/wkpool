@@ -17,6 +17,14 @@
 #' Segments track their feature origin via `.feature` attribute,
 #' enabling discovery of shared boundaries and neighbour relations.
 #'
+#' Segments also carry a minted `.path` id - one id per input ring or
+#' linestring - with a sidecar table (see [pool_paths()]) recording each
+#' path's feature, part and ring identity as captured from
+#' [wk::wk_coords()]. This provenance makes cycles, ring roles and
+#' feature structure recoverable exactly, in input order and input
+#' winding: see [find_cycles()], [classify_cycles()] and
+#' [cycles_to_wkt()].
+#'
 #' The coordinate reference system of the input (as reported by
 #' [wk::wk_crs()]) and its geodesic flag ([wk::wk_is_geodesic()]) are
 #' captured on the pool and travel with it through subsetting, merging
@@ -77,15 +85,34 @@ establish_topology <- function(x, ...) {
 
   same_path <- same_feature & same_part & same_ring
 
+  # Mint path identity: one id per maximal run of rows sharing
+  # (feature_id, part_id, ring_id) - i.e. one id per input ring or
+  # linestring. This is the provenance that makes cycles, ring roles
+  # and feature structure recoverable exactly, in input order and
+  # input winding.
+  path_of_row <- cumsum(c(TRUE, !same_path))
+  first_row <- which(!duplicated(path_of_row))
+  paths <- data.frame(
+    .path = path_of_row[first_row],
+    .feature = coords$feature_id[first_row],
+    .part = coords$part_id[first_row],
+    .ring = coords$ring_id[first_row]
+  )
+
   # Segment from row i to row i+1 where same_path[i] is TRUE
   seg_idx <- which(same_path)
   vx0 <- seg_idx
   vx1 <- seg_idx + 1L
 
-  # Track feature provenance
+  # Track feature and path provenance
   feature_id <- coords$feature_id[seg_idx]
+  path_id <- path_of_row[seg_idx]
+
+  # Drop paths that produced no segments (e.g. points)
+  paths <- paths[paths$.path %in% path_id, , drop = FALSE]
 
   new_wkpool(vertices, vx0, vx1, feature = feature_id,
+             path = path_id, paths = paths,
              crs = crs, geodesic = geodesic)
 }
 
@@ -129,6 +156,8 @@ pool_compact <- function(x) {
   new_vx1 <- new_pool$.vx[match(vx1, active)]
 
   new_wkpool(new_pool, new_vx0, new_vx1, feature = feature,
+             path = pool_path(x),
+             paths = pool_paths(x),
              crs = attr(x, "crs", exact = TRUE),
              geodesic = attr(x, "geodesic", exact = TRUE))
 }

@@ -37,6 +37,13 @@ geodesic_attr <- function(geodesic) {
 #' @param vx0,vx1 Integer vectors of segment start/end vertex ids, each
 #'   value present in `vertices$.vx`.
 #' @param feature Optional integer vector of feature ids, one per segment.
+#' @param path Optional integer vector of path ids, one per segment. A
+#'   path is a maximal run of segments minted from one input ring or
+#'   linestring; it is the provenance that lets cycles, ring roles and
+#'   feature structure be recovered exactly.
+#' @param paths Optional data.frame describing the paths: columns
+#'   `.path`, `.feature`, `.part`, `.ring` (as captured from
+#'   [wk::wk_coords()] identifiers by [establish_topology()]).
 #' @param crs A CRS object (commonly an authority string such as
 #'   "EPSG:4326"), carried but never interpreted, per wk's CRS
 #'   propagation model. Use `NULL` for none, or [wk::wk_crs_inherit()].
@@ -51,6 +58,7 @@ geodesic_attr <- function(geodesic) {
 #'
 #' @export
 new_wkpool <- function(vertices, vx0, vx1, feature = NULL,
+                       path = NULL, paths = NULL,
                        crs = NULL, geodesic = FALSE) {
 
   stopifnot(is.data.frame(vertices))
@@ -63,10 +71,22 @@ new_wkpool <- function(vertices, vx0, vx1, feature = NULL,
     stopifnot(length(feature) == length(vx0))
     fields$.feature <- as.integer(feature)
   }
+  if (!is.null(path)) {
+    stopifnot(length(path) == length(vx0))
+    fields$.path <- as.integer(path)
+  }
+  if (!is.null(paths)) {
+    stopifnot(is.data.frame(paths))
+    stopifnot(all(c(".path", ".feature", ".part", ".ring") %in% names(paths)))
+    if (!is.null(path)) {
+      stopifnot(all(path %in% paths$.path))
+    }
+  }
 
   vctrs::new_rcrd(
     fields,
     pool = vertices,
+    paths = paths,
     crs = crs,
     geodesic = if (is.null(geodesic)) NULL else geodesic_attr(geodesic),
     class = "wkpool"
@@ -75,12 +95,13 @@ new_wkpool <- function(vertices, vx0, vx1, feature = NULL,
 
 # User constructor -------------------------------------------------------
 
-wkpool <- function(vertices, segments, crs = NULL, geodesic = FALSE) {
+wkpool <- function(vertices, segments, paths = NULL, crs = NULL, geodesic = FALSE) {
   #vctrs::vec_assert(segments, data.frame())
   if (!is.data.frame(segments)) stop("`segments` must be a data.frame")
   feature <- if (".feature" %in% names(segments)) segments$.feature else NULL
+  path <- if (".path" %in% names(segments)) segments$.path else NULL
   new_wkpool(vertices, segments$.vx0, segments$.vx1, feature = feature,
-             crs = crs, geodesic = geodesic)
+             path = path, paths = paths, crs = crs, geodesic = geodesic)
 }
 
 # Empty pool -------------------------------------------------------------
@@ -166,9 +187,14 @@ wk_set_geodesic.wkpool <- function(x, geodesic) {
 #' - `pool_vertices()`: A data frame with columns `.vx` (vertex ID), `x`, `y`,
 #'   and optionally `z`.
 #' - `pool_segments()`: A data frame with columns `.vx0`, `.vx1`, and
-#'   optionally `.feature`.
+#'   optionally `.feature` and `.path`.
 #' - `pool_feature()`: An integer vector of feature IDs, or `NULL` if no
 #'   feature information is present.
+#' - `pool_path()`: An integer vector of path IDs (one per segment), or
+#'   `NULL` if no path provenance is present.
+#' - `pool_paths()`: A data frame describing each path (`.path`,
+#'   `.feature`, `.part`, `.ring`, as captured from [wk::wk_coords()]
+#'   identifiers), or `NULL`.
 #'
 #' @examples
 #' x <- wk::as_wkb(c(
@@ -201,6 +227,10 @@ pool_segments <- function(x) {
   if (!is.null(feat)) {
     out$.feature <- feat
   }
+  path <- pool_path(x)
+  if (!is.null(path)) {
+    out$.path <- path
+  }
   out
 }
 
@@ -211,6 +241,21 @@ pool_feature <- function(x) {
     vctrs::field(x, ".feature"),
     error = function(e) NULL
   )
+}
+
+#' @rdname wkpool-accessors
+#' @export
+pool_path <- function(x) {
+  tryCatch(
+    vctrs::field(x, ".path"),
+    error = function(e) NULL
+  )
+}
+
+#' @rdname wkpool-accessors
+#' @export
+pool_paths <- function(x) {
+  attr(x, "paths", exact = TRUE)
 }
 
 # Format/print -----------------------------------------------------------
@@ -254,12 +299,15 @@ vec_cast.wkpool.wkpool <- function(x, to, ...) {
 
 #' @export
 vec_restore.wkpool <- function(x, to, ...) {
-  # On subset: keep full pool, just subset segments; crs and geodesic
-  # come along from the original vector
+  # On subset: keep full pool and full paths table, just subset
+  # segments; crs and geodesic come along from the original vector
   pool <- pool_vertices(to)
   feature <- tryCatch(vctrs::field(x, ".feature"), error = function(e) NULL)
+  path <- tryCatch(vctrs::field(x, ".path"), error = function(e) NULL)
   new_wkpool(pool, vctrs::field(x, ".vx0"), vctrs::field(x, ".vx1"),
              feature = feature,
+             path = path,
+             paths = attr(to, "paths", exact = TRUE),
              crs = attr(to, "crs", exact = TRUE),
              geodesic = attr(to, "geodesic", exact = TRUE))
 }
@@ -314,11 +362,18 @@ pool_combine <- function(...) {
 
   new_pool <- vctrs::vec_rbind(!!!pools)
 
-  # Remap segment indices and collect features
+  # Path provenance combines only when every input carries it; path ids
+  # are offset per input so they stay unique
+  all_paths <- !any(vapply(xs, function(p) is.null(pool_path(p)) || is.null(pool_paths(p)), logical(1)))
+  path_offset <- 0L
+
+  # Remap segment indices and collect features/paths
   new_vx0 <- integer()
   new_vx1 <- integer()
   new_feature <- integer()
   has_feature <- FALSE
+  new_path <- integer()
+  new_paths <- vector("list", length(xs))
 
   for (i in seq_along(xs)) {
     old_vx0 <- vctrs::field(xs[[i]], ".vx0")
@@ -334,10 +389,21 @@ pool_combine <- function(...) {
     } else {
       new_feature <- c(new_feature, rep(NA_integer_, length(old_vx0)))
     }
+
+    if (all_paths) {
+      p <- pool_path(xs[[i]])
+      pt <- pool_paths(xs[[i]])
+      new_path <- c(new_path, p + path_offset)
+      pt$.path <- pt$.path + path_offset
+      new_paths[[i]] <- pt
+      path_offset <- path_offset + max(pt$.path, 0L)
+    }
   }
 
   new_wkpool(new_pool, new_vx0, new_vx1,
              feature = if (has_feature) new_feature else NULL,
+             path = if (all_paths) new_path else NULL,
+             paths = if (all_paths) vctrs::vec_rbind(!!!new_paths) else NULL,
              crs = crs, geodesic = geodesic)
 }
 

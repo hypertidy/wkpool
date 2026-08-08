@@ -9,7 +9,8 @@ hole_points(x, convention = c("sf", "ogc"))
 \arguments{
 \item{x}{A wkpool (ideally after merge_coincident)}
 
-\item{convention}{Which winding convention to use: "sf" (default) or "ogc"}
+\item{convention}{Which winding convention to use when the pool has
+no path provenance: "sf" (default) or "ogc"}
 }
 \value{
 A matrix of hole points (centroids of hole cycles), or NULL if no holes
@@ -20,6 +21,10 @@ Get hole points for constrained triangulation
 \details{
 For use with RTriangle::triangulate(). Each row is the centroid of a hole,
 which tells the triangulator to exclude that region.
+
+When the pool carries path provenance, holes are identified
+structurally (non-first rings of their part) and \code{convention} is
+not consulted.
 }
 \examples{
 polygons_with_holes <- wk::as_wkb(c(

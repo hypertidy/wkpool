@@ -98,7 +98,7 @@ test_that("classify_cycles assigns two different types for polygon with hole", {
   expect_equal(sort(unique(cl$type)), c("hole", "outer"))
 })
 
-test_that("classify_cycles OGC convention flips classification", {
+test_that("classify_cycles with provenance is structural: convention has no effect", {
   merged <- square_with_hole()
   cl_sf <- classify_cycles(merged, convention = "sf")
   cl_ogc <- classify_cycles(merged, convention = "ogc")
@@ -106,7 +106,26 @@ test_that("classify_cycles OGC convention flips classification", {
   # Same areas
   expect_equal(cl_sf$area, cl_ogc$area)
 
-  # Classifications are flipped
+  # Ring roles come from path provenance (first ring of a part is the
+  # exterior), so the winding convention is not consulted and both
+  # calls agree - and are correct
+  expect_identical(cl_sf$type, cl_ogc$type)
+  expect_identical(sum(cl_sf$type == "outer"), 1L)
+  expect_identical(sum(cl_sf$type == "hole"), 1L)
+  expect_true(all(c(".path", ".feature") %in% names(cl_sf)))
+})
+
+test_that("classify_cycles without provenance falls back to winding convention", {
+  merged <- square_with_hole()
+  # strip provenance: rebuild the pool without .path
+  s <- pool_segments(merged)
+  bare <- new_wkpool(pool_vertices(merged), s$.vx0, s$.vx1,
+                     feature = s$.feature)
+  cl_sf <- classify_cycles(bare, convention = "sf")
+  cl_ogc <- classify_cycles(bare, convention = "ogc")
+
+  expect_equal(cl_sf$area, cl_ogc$area)
+  # fallback classifies by winding, so the conventions flip
   expect_false(identical(cl_sf$type, cl_ogc$type))
 })
 
@@ -157,15 +176,10 @@ test_that("hole_points centroid is plausible", {
   expect_true(all(hp[, "y"] >= min(v$y) & hp[, "y"] <= max(v$y)))
 })
 
-test_that("hole_points on simple polygon reflects winding convention", {
-  # Known issue: with the current sign convention, a standard SF-wound
-  # outer ring (CCW, positive area) is treated as a hole. This test
-  # documents the current behaviour pending winding convention resolution.
+test_that("hole_points on simple polygon returns NULL (winding resolved)", {
+  # Resolved: ring roles come from path provenance, so a simple polygon
+  # has no holes regardless of its winding or the convention argument.
   merged <- single_square()
-  hp <- hole_points(merged)
-
-  # Currently returns a point (the centroid of the "hole") rather than NULL
-  # because the outer ring's positive area is classified as a hole.
-  # When winding convention is resolved, this should return NULL.
-  expect_true(is.matrix(hp) || !is.null(hp))
+  expect_null(hole_points(merged))
+  expect_null(hole_points(merged, convention = "ogc"))
 })

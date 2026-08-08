@@ -1,5 +1,39 @@
 # wkpool (development version)
 
+## Path provenance (.path)
+
+* `establish_topology()` now mints a `.path` id per segment - one id
+  per input ring or linestring - with a sidecar `paths` table
+  (`.path`, `.feature`, `.part`, `.ring`, captured from
+  `wk::wk_coords()` identifiers). Provenance survives subsetting,
+  `merge_coincident()`, `pool_compact()` and `pool_combine()` (which
+  offsets path ids to keep them unique), and is exposed via the new
+  accessors `pool_path()` and `pool_paths()`. `new_wkpool()` gains
+  `path` and `paths` arguments.
+
+* `find_cycles()` uses provenance when present: a cycle is a path
+  whose segment chain closes. Rings are recovered exactly, in input
+  order and input winding, robust to segment reordering (chains are
+  rebuilt by connectivity), and a broken ring after subsetting is
+  dropped rather than mis-walked. The result carries a `path`
+  attribute mapping cycles to path ids. Pools without provenance keep
+  the legacy storage-order walk.
+
+* The winding-convention issue is resolved structurally: with
+  provenance, ring roles are known (the first ring of each part is the
+  exterior, later rings are its holes), so `classify_cycles()` and
+  `hole_points()` no longer guess from winding and the `convention`
+  argument is only consulted for provenance-free pools.
+  `hole_points()` on a simple polygon now returns `NULL` as intended.
+
+* `cycles_to_wkb(feature = TRUE)` reconstructs original feature
+  structure exactly when provenance is present: rings grouped into
+  their original part (exterior first, then that part's own holes),
+  parts grouped into POLYGON or MULTIPOLYGON features. This replaces
+  the heuristics (all holes with the first outer; holes dropped for
+  multi-part features) for established pools; provenance-free pools
+  keep the old behaviour.
+
 ## Native emitters
 
 * All round-trip emitters (`arcs_to_*()`, `cycles_to_*()`,
@@ -16,10 +50,10 @@
   (16 significant digits, trimmed) - use the WKB emitters when
   bit-exact coordinates matter.
 
-* Behaviour is otherwise unchanged, including the documented
-  simplifications in `cycles_to_wkb(feature = TRUE)` (all holes with
-  the first outer; holes dropped in the multi-outer MULTIPOLYGON
-  case).
+* Behaviour is otherwise unchanged. (The documented simplifications in
+  `cycles_to_wkb(feature = TRUE)` were retained at this stage and have
+  since been superseded by path provenance for established pools - see
+  above; they still describe the provenance-free fallback.)
 
 ## wk_handle: a wkpool is wk-handleable
 

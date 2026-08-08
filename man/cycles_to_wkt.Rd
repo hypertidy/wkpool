@@ -16,9 +16,10 @@ cycles_to_wkb(x, feature = TRUE, convention = c("sf", "ogc"), ...)
 If TRUE, groups cycles by .feature and nests holes in outers.
 If FALSE, each cycle becomes a separate polygon.}
 
-\item{convention}{Winding convention: "sf" (default) or "ogc"}
+\item{convention}{Winding convention: "sf" (default) or "ogc"; only
+consulted for pools without path provenance}
 
-\item{...}{Passed to \code{\link[wk:as_wkb]{wk::as_wkb()}}}
+\item{...}{Passed to \code{\link[wk:wkb]{wk::as_wkb()}}}
 }
 \value{
 A wk_wkt vector of POLYGON geometries
@@ -27,12 +28,17 @@ A wk_wkt vector of POLYGON geometries
 Convert cycles to WKT polygons
 }
 \details{
-Converts cycles back to polygons. When feature = TRUE, attempts to
-reconstruct original polygon structure by grouping rings by feature
-and nesting holes within their containing outer ring.
+Converts cycles back to polygons. When feature = TRUE and the pool
+carries path provenance (minted by \code{\link[=establish_topology]{establish_topology()}}), the
+original feature structure is reconstructed exactly: rings are
+grouped into their original part (exterior first, then that part's
+holes) and parts into their original feature (POLYGON or
+MULTIPOLYGON), with winding emitted as stored and \code{convention} not
+consulted. Pools without provenance fall back to a heuristic that
+groups rings by feature and nests all holes with the first outer.
 
-Geometry is assembled natively via \code{\link[wk:wk_polygon]{wk::wk_polygon()}} and
-\code{\link[wk:wk_collection]{wk::wk_collection()}} (WKB first, WKT derived from it): coordinates
+Geometry is assembled natively via \code{\link[wk:wk_linestring]{wk::wk_polygon()}} and
+\code{\link[wk:wk_linestring]{wk::wk_collection()}} (WKB first, WKT derived from it): coordinates
 are emitted at full double precision, rings are closed by wk, z is
 carried when the pool has it, and the pool's crs and geodesic flag
 are attached to the output.

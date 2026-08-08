@@ -77,19 +77,21 @@ test_that("cycles_to_wkt recovers original polygons", {
   expect_equal(range(orig_coords$y), range(rt_coords$y))
 })
 
-test_that("cycles_to_wkt feature=TRUE is affected by winding convention", {
-
-  # Known issue: find_cycles traversal direction may not match SF sign
-  # convention, causing feature-grouped output to be empty for standard
-
-  # SF-wound input. This test documents the current behaviour.
+test_that("cycles_to_wkt feature=TRUE reconstructs features (winding resolved)", {
+  # Resolved: cycles carry path provenance, so feature reconstruction
+  # is structural and does not depend on winding or convention.
   x <- two_squares()
   pool <- establish_topology(x)
   merged <- merge_coincident(pool)
 
   wkt_feat <- cycles_to_wkt(merged, feature = TRUE)
-  # Currently returns 0 due to winding convention mismatch
   expect_s3_class(wkt_feat, "wk_wkt")
+  expect_length(wkt_feat, 2L)
+  expect_true(all(wk::wk_meta(wkt_feat)$geometry_type == 3L))
+
+  # coordinates recover the originals
+  expect_equal(range(wk::wk_coords(x)$x), range(wk::wk_coords(wkt_feat)$x))
+  expect_equal(range(wk::wk_coords(x)$y), range(wk::wk_coords(wkt_feat)$y))
 })
 
 test_that("cycles_to_wkt feature=FALSE produces valid WKT", {

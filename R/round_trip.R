@@ -78,13 +78,19 @@ arcs_to_wkt <- function(x) {
 #' @param feature Logical: attempt to reconstruct original features?
 #'   If TRUE, groups cycles by .feature and nests holes in outers.
 #'   If FALSE, each cycle becomes a separate polygon.
-#' @param convention Winding convention: "sf" (default) or "ogc"
+#' @param convention Winding convention: "sf" (default) or "ogc"; only
+#'   consulted for pools without path provenance
 #' @return A wk_wkt vector of POLYGON geometries
 #'
 #' @details
-#' Converts cycles back to polygons. When feature = TRUE, attempts to
-#' reconstruct original polygon structure by grouping rings by feature
-#' and nesting holes within their containing outer ring.
+#' Converts cycles back to polygons. When feature = TRUE and the pool
+#' carries path provenance (minted by [establish_topology()]), the
+#' original feature structure is reconstructed exactly: rings are
+#' grouped into their original part (exterior first, then that part's
+#' holes) and parts into their original feature (POLYGON or
+#' MULTIPOLYGON), with winding emitted as stored and `convention` not
+#' consulted. Pools without provenance fall back to a heuristic that
+#' groups rings by feature and nests all holes with the first outer.
 #'
 #' Geometry is assembled natively via [wk::wk_polygon()] and
 #' [wk::wk_collection()] (WKB first, WKT derived from it): coordinates
@@ -146,8 +152,45 @@ cycles_to_wkb <- function(x, feature = TRUE, convention = c("sf", "ogc"), ...) {
     return(wk::as_wkb(build_polygons(cycles, seq_along(cycles)), ...))
   }
 
-  # Try to reconstruct features with holes
-  # Associate each cycle with a feature based on segment membership
+  # Provenance path: cycles carry their minted path ids, so feature and
+  # ring structure is reconstructed exactly - rings grouped into their
+  # original part (exterior first, then its own holes), parts grouped
+  # into their original feature (POLYGON or MULTIPOLYGON). `convention`
+  # is not consulted; winding is emitted as stored.
+  cycle_paths <- attr(cycles, "path")
+  paths_tab <- pool_paths(x)
+  if (!is.null(cycle_paths) && !is.null(paths_tab) &&
+      length(cycle_paths) == length(cycles)) {
+    idx <- match(cycle_paths, paths_tab$.path)
+    feat <- paths_tab$.feature[idx]
+    part <- paths_tab$.part[idx]
+    ring <- paths_tab$.ring[idx]
+
+    out <- list()
+    for (f in unique(feat)) {
+      fparts <- unique(part[feat == f])
+      polys <- vector("list", length(fparts))
+      for (k in seq_along(fparts)) {
+        sel <- which(feat == f & part == fparts[k])
+        sel <- sel[order(ring[sel])]  # exterior ring first
+        polys[[k]] <- build_polygons(cycles[sel], rep(1L, length(sel)))
+      }
+      poly_vec <- do.call(c, polys)
+      out[[length(out) + 1L]] <- if (length(fparts) == 1L) {
+        poly_vec
+      } else {
+        wk::wk_collection(
+          poly_vec,
+          wk::wk_geometry_type("multipolygon"),
+          feature_id = 1L
+        )
+      }
+    }
+    return(wk::as_wkb(do.call(c, out), ...))
+  }
+
+  # Fallback for pools without provenance: associate each cycle with a
+  # feature based on segment membership
   segs <- pool_segments(x)
   cycle_features <- vapply(seq_along(cycles), function(i) {
     cyc <- cycles[[i]]

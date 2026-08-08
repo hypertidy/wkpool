@@ -83,6 +83,8 @@ merge_coincident <- function(x, tolerance = 0) {
   final_vx1 <- unname(final_remap[as.character(new_vx1)])
 
   new_wkpool(new_pool, final_vx0, final_vx1, feature = feature,
+             path = pool_path(x),
+             paths = pool_paths(x),
              crs = attr(x, "crs", exact = TRUE),
              geodesic = attr(x, "geodesic", exact = TRUE))
 }
@@ -252,8 +254,13 @@ as_decido <- function(x) {
 #' @return A list of integer vectors, each containing .vx IDs forming a closed cycle
 #'
 #' @details
-#' Walks the segment graph to discover closed loops. Relies on segments being
-#' in consecutive order within each ring (as produced by establish_topology).
+#' When the pool carries path provenance (minted by
+#' [establish_topology()]), a cycle is a path whose segment chain
+#' closes: rings are recovered exactly, in input order and input
+#' winding, robust to segment reordering, and the result carries a
+#' `path` attribute mapping each cycle to its path id. Pools without
+#' provenance fall back to walking the segment graph in storage order,
+#' which relies on segments being consecutive within each ring.
 #'
 #' Each cycle is a vector of vertex IDs in traversal order. The cycle is closed
 #' (first vertex connects back to last via a segment).
@@ -270,6 +277,75 @@ as_decido <- function(x) {
 #' @export
 find_cycles <- function(x) {
   check_wkpool(x)
+  path <- pool_path(x)
+  if (is.null(path)) {
+    return(find_cycles_walk(x))
+  }
+
+  # Provenance: a cycle is a path whose segment chain closes. Grouping
+  # by minted .path recovers rings exactly, in input order and input
+  # winding - no reliance on segment storage order across the pool.
+  segs <- pool_segments(x)
+  ids <- unique(path)
+  cycles <- list()
+  cycle_paths <- integer()
+
+  for (p in ids) {
+    i <- which(path == p)
+    ch <- chain_path(segs$.vx0[i], segs$.vx1[i])
+    if (!is.null(ch) && ch$closed && length(ch$vx) >= 3) {
+      cycles[[length(cycles) + 1L]] <- ch$vx
+      cycle_paths <- c(cycle_paths, p)
+    }
+  }
+
+  attr(cycles, "path") <- cycle_paths
+  cycles
+}
+
+# Order one path's segments into a chain. Returns list(vx, closed)
+# where vx is the vertex sequence in traversal order (closed chains
+# drop the repeated final vertex), or NULL if the segments do not form
+# a single simple chain (missing segments after subset, or branching).
+chain_path <- function(vx0, vx1) {
+  n <- length(vx0)
+  if (n == 0) return(NULL)
+
+  # fast path: already in chain order (establish_topology output)
+  if (n == 1 || all(vx1[-n] == vx0[-1])) {
+    closed <- vx1[n] == vx0[1]
+    return(list(vx = if (closed) vx0 else c(vx0, vx1[n]), closed = closed))
+  }
+
+  # reorder by connectivity: start at a vertex that ends no segment
+  start_candidates <- setdiff(vx0, vx1)
+  start <- if (length(start_candidates) > 0) start_candidates[1] else vx0[1]
+  ord <- integer(n)
+  used <- logical(n)
+  cur <- start
+  for (i in seq_len(n)) {
+    j <- which(!used & vx0 == cur)
+    if (length(j) != 1) return(NULL)
+    ord[i] <- j
+    used[j] <- TRUE
+    cur <- vx1[j]
+  }
+  chain_path(vx0[ord], vx1[ord])
+}
+
+# Structural ring roles for paths: within each (feature, part), the
+# first ring (lowest .ring id) is the exterior, later rings are holes.
+# wk emits the exterior ring first, so this is provenance, not guess.
+path_roles <- function(paths) {
+  key <- paste(paths$.feature, paths$.part, sep = "/")
+  mins <- tapply(paths$.ring, key, min)
+  ifelse(paths$.ring == unname(mins[key]), "outer", "hole")
+}
+
+# Legacy discovery: walk segments in storage order. Retained for pools
+# without path provenance (hand-built pools, as_arcs output). Relies on
+# segments being consecutive within each ring.
+find_cycles_walk <- function(x) {
   segs <- pool_segments(x)
   n <- nrow(segs)
 
@@ -341,10 +417,20 @@ cycle_signed_area <- function(cycle, pool) {
 #' Classify cycles as outer rings or holes based on winding
 #'
 #' @param x A wkpool (ideally after merge_coincident)
-#' @param convention Which winding convention to use: "sf" (default) or "ogc"
+#' @param convention Which winding convention to use when the pool has
+#'   no path provenance: "sf" (default) or "ogc"
 #'   - sf: negative area = outer, positive = hole
 #'   - ogc: positive area = outer, negative = hole
-#' @return A data frame with cycle index, signed area, and type (outer/hole)
+#' @return A data frame with cycle index, signed area, and type
+#'   (outer/hole); when path provenance is present, also `.path` and
+#'   `.feature`
+#'
+#' @details
+#' When the pool carries path provenance, ring roles are structural:
+#' the first ring of each part is the exterior and later rings are its
+#' holes, regardless of winding, and `convention` is not consulted.
+#' The signed area still reports the observed winding. Pools without
+#' provenance are classified by winding under the requested convention.
 #'
 #' @examples
 #' x <- wk::as_wkb(c(
@@ -368,6 +454,24 @@ classify_cycles <- function(x, convention = c("sf", "ogc")) {
 
   areas <- vapply(cycles, cycle_signed_area, numeric(1), pool = pool)
 
+  cycle_paths <- attr(cycles, "path")
+  paths <- pool_paths(x)
+  if (!is.null(cycle_paths) && !is.null(paths) && length(cycle_paths) == length(cycles)) {
+    # Provenance: ring role is known structurally (first ring of its
+    # part is the exterior); winding is reported via area, not used to
+    # classify, and `convention` is not consulted
+    idx <- match(cycle_paths, paths$.path)
+    return(data.frame(
+      cycle = seq_along(cycles),
+      area = areas,
+      type = path_roles(paths)[idx],
+      .path = cycle_paths,
+      .feature = paths$.feature[idx]
+    ))
+  }
+
+  # Fallback for pools without provenance: classify by winding under
+  # the requested convention
   if (convention == "sf") {
     type <- ifelse(areas < 0, "outer", "hole")
   } else {
@@ -407,12 +511,17 @@ reverse_cycle <- function(cycle) {
 #' Get hole points for constrained triangulation
 #'
 #' @param x A wkpool (ideally after merge_coincident)
-#' @param convention Which winding convention to use: "sf" (default) or "ogc"
+#' @param convention Which winding convention to use when the pool has
+#'   no path provenance: "sf" (default) or "ogc"
 #' @return A matrix of hole points (centroids of hole cycles), or NULL if no holes
 #'
 #' @details
 #' For use with RTriangle::triangulate(). Each row is the centroid of a hole,
 #' which tells the triangulator to exclude that region.
+#'
+#' When the pool carries path provenance, holes are identified
+#' structurally (non-first rings of their part) and `convention` is
+#' not consulted.
 #'
 #' @examples
 #' polygons_with_holes <- wk::as_wkb(c(
@@ -441,12 +550,21 @@ hole_points <- function(x, convention = c("sf", "ogc")) {
   cycles <- find_cycles(x)
   pool <- pool_vertices(x)
 
-  areas <- vapply(cycles, cycle_signed_area, numeric(1), pool = pool)
-
-  if (convention == "sf") {
-    hole_idx <- which(areas > 0)
+  cycle_paths <- attr(cycles, "path")
+  paths <- pool_paths(x)
+  if (!is.null(cycle_paths) && !is.null(paths) && length(cycle_paths) == length(cycles)) {
+    # Provenance: holes are the non-first rings of their part;
+    # `convention` is not consulted
+    role <- path_roles(paths)[match(cycle_paths, paths$.path)]
+    hole_idx <- which(role == "hole")
   } else {
-    hole_idx <- which(areas < 0)
+    areas <- vapply(cycles, cycle_signed_area, numeric(1), pool = pool)
+
+    if (convention == "sf") {
+      hole_idx <- which(areas > 0)
+    } else {
+      hole_idx <- which(areas < 0)
+    }
   }
 
   if (length(hole_idx) == 0) return(NULL)
