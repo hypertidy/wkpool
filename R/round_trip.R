@@ -127,7 +127,7 @@ cycles_to_wkb <- function(x, feature = TRUE, convention = c("sf", "ogc"), ...) {
   geodesic <- wk::wk_is_geodesic(x)
 
   # Get signed areas
-  areas <- vapply(cycles, cycle_signed_area, numeric(1), pool = v)
+  areas <- cycles_signed_area(cycles, v)
 
   if (convention == "sf") {
     is_outer <- areas < 0

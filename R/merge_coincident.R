@@ -108,39 +108,63 @@ vertex_groups <- function(pool, tolerance = 0) {
 #' @export
 find_shared_edges <- function(x) {
   check_wkpool(x)
-  vx0 <- vctrs::field(x, ".vx0")
-  vx1 <- vctrs::field(x, ".vx1")
   feature <- pool_feature(x)
-
-  # Normalize edge direction for comparison (lower .vx first)
-  edge_lo <- pmin(vx0, vx1)
-  edge_hi <- pmax(vx0, vx1)
-  edge_key <- paste(edge_lo, edge_hi, sep = "-")
-
-  # Build edge-feature table
-  edge_df <- data.frame(
-    edge_key = edge_key,
-    .vx0 = edge_lo,
-    .vx1 = edge_hi,
-    .feature = if (!is.null(feature)) feature else NA_integer_,
-    segment_idx = seq_along(vx0)
-  )
+  e <- shared_edge_index(x)
 
   # Find edges that appear in multiple features
   if (!is.null(feature)) {
-    # Group by edge, count distinct features
-    edge_features <- tapply(edge_df$.feature, edge_df$edge_key,
-                            function(f) unique(f[!is.na(f)]))
-    shared_keys <- names(edge_features)[lengths(edge_features) > 1]
-
-    out <- edge_df[edge_df$edge_key %in% shared_keys, ]
-    out$features <- edge_features[out$edge_key]
+    out <- edge_frame(e$lo, e$hi, feature, e$keep)
+    # per shared edge, its distinct features in order of appearance,
+    # named by edge key
+    ef <- e$ef[e$n_feat[e$ef$gid] > 1, ]
+    features <- split(ef$f, ef$gid)
+    first <- match(as.integer(names(features)), e$gid)
+    names(features) <- paste(e$lo[first], e$hi[first], sep = "-")
+    out$features <- if (nrow(out)) features[out$edge_key] else integer()
     out
   } else {
     # No feature info - just find duplicate edges
-    dup_keys <- unique(edge_key[duplicated(edge_key)])
-    edge_df[edge_df$edge_key %in% dup_keys, ]
+    edge_frame(e$lo, e$hi, NULL, e$keep)
   }
+}
+
+# Undirected edge identity per segment (lower .vx first, integer group
+# id numbered by first appearance) and which segments lie on a shared
+# edge: one present in more than one feature (distinct non-NA
+# features), or without feature info simply duplicated
+shared_edge_index <- function(x) {
+  vx0 <- vctrs::field(x, ".vx0")
+  vx1 <- vctrs::field(x, ".vx1")
+  feature <- pool_feature(x)
+  lo <- pmin(vx0, vx1)
+  hi <- pmax(vx0, vx1)
+  gid <- vctrs::vec_group_id(data.frame(lo = lo, hi = hi))
+  n <- attr(gid, "n")
+  out <- list(lo = lo, hi = hi, gid = gid)
+  if (!is.null(feature)) {
+    # distinct (edge, feature) pairs in segment order, NA features dropped
+    out$ef <- vctrs::vec_unique(data.frame(gid = gid, f = feature)[!is.na(feature), ])
+    out$n_feat <- tabulate(out$ef$gid, nbins = n)
+    out$keep <- out$n_feat[gid] > 1
+  } else {
+    out$keep <- tabulate(gid, nbins = n)[gid] > 1
+  }
+  out
+}
+
+# Rows of the edge-feature table for the segments selected by `keep`,
+# with the same columns and row names as the full table subset
+edge_frame <- function(edge_lo, edge_hi, feature, keep) {
+  i <- which(keep)
+  out <- data.frame(
+    edge_key = paste(edge_lo[i], edge_hi[i], sep = "-"),
+    .vx0 = edge_lo[i],
+    .vx1 = edge_hi[i],
+    .feature = if (!is.null(feature)) feature[i] else rep(NA_integer_, length(i)),
+    segment_idx = i
+  )
+  row.names(out) <- i
+  out
 }
 
 
@@ -169,14 +193,11 @@ find_internal_boundaries <- function(x) {
   check_wkpool(x)
   s <- pool_segments(x)
 
-  # Create directed edge key
-  edge_directed <- paste(s$.vx0, s$.vx1, sep = "-")
-
-  # Create reversed key
-  edge_reversed <- paste(s$.vx1, s$.vx0, sep = "-")
-
-  # Internal = my edge exists as someone else's reverse
-  is_internal <- edge_directed %in% edge_reversed
+  # Internal = my directed edge exists as someone else's reverse
+  is_internal <- vctrs::vec_in(
+    data.frame(a = s$.vx0, b = s$.vx1),
+    data.frame(a = s$.vx1, b = s$.vx0)
+  )
 
   x[is_internal]
 }
@@ -282,19 +303,16 @@ find_cycles <- function(x) {
   # winding - no reliance on segment storage order across the pool.
   segs <- pool_segments(x)
   ids <- unique(path)
-  cycles <- list()
-  cycle_paths <- integer()
+  # segment indices per path, paths in order of first appearance
+  by_path <- split(seq_along(path), factor(path, levels = ids))
+  chains <- lapply(by_path, function(i) chain_path(segs$.vx0[i], segs$.vx1[i]))
+  ok <- vapply(chains, function(ch) {
+    !is.null(ch) && ch$closed && length(ch$vx) >= 3
+  }, logical(1))
 
-  for (p in ids) {
-    i <- which(path == p)
-    ch <- chain_path(segs$.vx0[i], segs$.vx1[i])
-    if (!is.null(ch) && ch$closed && length(ch$vx) >= 3) {
-      cycles[[length(cycles) + 1L]] <- ch$vx
-      cycle_paths <- c(cycle_paths, p)
-    }
-  }
-
-  attr(cycles, "path") <- cycle_paths
+  cycles <- lapply(chains[ok], `[[`, "vx")
+  names(cycles) <- NULL
+  attr(cycles, "path") <- ids[ok]
   cycles
 }
 
@@ -409,6 +427,27 @@ cycle_signed_area <- function(cycle, pool) {
 }
 
 
+# Signed areas of many cycles: one match() of all cycle vertices into
+# the pool, then the same shoelace arithmetic as cycle_signed_area()
+# on each cycle's slice (identical results, without a pool-wide match
+# per cycle)
+cycles_signed_area <- function(cycles, pool) {
+  if (length(cycles) == 0) return(numeric(0))
+  idx <- match(unlist(cycles), pool$.vx)
+  x <- pool$x[idx]
+  y <- pool$y[idx]
+  end <- cumsum(lengths(cycles))
+  start <- end - lengths(cycles) + 1L
+  vapply(seq_along(cycles), function(k) {
+    i <- start[k]:end[k]
+    xk <- c(x[i], x[i[1]])
+    yk <- c(y[i], y[i[1]])
+    n <- length(i)
+    sum(xk[-(n+1)] * yk[-1] - xk[-1] * yk[-(n+1)]) / 2
+  }, numeric(1))
+}
+
+
 #' Classify cycles as outer rings or holes based on winding
 #'
 #' @param x A wkpool (ideally after merge_coincident)
@@ -447,7 +486,7 @@ classify_cycles <- function(x, convention = c("sf", "ogc")) {
   cycles <- find_cycles(x)
   pool <- pool_vertices(x)
 
-  areas <- vapply(cycles, cycle_signed_area, numeric(1), pool = pool)
+  areas <- cycles_signed_area(cycles, pool)
 
   cycle_paths <- attr(cycles, "path")
   paths <- pool_paths(x)
@@ -553,7 +592,7 @@ hole_points <- function(x, convention = c("sf", "ogc")) {
     role <- path_roles(paths)[match(cycle_paths, paths$.path)]
     hole_idx <- which(role == "hole")
   } else {
-    areas <- vapply(cycles, cycle_signed_area, numeric(1), pool = pool)
+    areas <- cycles_signed_area(cycles, pool)
 
     if (convention == "sf") {
       hole_idx <- which(areas > 0)
@@ -566,11 +605,13 @@ hole_points <- function(x, convention = c("sf", "ogc")) {
 
   hole_cycles <- cycles[hole_idx]
 
-  # Centroid of each hole
-  pts <- t(vapply(hole_cycles, function(cyc) {
-    idx <- match(cyc, pool$.vx)
-    c(mean(pool$x[idx]), mean(pool$y[idx]))
+  # Centroid of each hole: one match() for all holes, then per-hole slices
+  idx <- split(match(unlist(hole_cycles), pool$.vx),
+               rep(seq_along(hole_cycles), lengths(hole_cycles)))
+  pts <- t(vapply(idx, function(i) {
+    c(mean(pool$x[i]), mean(pool$y[i]))
   }, numeric(2)))
+  dimnames(pts) <- NULL
 
   colnames(pts) <- c("x", "y")
   pts
@@ -605,24 +646,19 @@ find_neighbours <- function(x, type = c("edge", "vertex")) {
   }
 
   if (type == "edge") {
-    shared <- find_shared_edges(x)
+    e <- shared_edge_index(x)
 
-    if (nrow(shared) == 0) {
+    if (!any(e$keep)) {
       return(data.frame(feature_a = integer(), feature_b = integer()))
     }
 
-    # For each shared edge, create pairs of features
-    pairs <- lapply(unique(shared$edge_key), function(key) {
-      feats <- unique(shared$.feature[shared$edge_key == key])
-      if (length(feats) >= 2) {
-        expand.grid(feature_a = feats, feature_b = feats,
-                    stringsAsFactors = FALSE)
-      }
-    })
-
-    pairs <- do.call(rbind, pairs)
+    # For each shared edge (in order of appearance), all ordered pairs of
+    # its distinct features
+    d <- vctrs::vec_unique(data.frame(g = e$gid[e$keep], f = feature[e$keep]))
+    d <- d[order(d$g), ]
+    pairs <- group_pairs(d$g, d$f)
     pairs <- pairs[pairs$feature_a < pairs$feature_b, ]  # unique pairs
-    unique(pairs)
+    unique_rows(pairs)
 
   } else {
     # Vertex-based: features sharing any vertex
@@ -634,25 +670,50 @@ find_neighbours <- function(x, type = c("edge", "vertex")) {
       .vx = c(vx0, vx1),
       .feature = c(feature, feature)
     )
-    vf <- unique(vf)
+    vf <- vctrs::vec_unique(vf)
 
-    # For each vertex, find features
-    vertex_features <- split(vf$.feature, vf$.vx)
-    shared_vertices <- vertex_features[lengths(vertex_features) > 1]
-
-    pairs <- lapply(shared_vertices, function(feats) {
-      expand.grid(feature_a = feats, feature_b = feats,
-                  stringsAsFactors = FALSE)
-    })
-
-    pairs <- do.call(rbind, pairs)
-    if (is.null(pairs) || nrow(pairs) == 0) {
+    # Vertices shared by more than one feature, ascending .vx
+    vf <- vf[order(vf$.vx), ]
+    n <- tabulate(match(vf$.vx, unique(vf$.vx)))
+    vf <- vf[rep(n > 1, n), ]
+    if (nrow(vf) == 0) {
       return(data.frame(feature_a = integer(), feature_b = integer()))
     }
 
+    pairs <- group_pairs(vf$.vx, vf$.feature, label = TRUE)
     pairs <- pairs[pairs$feature_a < pairs$feature_b, ]
-    unique(pairs)
+    pairs <- unique_rows(pairs)
+    # row names as rbind() gives a named list: "<.vx>.<position>"
+    row.names(pairs) <- paste(pairs$.g, pairs$.p, sep = ".")
+    pairs[c("feature_a", "feature_b")]
   }
+}
+
+# All ordered pairs of values within each group, as expand.grid() would
+# give them per group and rbind() would stack them: groups must be
+# contiguous, and within a group feature_a varies fastest. Row names are
+# the stacked positions, or "<group>.<position>" when `label` is TRUE
+# (as rbind() names rows from a named list): with `label`, columns .g
+# and .p carry the group and position for the caller to build them on
+# the rows it keeps.
+group_pairs <- function(g, f, label = FALSE) {
+  k <- tabulate(match(g, unique(g)))
+  start <- cumsum(k) - k + 1L
+  # every row is feature_b once per member of its group
+  b <- rep(seq_along(f), rep(k, k))
+  a <- sequence(rep(k, k), from = rep(start, k))
+  out <- data.frame(feature_a = f[a], feature_b = f[b])
+  if (label) {
+    out$.g <- rep(unique(g), k^2)
+    out$.p <- sequence(k^2)
+  }
+  out
+}
+
+# unique() for the feature pair columns of a data frame, keeping the
+# first occurrence and its row name, keyed at C level
+unique_rows <- function(x) {
+  x[!duplicated(vctrs::vec_group_id(x[c("feature_a", "feature_b")])), , drop = FALSE]
 }
 
 
@@ -697,8 +758,8 @@ topology_report <- function(x, tolerance = 1e-8) {
     a1 <- g[match(vx1, pool$.vx)]
     ekey <- vctrs::vec_group_id(data.frame(lo = pmin(a0, a1), hi = pmax(a0, a1)))
     if (!is.null(feature)) {
-      n_per_edge <- vapply(split(feature, ekey), function(f) length(unique(f)), integer(1))
-      n_shared_edges <- sum(n_per_edge > 1)
+      ef <- vctrs::vec_unique(data.frame(e = ekey, f = feature))
+      n_shared_edges <- sum(tabulate(ef$e) > 1)
     } else {
       n_shared_edges <- sum(tabulate(ekey) > 1)
     }
