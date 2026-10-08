@@ -109,7 +109,8 @@ establish_topology <- function(x, ...) {
   path_id <- path_of_row[seg_idx]
 
   # Drop paths that produced no segments (e.g. points)
-  paths <- paths[paths$.path %in% path_id, , drop = FALSE]
+  has_seg <- tabulate(path_id, nbins = path_of_row[n]) > 0
+  paths <- paths[has_seg[paths$.path], , drop = FALSE]
 
   new_wkpool(vertices, vx0, vx1, feature = feature_id,
              path = path_id, paths = paths,

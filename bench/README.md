@@ -6,7 +6,7 @@ packages agree on the vertex and edge counts first. Results are in `results/`.
 
 Rerun from the package root (wkpool, silicate, sf, wk, bench installed):
 
-    Rscript bench/silicate-vs-wkpool.R          # all sizes, ~20 min
+    Rscript bench/silicate-vs-wkpool.R          # all sizes, ~25 min
     Rscript bench/silicate-vs-wkpool.R small    # nc + 1000 hexagons, ~2 min
 
 | file | contents |
@@ -39,78 +39,83 @@ Rerun from the package root (wkpool, silicate, sf, wk, bench installed):
 | unique undirected edges | `SC0()`, `SC()` | the above + `quotient_edges()` |
 | arcs (TopoJSON-style) | `ARC()` | the above + `find_arcs(quotient = TRUE)` |
 
-## Results (2026-10-07 second run, Xeon 2.8 GHz, R 4.3.3, wkpool 0.3.0.9006 @ 4cc1fa7)
+## Results (2026-10-08, Xeon 2.8 GHz, R 4.3.3, wkpool 0.3.0.9006 with vectorised verbs and positional vertex lookup)
 
-Median seconds; single iterations above 50k coords. `-` = not run: silicate
-`SC()`/`ARC()` are skipped above 200k coords because they are superlinear
-(49 s and 34 s already at 70k coords).
+Median seconds. wkpool always gets 3-10 iterations; silicate gets a single
+iteration above 50k coords. `-` = not run: silicate `SC()`/`ARC()` are
+skipped above 200k coords because they are superlinear (67 s and 39 s
+already at 70k coords).
 
 | input | PATH0 | wkpool vertices | SC0 | SC | wkpool edges | ARC | wkpool arcs |
 |---|---|---|---|---|---|---|---|
-| nc | 0.029 | 0.003 | 0.055 | 0.084 | 0.0029 | 0.32 | 0.0064 |
-| inlandwaters | 0.049 | 0.045 | 0.071 | 0.47 | 0.039 | 1.4 | 0.059 |
-| hex_1e3 | 0.13 | 0.0062 | 0.26 | 0.82 | 0.0047 | 2.6 | 0.0068 |
-| hex_1e4 | 0.91 | 0.063 | 2.1 | 49 | 0.067 | 34 | 0.086 |
-| dense_hex_1e3 | 0.18 | 0.065 | 0.4 | 1.6 | 0.069 | 5.3 | 0.14 |
-| lines_100x1000 | 0.055 | 0.1 | 0.24 | 0.69 | 0.17 | 18 | 0.13 |
-| hex_1e5 | 11 | 1.5 | 21 | - | 1.1 | - | 2 |
-| dense_hex_1e4 | 1.4 | 1.4 | 2 | - | 0.74 | - | 0.7 |
-| lines_1000x1000 | 0.46 | 2.1 | 0.81 | - | 0.99 | - | 1.6 |
-
-Single-iteration timings (above 50k coords) vary by up to 2x between runs
-because of garbage collection: an earlier run had wkpool vertices at 0.91 s
-for dense_hex_1e4 and 1.1 s for lines_1000x1000. Ratios below 2x are noise.
+| nc | 0.027 | 0.0039 | 0.054 | 0.11 | 0.0026 | 0.32 | 0.0038 |
+| inlandwaters | 0.061 | 0.011 | 0.12 | 0.53 | 0.014 | 1.5 | 0.047 |
+| hex_1e3 | 0.13 | 0.0045 | 0.25 | 0.79 | 0.0054 | 2.6 | 0.0064 |
+| hex_1e4 | 0.88 | 0.06 | 1.7 | 71 | 0.056 | 33 | 0.061 |
+| dense_hex_1e3 | 0.15 | 0.018 | 0.25 | 1.4 | 0.026 | 5 | 0.073 |
+| lines_100x1000 | 0.053 | 0.028 | 0.13 | 0.88 | 0.076 | 16 | 0.082 |
+| hex_1e5 | 12 | 0.48 | 20 | - | 0.52 | - | 0.67 |
+| dense_hex_1e4 | 0.99 | 0.36 | 1.7 | - | 0.42 | - | 0.33 |
+| lines_1000x1000 | 0.79 | 0.48 | 0.56 | - | 0.64 | - | 0.64 |
 
 ### Reading
 
-* Polygon coverages with many features: wkpool is 3-20x faster than
-  `PATH0()` for vertices, 3-55x faster than `SC0()` for edges, 23-730x
-  faster than `SC()`, and 37-390x faster than `ARC()`. wkpool's pipelines
-  scale linearly (exponent ~0.8-0.9 over the scaling series, i.e. linear plus
-  fixed cost); silicate `SC()` is superlinear (exponent 1.7; 60x slower for
-  10x more hexagons) and `ARC()` allocates 4.2 GB on 10,000 hexagons.
-* inlandwaters (few features, long rings, holes): vertices tie with `PATH0()`,
-  edges 1.8x faster than `SC0()`, 12x faster than `SC()`, 23x faster than
-  `ARC()`.
-* Long lines with few features: silicate's integer-indexed `PATH0()` is
-  2-5x faster than wkpool (1M coords: 0.46 s vs 1.1-2.1 s) and `SC0()` ties.
-  silicate's per-feature overhead is small when there are few features,
-  while wkpool pays roughly 1-2 us per coordinate: `establish_topology()`
-  is ~5x `wk_coords()` on its own, then `merge_coincident()` adds about as
-  much again. wkpool also allocates about 2x the memory of `PATH0()`.
+* wkpool is faster than silicate on every input for vertices: 1.6-29x
+  faster than `PATH0()`, from 1M coords of long lines (0.48 s vs 0.79 s)
+  to 100k hexagons (0.48 s vs 12 s). For edges it is 1.7-46x faster than
+  `SC0()` everywhere except 1M coords of long lines, where the two tie
+  (0.64 s vs 0.56 s). Against `SC()` and `ARC()` it is 12-1300x faster.
+* wkpool's pipelines scale linearly (exponent 0.7-0.8 over the scaling
+  series, i.e. linear plus fixed cost); silicate `SC()` is superlinear
+  (exponent 1.6) and `ARC()` allocates 4.2 GB on 10,000 hexagons.
+* Before the positional vertex lookup (previous run), long lines were the
+  one case silicate won: `PATH0()` was 1.6x faster at 1M coords. The cost
+  was hash-table lookups of vertex ids: two `%in%` checks in
+  `new_wkpool()` on every construction and a `match()` remap in
+  `merge_coincident()`. Pools have `.vx = 1..n`, so the id is the
+  position and none of that is needed. wkpool still allocates about 2x
+  the memory of `PATH0()`.
 
-### wkpool verbs that need attention
+### wkpool verbs
 
-On the merged pool (seconds; skipped above 100k coords where marked `-`):
+On the merged pool (median seconds):
 
-| verb | inlandwaters | hex_1e3 | hex_1e4 | hex_1e5 | exponent |
-|---|---|---|---|---|---|
-| find_cycles | 0.038 | 0.050 | 2.6 (4.7 GB) | - | 2.0 |
-| classify_cycles | 0.30 | 0.11 | 9.5 (7.9 GB) | - | 2.0 |
-| find_neighbours(type = "edge") | 0.78 | 0.72 | 20 (13 GB) | - | 1.6 |
-| find_neighbours(type = "vertex") | 0.58 | 0.40 | 3.3 | - | 1.1 |
-| find_shared_edges | 0.26 | 0.021 | 0.30 | 3.2 | 1.1 |
-| find_internal_boundaries | 0.064 | 0.0085 | 0.098 | 1.4 | 1.2 |
-| topology_report | 0.18 | 0.015 | 0.24 | 2.4 | 1.1 |
+| verb | nc | inlandwaters | hex_1e3 | hex_1e4 | dense_hex_1e3 | lines_100x1000 | hex_1e5 | dense_hex_1e4 | lines_1000x1000 |
+|---|---|---|---|---|---|---|---|---|---|
+| merge_coincident | 0.0023 | 0.013 | 0.0053 | 0.042 | 0.018 | 0.065 | 0.55 | 0.25 | 0.81 |
+| pool_compact | 0.00079 | 0.011 | 0.00072 | 0.0092 | 0.017 | 0.017 | 0.24 | 0.13 | 0.22 |
+| vertex_degree | 0.0017 | 0.0051 | 0.00027 | 0.0055 | 0.0097 | 0.014 | 0.13 | 0.053 | 0.22 |
+| find_nodes | 0.0016 | 0.0063 | 0.00057 | 0.01 | 0.02 | 0.019 | 0.17 | 0.12 | 0.23 |
+| find_arcs | 0.0023 | 0.0088 | 0.0014 | 0.014 | 0.028 | 0.029 | 0.24 | 0.15 | 0.41 |
+| find_arcs_quotient | 0.0027 | 0.01 | 0.0013 | 0.013 | 0.02 | 0.039 | 0.18 | 0.1 | 0.28 |
+| find_shared_edges | 0.0095 | 0.023 | 0.0088 | 0.13 | 0.13 | 0.058 | 1.1 | 1.4 | 2.1 |
+| find_internal_boundaries | 0.00084 | 0.0024 | 0.0012 | 0.0054 | 0.0063 | 0.0083 | 0.12 | 0.13 | 0.18 |
+| topology_report | 0.00092 | 0.0084 | 0.0013 | 0.0072 | 0.012 | 0.013 | 0.15 | 0.13 | 0.22 |
+| find_cycles | 0.0012 | 0.0046 | 0.0088 | 0.12 | 0.02 | 0.008 | 1.1 | 0.18 | 0.14 |
+| classify_cycles | 0.0026 | 0.0088 | 0.016 | 0.18 | 0.036 | 0.0089 | 2.1 | 0.36 | 0.14 |
+| find_neighbours_edge | 0.0016 | 0.0059 | 0.0027 | 0.03 | 0.036 | 0.026 | 0.47 | 0.48 | 0.6 |
+| find_neighbours_vertex | 0.0015 | 0.011 | 0.0046 | 0.054 | 0.12 | 0.022 | 0.74 | 0.41 | 1.2 |
+| hole_points | 0.0016 | 0.0057 | 0.019 | 0.1 | 0.019 | 0.0086 | 1.6 | 0.21 | 0.15 |
 
-For comparison the healthy verbs at hex_1e5: `vertex_degree` 0.18 s,
-`find_arcs` 0.28 s, `pool_compact` 0.39 s, `merge_coincident` 0.97 s.
+All verbs scale linearly over the scaling series (exponents 0.45-1.21 in
+`results/scaling-exponents.csv`).
 
-Causes, from the code:
+Before the vectorisation (same machine, hex_1e4), the quadratic verbs were:
 
-* `find_cycles()` loops over paths with `which(path == p)`: O(paths x
-  segments). `split(seq_along(path), path)` makes it linear.
-  `classify_cycles()` and `hole_points()` inherit this, and add their own
-  per-cycle `match(cycle, pool$.vx)` over the whole pool: O(cycles x
-  vertices), which is why `classify_cycles()` is 8x `find_cycles()` on
-  inlandwaters (189 rings, 31k vertices).
-* `find_neighbours(type = "edge")` loops over shared edge keys with
-  `shared$edge_key == key` and `expand.grid()` per key: O(keys x rows).
-  It also goes through `find_shared_edges()`, which builds `paste()` keys and
-  a `tapply()` with a closure. Grouping with `vctrs::vec_group_id()` (as
-  `quotient_edges()` already does) and a self-join on the edge group would
-  be linear.
-* `find_neighbours(type = "vertex")` builds one `expand.grid()` per shared
-  vertex.
-* `find_internal_boundaries()` uses `paste()` keys and `%in%`; integer keys
-  (`vx0 * n + vx1`, or `vec_group_id`) would avoid string allocation.
+| verb | before | after |
+|---|---|---|
+| find_cycles | 2.0 s (4.7 GB) | 0.14 s |
+| classify_cycles | 8.3 s (7.9 GB) | 0.23 s |
+| hole_points | 2.1 s | 0.11 s |
+| find_neighbours(type = "edge") | 19 s (13 GB) | 0.03 s |
+| find_neighbours(type = "vertex") | 2.9 s | 0.05 s |
+
+They were skipped above 100k coords in the earlier runs. The causes were
+`which(path == p)` per path in `find_cycles()`, one pool-wide `match()`
+per ring for areas and centroids, and a per-key scan with `expand.grid()`
+in `find_neighbours()`.
+
+Remaining: `cycles_to_wkb()` loops over features with `feat == f`
+(quadratic in features). `establish_topology()` is still 3-7x the cost
+of `wk::wk_coords()`, which is the floor for this design; most of the
+rest is building the vertex data frame and the segment record in R.

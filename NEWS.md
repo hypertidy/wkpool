@@ -2,10 +2,18 @@
 
 ## Performance
 
+* `establish_topology()` and `merge_coincident()` no longer build hash
+  tables to look up vertex ids: pools they mint have `.vx = 1..n`, where
+  an id is its own position, so validation in `new_wkpool()` and the
+  segment remap use it directly (other pools fall back to `match()`).
+  On 1M line coordinates `merge_coincident()` drops from 0.35 s to
+  0.12 s, and the vertex pipeline is now faster than silicate's
+  `PATH0()` on every benchmark input (see `bench/README.md`).
+
 * `find_cycles()`, `classify_cycles()`, `hole_points()` and
   `find_neighbours()` no longer scale quadratically: on 10,000 hexagons
   `find_neighbours(type = "edge")` drops from 19 s (13 GB allocated) to
-  0.12 s and `classify_cycles()` from 8.3 s to 0.16 s.
+  0.03 s and `classify_cycles()` from 8.3 s to 0.23 s.
   `find_shared_edges()`, `find_internal_boundaries()` and
   `topology_report()` key edges with vctrs instead of `paste()`. Results
   are unchanged, except that `find_neighbours()` output no longer

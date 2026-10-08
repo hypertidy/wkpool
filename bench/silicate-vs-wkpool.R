@@ -130,12 +130,6 @@ mark <- function(..., iter = c(3, 10), env = parent.frame()) {
                                env = env))
 }
 
-# wkpool verbs that are currently quadratic in the number of paths or shared
-# edges (per-group which()/== scans in R); skipped above this many coordinates
-# and measured separately in the scaling series below
-quadratic_verbs <- c("find_cycles", "classify_cycles",
-                     "find_neighbours_edge", "find_neighbours_vertex")
-quadratic_cap <- 1e5
 slow_n <- 5e4
 silicate_cap <- 2e5
 
@@ -153,12 +147,13 @@ wkpool_verbs <- function(x, m, skip = character()) {
     find_cycles = function() find_cycles(m),
     classify_cycles = function() classify_cycles(m),
     find_neighbours_edge = function() find_neighbours(m, "edge"),
-    find_neighbours_vertex = function() find_neighbours(m, "vertex")
+    find_neighbours_vertex = function() find_neighbours(m, "vertex"),
+    hole_points = function() hole_points(m)
   )
   fns <- fns[setdiff(names(fns), skip)]
   do.call(rbind, lapply(names(fns), function(f) {
     fn <- fns[[f]]
-    r <- as_rows(mark(fn(), iter = c(1, 5)), "wkpool_verbs")
+    r <- as_rows(mark(fn(), iter = c(3, 10)), "wkpool_verbs")
     r$expression <- f
     r
   }))
@@ -187,27 +182,27 @@ for (nm in names(inputs)) {
                     wk_coords = wk_coords(x)), "coords")
   step("decompose")
   b <- rbind(b, as_rows(mark(wkpool_establish = establish_topology(x)), "decompose"))
+  # wkpool pipelines always get repeated iterations (they are fast); a
+  # single GC-affected iteration can otherwise misreport them several-fold
+  wk_it <- c(3, 10)
   step("vertices")
   b <- rbind(b, as_rows(mark(silicate_PATH0 = PATH0(x),
-                             silicate_PATH = PATH(x),
-                             wkpool = wkp_vertices(x), iter = it), "vertices"))
+                             silicate_PATH = PATH(x), iter = it), "vertices"),
+             as_rows(mark(wkpool = wkp_vertices(x), iter = wk_it), "vertices"))
   step("edges")
   b <- rbind(b, if (big) {
-    as_rows(mark(silicate_SC0 = SC0(x), wkpool = wkp_edges(x), iter = it), "edges")
+    as_rows(mark(silicate_SC0 = SC0(x), iter = it), "edges")
   } else {
-    as_rows(mark(silicate_SC0 = SC0(x), silicate_SC = SC(x),
-                 wkpool = wkp_edges(x), iter = it), "edges")
-  })
+    as_rows(mark(silicate_SC0 = SC0(x), silicate_SC = SC(x), iter = it), "edges")
+  }, as_rows(mark(wkpool = wkp_edges(x), iter = wk_it), "edges"))
   step("arcs")
-  b <- rbind(b, if (big) {
-    as_rows(mark(wkpool = wkp_arcs(x), iter = it), "arcs")
-  } else {
-    as_rows(mark(silicate_ARC = ARC(x), wkpool = wkp_arcs(x),
-                 iter = if (slow) c(1, 1) else c(3, 3)), "arcs")
-  })
+  if (!big) {
+    b <- rbind(b, as_rows(mark(silicate_ARC = ARC(x),
+                               iter = if (slow) c(1, 1) else c(3, 3)), "arcs"))
+  }
+  b <- rbind(b, as_rows(mark(wkpool = wkp_arcs(x), iter = wk_it), "arcs"))
   step("wkpool verbs")
-  b <- rbind(b, wkpool_verbs(x, wkp_vertices(x),
-                             skip = if (n_coords > quadratic_cap) quadratic_verbs))
+  b <- rbind(b, wkpool_verbs(x, wkp_vertices(x)))
   b$input <- nm
   b$n_coords <- n_coords
   results[[nm]] <- b

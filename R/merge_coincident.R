@@ -57,12 +57,14 @@ merge_coincident <- function(x, tolerance = 0) {
   # beyond ~15 significant digits).
   g <- vertex_groups(pool, tolerance)
 
-  first <- !duplicated(g)
+  # group ids are numbered by first appearance, so a row is the first of
+  # its group exactly when its id exceeds every id before it
+  first <- g > c(0L, cummax(g)[-length(g)])
   new_pool <- pool[first, , drop = FALSE]
   new_pool$.vx <- seq_len(nrow(new_pool))
 
-  final_vx0 <- g[match(vx0, pool$.vx)]
-  final_vx1 <- g[match(vx1, pool$.vx)]
+  final_vx0 <- g[vx_match(vx0, pool$.vx)]
+  final_vx1 <- g[vx_match(vx1, pool$.vx)]
 
   new_wkpool(new_pool, final_vx0, final_vx1, feature = feature,
              path = pool_path(x),
@@ -413,7 +415,7 @@ find_cycles_walk <- function(x) {
 #'
 #' @export
 cycle_signed_area <- function(cycle, pool) {
-  idx <- match(cycle, pool$.vx)
+  idx <- vx_match(cycle, pool$.vx)
   x <- pool$x[idx]
   y <- pool$y[idx]
 
@@ -433,7 +435,7 @@ cycle_signed_area <- function(cycle, pool) {
 # per cycle)
 cycles_signed_area <- function(cycles, pool) {
   if (length(cycles) == 0) return(numeric(0))
-  idx <- match(unlist(cycles), pool$.vx)
+  idx <- vx_match(unlist(cycles), pool$.vx)
   x <- pool$x[idx]
   y <- pool$y[idx]
   end <- cumsum(lengths(cycles))
@@ -606,7 +608,7 @@ hole_points <- function(x, convention = c("sf", "ogc")) {
   hole_cycles <- cycles[hole_idx]
 
   # Centroid of each hole: one match() for all holes, then per-hole slices
-  idx <- split(match(unlist(hole_cycles), pool$.vx),
+  idx <- split(vx_match(unlist(hole_cycles), pool$.vx),
                rep(seq_along(hole_cycles), lengths(hole_cycles)))
   pts <- t(vapply(idx, function(i) {
     c(mean(pool$x[i]), mean(pool$y[i]))
@@ -754,8 +756,8 @@ topology_report <- function(x, tolerance = 1e-8) {
   # canonical vertex ids; shared = present in more than one feature
   # (or, without feature info, simply duplicated)
   if (length(vx0) > 0) {
-    a0 <- g[match(vx0, pool$.vx)]
-    a1 <- g[match(vx1, pool$.vx)]
+    a0 <- g[vx_match(vx0, pool$.vx)]
+    a1 <- g[vx_match(vx1, pool$.vx)]
     ekey <- vctrs::vec_group_id(data.frame(lo = pmin(a0, a1), hi = pmax(a0, a1)))
     if (!is.null(feature)) {
       ef <- vctrs::vec_unique(data.frame(e = ekey, f = feature))

@@ -34,7 +34,7 @@ arcs_to_wkb <- function(x, quotient = FALSE, ...) {
   if (length(arcs) == 0) return(wk::as_wkb(wkb_empty(x), ...))
   v <- pool_vertices(x)
 
-  idx <- match(unlist(arcs), v$.vx)
+  idx <- vx_match(unlist(arcs), v$.vx)
   result <- wk::wk_linestring(
     pool_coords(x, idx),
     feature_id = rep(seq_along(arcs), lengths(arcs)),
@@ -138,7 +138,7 @@ cycles_to_wkb <- function(x, feature = TRUE, convention = c("sf", "ogc"), ...) {
   # One POLYGON per block of rings: feature_id changes delimit polygons,
   # ring_id changes delimit rings, wk closes each ring
   build_polygons <- function(ring_list, poly_id) {
-    idx <- match(unlist(ring_list), v$.vx)
+    idx <- vx_match(unlist(ring_list), v$.vx)
     n <- lengths(ring_list)
     wk::wk_polygon(
       pool_coords(x, idx),
