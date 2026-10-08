@@ -141,6 +141,60 @@ pool_segments(merged)  # data.frame: .vx0, .vx1, .feature
 #> 16   14    7        2     3
 ```
 
+## Shared boundaries and holes
+
+`inlandwaters` (in silicate) has six features with 189 rings, 32 of them
+holes, and neighbouring states that share long boundaries vertex for
+vertex. After `merge_coincident()` those boundaries are the same vertex
+pairs, so the quotient graph walks each shared boundary once:
+
+```r
+x <- wk::as_wkb(sf::st_geometry(silicate::inlandwaters))
+pool <- merge_coincident(establish_topology(x))
+find_arcs(pool, quotient = TRUE)    # 201 arcs
+find_nodes(pool, quotient = TRUE)   # 13 nodes where three or more edges meet
+classify_cycles(pool)               # 189 rings: 157 outer, 32 holes
+```
+
+![inlandwaters arcs, nodes and rings](man/figures/inlandwaters.png)
+
+Without `quotient = TRUE` every vertex inside a shared boundary has
+degree 4 (each feature carries its own copy of the edge), so
+`find_nodes()` returns 2,619 nodes and `find_arcs()` 5,418 arcs. Use
+the quotient graph for coverages; the default counts every segment.
+
+## Vertex identity
+
+wkpool covers two rungs of a ladder of ways a vertex can be "the same":
+exact float (`merge_coincident(tolerance = 0)`) and snapped
+(`tolerance > 0`). It does not node: a vertex lying on another
+feature's edge stays a T-junction until something like GEOS inserts it.
+Above exact float, a lattice (a raster, a discrete global grid) can give
+identity by construction, with no comparison at all.
+
+![the vertex identity ladder](man/figures/ladder.png)
+
+## Performance
+
+All pipelines scale linearly. Against silicate on the same inputs
+(`bench/README.md` has the full tables), wkpool is 1.6 to 29 times
+faster than `PATH0()` for vertices and 12 to 1300 times faster than
+`SC()` and `ARC()` for edges and arcs.
+
+![silicate vs wkpool scaling on hexagon coverages](man/figures/scaling.png)
+
+## Related
+
+wkpool is machinery: silicate's models and `sc_*` verbs can sit on it,
+and so can other mesh models. Work in progress on top of it:
+
+- [silicate](https://github.com/hypertidy/silicate), branch `silicate2`:
+  the UGRID model and a model zoo, with polygons and lines routed into
+  UGRID through wkpool.
+- [meshcore](https://github.com/hypertidy/meshcore) (working name):
+  one verb set for rasters and discrete global grids, whose
+  `as_wkpool()` hands over an already-merged pool.
+
 ## Key decisions
 
 | Decision | Choice | Rationale |
@@ -154,13 +208,16 @@ pool_segments(merged)  # data.frame: .vx0, .vx1, .feature
 
 ## Next steps
 
-- [x] `wk_handle.wkpool()` — round-trip back to wk geometry
-- [x] Path reconstruction — derive linestrings/rings from segment
+- [x] `wk_handle.wkpool()`: round-trip back to wk geometry
+- [x] Path reconstruction: derive linestrings/rings from segment
   connectivity
+- [x] Arc-node topology and cycles, with quotient semantics for
+  shared boundaries
+- [x] PSLG for constrained triangulation (`as_pslg()`, RTriangle)
+- [x] Vectorised verbs with no quadratic scans; C++ (cpp11) for arcs
 - [ ] Apply to production package (trip)
-- [ ] Triangulation integration (decido) — indexed triangles from same
-  pool
-- [ ] Consider C++ once API is stable
+- [ ] Triangulation integration (decido): indexed triangles from the
+  same pool
 
 ## Code of Conduct
 

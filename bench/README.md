@@ -36,7 +36,7 @@ Rerun from the package root (wkpool, silicate, sf, wk, bench installed):
 | task | silicate | wkpool |
 |---|---|---|
 | vertices (exact identity) | `PATH0()`, `PATH()` | `merge_coincident(establish_topology(x))` |
-| unique undirected edges | `SC0()`, `SC()` | the above + `quotient_edges()` |
+| unique undirected edges | `SC0()`, `SC()` | the above + `wkpool:::quotient_edges()` (internal) |
 | arcs (TopoJSON-style) | `ARC()` | the above + `find_arcs(quotient = TRUE)` |
 
 ## Results (2026-10-08, Xeon 2.8 GHz, R 4.3.3, wkpool 0.3.0.9006 with vectorised verbs and positional vertex lookup)
