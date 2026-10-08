@@ -2,6 +2,13 @@
 
 ## Performance
 
+* `cycles_to_wkb()` / `cycles_to_wkt()` build all polygons in one
+  `wk::wk_polygon()` call and all multipolygons in one
+  `wk::wk_collection()` call, instead of looping over features and parts
+  (10,000 hexagons: 5.7 s to 0.16 s). The fallback for pools without
+  path provenance matches cycle edges to segments with one
+  `vctrs::vec_match()` instead of a scan per cycle. Output is unchanged.
+
 * `establish_topology()` and `merge_coincident()` no longer build hash
   tables to look up vertex ids: pools they mint have `.vx = 1..n`, where
   an id is its own position, so validation in `new_wkpool()` and the

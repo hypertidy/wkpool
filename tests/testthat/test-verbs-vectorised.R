@@ -72,3 +72,19 @@ test_that("find_shared_edges lists each shared edge's distinct features", {
   expect_true(any(vapply(stacked, function(f) identical(sort(f), c(2L, 5L, 6L)), logical(1))))
   expect_identical(names(se$features), se$edge_key)
 })
+
+test_that("cycles_to_wkb rebuilds mixed POLYGON and MULTIPOLYGON features in order", {
+  x <- wk::as_wkt(c(
+    "MULTIPOLYGON (((0 0, 0 10, 10 10, 10 0, 0 0), (1 1, 2 1, 2 2, 1 2, 1 1)), ((20 0, 20 4, 24 4, 24 0, 20 0)))",
+    "POLYGON ((10 0, 10 10, 15 10, 15 0, 10 0))",
+    "MULTIPOLYGON (((30 0, 30 1, 31 1, 30 0)), ((40 0, 40 1, 41 1, 40 0)), ((50 0, 50 1, 51 1, 50 0)))",
+    "POLYGON ((60 0, 60 1, 61 1, 60 0))"
+  ))
+  m <- merge_coincident(establish_topology(x))
+  out <- cycles_to_wkt(m)
+  expect_equal(length(out), 4)
+  expect_identical(wk::wk_meta(out)$geometry_type, c(6L, 3L, 6L, 3L))
+  expect_identical(wk::wk_meta(wk::as_wkb(out))$size, c(2L, 1L, 3L, 1L))
+  expect_identical(unclass(out), unclass(x))
+  expect_true(all(wk::wk_coords(out)$x == wk::wk_coords(x)$x))
+})
