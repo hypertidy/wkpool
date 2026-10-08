@@ -167,59 +167,67 @@ cycles_to_wkb <- function(x, feature = TRUE, convention = c("sf", "ogc"), ...) {
     part <- paths_tab$.part[idx]
     ring <- paths_tab$.ring[idx]
 
-    out <- list()
-    for (f in unique(feat)) {
-      fparts <- unique(part[feat == f])
-      polys <- vector("list", length(fparts))
-      for (k in seq_along(fparts)) {
-        sel <- which(feat == f & part == fparts[k])
-        sel <- sel[order(ring[sel])]  # exterior ring first
-        polys[[k]] <- build_polygons(cycles[sel], rep(1L, length(sel)))
-      }
-      poly_vec <- do.call(c, polys)
-      out[[length(out) + 1L]] <- if (length(fparts) == 1L) {
-        poly_vec
-      } else {
-        wk::wk_collection(
-          poly_vec,
-          wk::wk_geometry_type("multipolygon"),
-          feature_id = 1L
-        )
-      }
+    # Order rings: features in order of first appearance, parts in order
+    # of first appearance within their feature, rings ascending within
+    # their part (exterior ring first)
+    feat_rank <- match(feat, unique(feat))
+    fp <- vctrs::vec_group_id(data.frame(f = feat_rank, p = part))
+    ord <- order(feat_rank, fp, ring)
+
+    # One POLYGON per (feature, part), all built in a single call
+    poly_of_ring <- vctrs::vec_group_id(fp[ord])
+    polys <- build_polygons(cycles[ord], poly_of_ring)
+
+    # Features with one part are that POLYGON; features with several
+    # parts are one MULTIPOLYGON collecting them, also in one call
+    poly_feat <- feat_rank[ord][!duplicated(poly_of_ring)]
+    n_parts <- tabulate(poly_feat)
+    multi <- n_parts[poly_feat] > 1L
+    out_single <- polys[!multi]
+    out_multi <- if (any(multi)) {
+      wk::wk_collection(
+        polys[multi],
+        wk::wk_geometry_type("multipolygon"),
+        feature_id = poly_feat[multi]
+      )
     }
-    return(wk::as_wkb(do.call(c, out), ...))
+    is_multi_feat <- n_parts > 1L
+    pos <- integer(length(n_parts))
+    pos[!is_multi_feat] <- seq_len(sum(!is_multi_feat))
+    pos[is_multi_feat] <- sum(!is_multi_feat) + seq_len(sum(is_multi_feat))
+    combined <- if (is.null(out_multi)) out_single else c(out_single, out_multi)
+    return(wk::as_wkb(combined[pos], ...))
   }
 
   # Fallback for pools without provenance: associate each cycle with a
   # feature based on segment membership
   segs <- pool_segments(x)
-  cycle_features <- vapply(seq_along(cycles), function(i) {
-    cyc <- cycles[[i]]
-    # Find segments that match this cycle's edges
-    for (j in seq_len(length(cyc))) {
-      v0 <- cyc[j]
-      v1 <- cyc[if (j == length(cyc)) 1 else j + 1]
-
-      # Find matching segment
-      match_idx <- which(
-        (segs$.vx0 == v0 & segs$.vx1 == v1) |
-          (segs$.vx0 == v1 & segs$.vx1 == v0)
-      )
-      if (length(match_idx) > 0 && !is.null(segs$.feature)) {
-        return(segs$.feature[match_idx[1]])
-      }
-    }
-    NA_integer_
-  }, integer(1))
+  cycle_features <- rep(NA_integer_, length(cycles))
+  if (!is.null(segs$.feature)) {
+    # Each cycle takes the feature of the first segment matching its
+    # first matchable edge (in traversal order, either direction)
+    n <- lengths(cycles)
+    v0 <- unlist(cycles)
+    nxt <- sequence(n) %% rep(n, n) + 1L
+    v1 <- v0[cumsum(c(0L, n[-length(n)]))[rep(seq_along(n), n)] + nxt]
+    seg_key <- data.frame(lo = pmin(segs$.vx0, segs$.vx1), hi = pmax(segs$.vx0, segs$.vx1))
+    m <- vctrs::vec_match(data.frame(lo = pmin(v0, v1), hi = pmax(v0, v1)), seg_key)
+    cyc <- rep(seq_along(n), n)
+    hit <- !is.na(m)
+    first <- which(hit)[!duplicated(cyc[hit])]
+    cycle_features[cyc[first]] <- segs$.feature[m[first]]
+  }
 
   # Group by feature
   unique_features <- unique(cycle_features[!is.na(cycle_features)])
+  by_feature <- split(seq_along(cycles),
+                      factor(cycle_features, levels = unique_features))
 
   out <- vector("list", length(unique_features))
   keep <- logical(length(unique_features))
 
   for (i in seq_along(unique_features)) {
-    feat_cycles <- which(cycle_features == unique_features[i])
+    feat_cycles <- by_feature[[i]]
     feat_outers <- feat_cycles[is_outer[feat_cycles]]
     feat_holes <- feat_cycles[!is_outer[feat_cycles]]
 
