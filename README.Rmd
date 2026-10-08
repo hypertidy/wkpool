@@ -140,7 +140,7 @@ and so can other mesh models. Work in progress on top of it:
 - [silicate](https://github.com/hypertidy/silicate), branch `silicate2`:
   the UGRID model and a model zoo, with polygons and lines routed into
   UGRID through wkpool.
-- [meshcore](https://github.com/hypertidy/meshcore-) (working name):
+- [meshcore](https://github.com/hypertidy/meshcore) (working name):
   one verb set for rasters and discrete global grids, whose
   `as_wkpool()` hands over an already-merged pool.
 
