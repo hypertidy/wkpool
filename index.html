@@ -208,6 +208,48 @@
 <span><span class="co">#&gt; 16   14    7        2     3</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="shared-boundaries-and-holes">Shared boundaries and holes<a class="anchor" aria-label="anchor" href="#shared-boundaries-and-holes"></a>
+</h2>
+<p><code>inlandwaters</code> (in silicate) has six features with 189 rings, 32 of them holes, and neighbouring states that share long boundaries vertex for vertex. After <code><a href="reference/merge_coincident.html">merge_coincident()</a></code> those boundaries are the same vertex pairs, so the quotient graph walks each shared boundary once:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/wkb.html" class="external-link">as_wkb</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu">st_geometry</span><span class="op">(</span><span class="fu">silicate</span><span class="fu">::</span><span class="va">inlandwaters</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">pool</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/merge_coincident.html">merge_coincident</a></span><span class="op">(</span><span class="fu"><a href="reference/establish_topology.html">establish_topology</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/find_arcs.html">find_arcs</a></span><span class="op">(</span><span class="va">pool</span>, quotient <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>    <span class="co"># 201 arcs</span></span>
+<span><span class="fu"><a href="reference/find_nodes.html">find_nodes</a></span><span class="op">(</span><span class="va">pool</span>, quotient <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>   <span class="co"># 13 nodes where three or more edges meet</span></span>
+<span><span class="fu"><a href="reference/classify_cycles.html">classify_cycles</a></span><span class="op">(</span><span class="va">pool</span><span class="op">)</span>               <span class="co"># 189 rings: 157 outer, 32 holes</span></span></code></pre></div>
+<div class="float">
+<img src="reference/figures/inlandwaters.png" alt="inlandwaters arcs, nodes and rings"><div class="figcaption">inlandwaters arcs, nodes and rings</div>
+</div>
+<p>Without <code>quotient = TRUE</code> every vertex inside a shared boundary has degree 4 (each feature carries its own copy of the edge), so <code><a href="reference/find_nodes.html">find_nodes()</a></code> returns 2,619 nodes and <code><a href="reference/find_arcs.html">find_arcs()</a></code> 5,418 arcs. Use the quotient graph for coverages; the default counts every segment.</p>
+</div>
+<div class="section level2">
+<h2 id="vertex-identity">Vertex identity<a class="anchor" aria-label="anchor" href="#vertex-identity"></a>
+</h2>
+<p>wkpool covers two rungs of a ladder of ways a vertex can be “the same”: exact float (<code>merge_coincident(tolerance = 0)</code>) and snapped (<code>tolerance &gt; 0</code>). It does not node: a vertex lying on another feature’s edge stays a T-junction until something like GEOS inserts it. Above exact float, a lattice (a raster, a discrete global grid) can give identity by construction, with no comparison at all.</p>
+<div class="float">
+<img src="reference/figures/ladder.png" alt="the vertex identity ladder"><div class="figcaption">the vertex identity ladder</div>
+</div>
+</div>
+<div class="section level2">
+<h2 id="performance">Performance<a class="anchor" aria-label="anchor" href="#performance"></a>
+</h2>
+<p>All pipelines scale linearly. Against silicate on the same inputs (<code>bench/README.md</code> has the full tables), wkpool is 1.6 to 29 times faster than <code>PATH0()</code> for vertices and 12 to 1300 times faster than <code>SC()</code> and <code>ARC()</code> for edges and arcs.</p>
+<div class="float">
+<img src="reference/figures/scaling.png" alt="silicate vs wkpool scaling on hexagon coverages"><div class="figcaption">silicate vs wkpool scaling on hexagon coverages</div>
+</div>
+</div>
+<div class="section level2">
+<h2 id="related">Related<a class="anchor" aria-label="anchor" href="#related"></a>
+</h2>
+<p>wkpool is machinery: silicate’s models and <code>sc_*</code> verbs can sit on it, and so can other mesh models. Work in progress on top of it:</p>
+<ul>
+<li>
+<a href="https://github.com/hypertidy/silicate" class="external-link">silicate</a>, branch <code>silicate2</code>: the UGRID model and a model zoo, with polygons and lines routed into UGRID through wkpool.</li>
+<li>
+<a href="https://github.com/hypertidy/meshcore" class="external-link">meshcore</a> (working name): one verb set for rasters and discrete global grids, whose <code>as_wkpool()</code> hands over an already-merged pool.</li>
+</ul>
+</div>
+<div class="section level2">
 <h2 id="key-decisions">Key decisions<a class="anchor" aria-label="anchor" href="#key-decisions"></a>
 </h2>
 <table class="table">
@@ -259,11 +301,13 @@
 <h2 id="next-steps">Next steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
 </h2>
 <ul class="task-list">
-<li><label><input type="checkbox" checked><code><a href="reference/wk_handle.wkpool.html">wk_handle.wkpool()</a></code> — round-trip back to wk geometry</label></li>
-<li><label><input type="checkbox" checked>Path reconstruction — derive linestrings/rings from segment connectivity</label></li>
+<li><label><input type="checkbox" checked><code><a href="reference/wk_handle.wkpool.html">wk_handle.wkpool()</a></code>: round-trip back to wk geometry</label></li>
+<li><label><input type="checkbox" checked>Path reconstruction: derive linestrings/rings from segment connectivity</label></li>
+<li><label><input type="checkbox" checked>Arc-node topology and cycles, with quotient semantics for shared boundaries</label></li>
+<li><label><input type="checkbox" checked>PSLG for constrained triangulation (<code><a href="reference/as_pslg.html">as_pslg()</a></code>, RTriangle)</label></li>
+<li><label><input type="checkbox" checked>Vectorised verbs with no quadratic scans; C++ (cpp11) for arcs</label></li>
 <li><label><input type="checkbox">Apply to production package (trip)</label></li>
-<li><label><input type="checkbox">Triangulation integration (decido) — indexed triangles from same pool</label></li>
-<li><label><input type="checkbox">Consider C++ once API is stable</label></li>
+<li><label><input type="checkbox">Triangulation integration (decido): indexed triangles from the same pool</label></li>
 </ul>
 </div>
 <div class="section level2">
