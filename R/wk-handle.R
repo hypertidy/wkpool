@@ -63,8 +63,8 @@ pool_segments_geometry <- function(x) {
   }
 
   # interleave endpoint rows: v0, v1 per segment
-  i0 <- match(s$.vx0, v$.vx)
-  i1 <- match(s$.vx1, v$.vx)
+  i0 <- vx_match(s$.vx0, v$.vx)
+  i1 <- vx_match(s$.vx1, v$.vx)
   idx <- as.vector(rbind(i0, i1))
 
   coords <- if ("z" %in% names(v)) {

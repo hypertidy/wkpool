@@ -63,8 +63,8 @@ new_wkpool <- function(vertices, vx0, vx1, feature = NULL,
 
   stopifnot(is.data.frame(vertices))
   stopifnot(".vx" %in% names(vertices))
-  stopifnot(all(vx0 %in% vertices$.vx))
-  stopifnot(all(vx1 %in% vertices$.vx))
+  stopifnot(!anyNA(vx_match(vx0, vertices$.vx)))
+  stopifnot(!anyNA(vx_match(vx1, vertices$.vx)))
 
   fields <- list(.vx0 = vx0, .vx1 = vx1)
   if (!is.null(feature)) {
@@ -457,8 +457,8 @@ plot.wkpool <- function(x, col = NULL, ...) {
 
   plot(v$x, v$y, type = "n", ...)
 
-  idx0 <- match(segs$.vx0, v$.vx)
-  idx1 <- match(segs$.vx1, v$.vx)
+  idx0 <- vx_match(segs$.vx0, v$.vx)
+  idx1 <- vx_match(segs$.vx1, v$.vx)
   segments(v$x[idx0], v$y[idx0], v$x[idx1], v$y[idx1], col = col)
 
   invisible(x)
@@ -476,6 +476,23 @@ plot.wkpool <- function(x, col = NULL, ...) {
 #' @param x Input to check
 #' @param arg Name of argument for error message
 #' @noRd
+# Position of vertex ids in a pool's .vx column, as match(ids, vx).
+# Pools minted by establish_topology(), merge_coincident() and
+# pool_compact() have .vx = 1..n, where an id is its own position, so
+# no hash table is built; other pools fall back to match().
+vx_match <- function(ids, vx) {
+  n <- length(vx)
+  if (is.integer(vx) && n > 0 && vx[1L] == 1L && vx[n] == n &&
+      !is.unsorted(vx, strictly = TRUE)) {
+    out <- as.integer(ids)
+    if (length(out) && (anyNA(out) || min(out) < 1L || max(out) > n)) {
+      out[!(out >= 1L & out <= n)] <- NA_integer_
+    }
+    return(out)
+  }
+  match(ids, vx)
+}
+
 check_wkpool <- function(x, arg = "x") {
   if (!inherits(x, "wkpool")) {
     stop(

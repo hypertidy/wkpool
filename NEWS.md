@@ -2,6 +2,13 @@
 
 ## Performance
 
+* `establish_topology()` and `merge_coincident()` no longer build hash
+  tables to look up vertex ids: pools they mint have `.vx = 1..n`, where
+  an id is its own position, so validation in `new_wkpool()` and the
+  segment remap use it directly (other pools fall back to `match()`).
+  On 1M line coordinates `merge_coincident()` drops from 0.35 s to
+  0.12 s and the vertex pipeline matches silicate's `PATH0()`.
+
 * `find_cycles()`, `classify_cycles()`, `hole_points()` and
   `find_neighbours()` no longer scale quadratically: on 10,000 hexagons
   `find_neighbours(type = "edge")` drops from 19 s (13 GB allocated) to
