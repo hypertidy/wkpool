@@ -137,6 +137,21 @@ find_arcs(pool)
 arc_node_summary(pool)
 ```
 
+The two squares share an edge and each square carries its own copy of
+it, so the shared vertices have degree 4 and the shared edge comes back
+as two arcs, one per square. In the quotient graph a duplicated
+boundary counts once: the shared edge is a single arc, and its end
+vertices stay nodes because three distinct edges meet there. On a
+coverage with long shared boundaries the difference is large (on
+silicate's `inlandwaters`, 5,418 arcs and 2,619 nodes by default, 201
+arcs and 13 nodes in the quotient graph). Use `quotient = TRUE` for
+polygon coverages.
+
+```{r arc-node-quotient}
+find_nodes(pool, quotient = TRUE)
+find_arcs(pool, quotient = TRUE)
+```
+
 ## Round-trip to WKT
 
 Convert topology back to standard geometry formats:
@@ -224,7 +239,7 @@ plot(pool)
 | Package | Where | Notes |
 |---------|-------|-------|
 | [RTriangle](https://CRAN.R-project.org/package=RTriangle) | CRAN | Shewchuk's Triangle — constrained Delaunay, `as_pslg()` target |
-| [decido](https://CRAN.R-project.org/package=decido) | CRAN | Earcut — fast, returns vertex indices (implicit pool), `as_decido()` target |
+| [decido](https://CRAN.R-project.org/package=decido) | CRAN | Earcut, fast, returns vertex indices (implicit pool); no wkpool converter yet |
 | [sfdct](https://CRAN.R-project.org/package=sfdct) | CRAN | RTriangle wrapper for sf objects |
 
 ### Adjacency (computed, not stored)
