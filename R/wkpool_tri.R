@@ -360,3 +360,66 @@ vec_restore.wkpool_tri <- function(x, to, ...) {
                  crs = attr(to, "crs", exact = TRUE),
                  geodesic = attr(to, "geodesic", exact = TRUE))
 }
+
+# Plot ------------------------------------------------------------------
+
+#' Plot a triangle pool
+#'
+#' Draws every triangle with one call to [graphics::polygon()], indexing the
+#' vertex pool directly (triangles separated by `NA`). This avoids building
+#' geometry: on 40,000 triangles it draws in a fraction of a second, where
+#' casting to wk polygons and plotting those takes over a minute.
+#'
+#' @param x A `wkpool_tri`.
+#' @param col Fill colour(s), recycled over triangles. If `NULL` (default),
+#'   triangles are coloured by feature using the same palette as
+#'   [plot.wkpool()].
+#' @param border Border colour(s) for triangle edges, `NA` for none.
+#' @param add If `TRUE`, draw on the current plot.
+#' @param ... Further arguments passed to [plot.default()] when
+#'   `add = FALSE`.
+#'
+#' @returns Invisibly returns `x`.
+#'
+#' @examples
+#' x <- wk::as_wkb(c(
+#'   "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0), (0.2 0.3, 0.2 0.5, 0.4 0.5, 0.2 0.3))",
+#'   "POLYGON ((1 0, 2 0, 2 1, 1 1, 1 0))"
+#' ))
+#' if (requireNamespace("decido", quietly = TRUE)) {
+#'   tri <- pool_triangulate(establish_topology(x))
+#'   plot(tri)
+#'   plot(tri, col = "grey", border = NA)
+#' }
+#'
+#' @export
+plot.wkpool_tri <- function(x, col = NULL, border = "black", add = FALSE, ...) {
+  check_wkpool_tri(x)
+  v <- pool_vertices(x)
+
+  if (is.null(col)) {
+    feat <- pool_feature(x)
+    if (!is.null(feat)) {
+      pal <- c("steelblue", "coral", "forestgreen", "purple", "orange",
+               "darkred", "darkgreen", "navy")
+      col <- pal[(feat - 1) %% length(pal) + 1]
+    } else {
+      col <- "steelblue"
+    }
+  }
+
+  if (!add) {
+    plot(range(v$x), range(v$y), type = "n", xlab = "x", ylab = "y", ...)
+  }
+  if (length(x) == 0L) return(invisible(x))
+
+  # corners of each triangle then NA, dropping the final NA
+  idx <- vx_match(as.vector(rbind(vctrs::field(x, ".vx0"),
+                                  vctrs::field(x, ".vx1"),
+                                  vctrs::field(x, ".vx2"),
+                                  NA_integer_)), v$.vx)
+  idx <- idx[-length(idx)]
+  graphics::polygon(v$x[idx], v$y[idx], col = col, border = border)
+
+  invisible(x)
+}
