@@ -2,7 +2,7 @@ Package: wkpool
 Title: Vertex Pool Topology for Well-Known Geometry
 Version: 0.4.0
 Authors@R: 
-    person("Michael", "Sumner", , "mdsumner@gmail.com", role = c("aut", "cre"))
+    person("Michael", "Sumner", , "mdsumner@gmail.com", role = c("aut", "cre", "cph"))
 Description: Establishes and maintains vertex pool topology for geometry 
     handled by 'wk'. Segments are the atomic unit, vertices are shared via
     integer references into a pool. Topology is made discoverable via coincident
@@ -32,4 +32,4 @@ LinkingTo:
     cpp11
 Config/testthat/edition: 3
 Language: en-GB
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.1.0
