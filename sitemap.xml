@@ -26,9 +26,12 @@
 <url><loc>/reference/index.html</loc></url>
 <url><loc>/reference/merge_coincident.html</loc></url>
 <url><loc>/reference/new_wkpool.html</loc></url>
+<url><loc>/reference/new_wkpool_tri.html</loc></url>
 <url><loc>/reference/plot.wkpool.html</loc></url>
 <url><loc>/reference/pool_combine.html</loc></url>
 <url><loc>/reference/pool_compact.html</loc></url>
+<url><loc>/reference/pool_triangles.html</loc></url>
+<url><loc>/reference/pool_triangulate.html</loc></url>
 <url><loc>/reference/reverse_cycle.html</loc></url>
 <url><loc>/reference/segments_to_wkt.html</loc></url>
 <url><loc>/reference/topology_report.html</loc></url>
