@@ -20,6 +20,7 @@ Imports:
     vctrs,
     wk (>= 0.9.4)
 Suggests:
+    decido,
     knitr,
     rmarkdown,
     RTriangle,
