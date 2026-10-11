@@ -1,5 +1,23 @@
 # wkpool (development version)
 
+## Triangles
+
+* New `wkpool_tri` class: a vector of triangles (`.vx0`, `.vx1`, `.vx2`,
+  `.feature`, `.part`) on the same kind of vertex pool as a wkpool.
+  `pool_triangulate(x, engine = "decido")` ear-cuts each polygon of a pool
+  using its path provenance; ear cutting creates no vertices, so the
+  vertex table is passed through unchanged. `merge_coincident()` accepts a
+  `wkpool_tri` (triangulate first, merge later gives the same result as
+  merging first). `pool_triangles()` and `tri_segments()` give the triangle
+  table and the triangle edges as a wkpool; `wk_handle()` presents one
+  POLYGON per triangle, with crs and geodesic carried. 'decido' is
+  suggested.
+
+* For later consideration: the part is stored as a `.part` field on each
+  triangle (the simplest option). The alternative is a `.path` field
+  pointing at the outer ring's path, recovering feature and part from
+  `pool_paths()` as segments do.
+
 ## Performance
 
 * `cycles_to_wkb()` / `cycles_to_wkt()` build all polygons in one

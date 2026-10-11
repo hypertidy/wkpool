@@ -7,13 +7,14 @@
 merge_coincident(x, tolerance = 0)
 }
 \arguments{
-\item{x}{A wkpool}
+\item{x}{A wkpool, or a \code{wkpool_tri} (see \code{\link[=pool_triangulate]{pool_triangulate()}})}
 
 \item{tolerance}{Numeric tolerance for coordinate matching.
 Default 0 means exact match only.}
 }
 \value{
-A wkpool with shared vertices merged (fewer unique vertices)
+A wkpool (or \code{wkpool_tri}) with shared vertices merged (fewer
+unique vertices)
 }
 \description{
 Merge coincident vertices in a pool

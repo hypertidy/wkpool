@@ -4,10 +4,11 @@
 
 #' Merge coincident vertices in a pool
 #'
-#' @param x A wkpool
+#' @param x A wkpool, or a `wkpool_tri` (see [pool_triangulate()])
 #' @param tolerance Numeric tolerance for coordinate matching.
 #'   Default 0 means exact match only.
-#' @return A wkpool with shared vertices merged (fewer unique vertices)
+#' @return A wkpool (or `wkpool_tri`) with shared vertices merged (fewer
+#'   unique vertices)
 #'
 #' @details
 #' With tolerance = 0, only exactly identical coordinates are merged -
@@ -43,6 +44,9 @@
 #'
 #' @export
 merge_coincident <- function(x, tolerance = 0) {
+  if (inherits(x, "wkpool_tri")) {
+    return(merge_coincident_tri(x, tolerance))
+  }
   check_wkpool(x)
   pool <- pool_vertices(x)
   vx0 <- vctrs::field(x, ".vx0")
