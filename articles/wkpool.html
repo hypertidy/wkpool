@@ -32,7 +32,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">wkpool</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9006</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.4.0</span>
       </span>
     </div>
 
@@ -383,7 +383,7 @@ arcs and 13 nodes in the quotient graph). Use
 <span><span class="co">#&gt; List of 2</span></span>
 <span><span class="co">#&gt;  $ P: num [1:6, 1:2] 0 1 1 0 2 2 0 0 1 1 ...</span></span>
 <span><span class="co">#&gt;  $ S: int [1:8, 1:2] 1 2 3 4 2 5 6 3 2 3 ...</span></span></code></pre></div>
-<p>For polygons with holes, use <code><a href="../reference/hole_points.html">hole_points()</a></code> to generate
+<p>For polygons with holes, use <code><a href="../reference/pool_holes.html">pool_holes()</a></code> to generate
 interior points that tell the triangulator which regions to exclude:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># A polygon with a hole</span></span>
@@ -393,7 +393,7 @@ interior points that tell the triangulator which regions to exclude:</p>
 <span><span class="va">hp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/establish_topology.html">establish_topology</a></span><span class="op">(</span><span class="va">holed</span><span class="op">)</span></span>
 <span><span class="va">hp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merge_coincident.html">merge_coincident</a></span><span class="op">(</span><span class="va">hp</span><span class="op">)</span></span>
 <span><span class="va">pslg_h</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_pslg.html">as_pslg</a></span><span class="op">(</span><span class="va">hp</span><span class="op">)</span></span>
-<span><span class="va">holes</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hole_points.html">hole_points</a></span><span class="op">(</span><span class="va">hp</span><span class="op">)</span></span>
+<span><span class="va">holes</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pool_holes.html">pool_holes</a></span><span class="op">(</span><span class="va">hp</span><span class="op">)</span></span>
 <span><span class="va">tri</span> <span class="op">&lt;-</span> <span class="fu">RTriangle</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/RTriangle/man/triangulate.html" class="external-link">triangulate</a></span><span class="op">(</span></span>
 <span>  <span class="fu">RTriangle</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/RTriangle/man/pslg.html" class="external-link">pslg</a></span><span class="op">(</span>P <span class="op">=</span> <span class="va">pslg_h</span><span class="op">$</span><span class="va">P</span>, S <span class="op">=</span> <span class="va">pslg_h</span><span class="op">$</span><span class="va">S</span>, H <span class="op">=</span> <span class="va">holes</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>

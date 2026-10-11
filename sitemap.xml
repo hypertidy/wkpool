@@ -22,7 +22,6 @@
 <url><loc>/reference/find_neighbours.html</loc></url>
 <url><loc>/reference/find_nodes.html</loc></url>
 <url><loc>/reference/find_shared_edges.html</loc></url>
-<url><loc>/reference/hole_points.html</loc></url>
 <url><loc>/reference/index.html</loc></url>
 <url><loc>/reference/merge_coincident.html</loc></url>
 <url><loc>/reference/new_wkpool.html</loc></url>
@@ -30,6 +29,7 @@
 <url><loc>/reference/plot.wkpool.html</loc></url>
 <url><loc>/reference/pool_combine.html</loc></url>
 <url><loc>/reference/pool_compact.html</loc></url>
+<url><loc>/reference/pool_holes.html</loc></url>
 <url><loc>/reference/pool_triangles.html</loc></url>
 <url><loc>/reference/pool_triangulate.html</loc></url>
 <url><loc>/reference/reverse_cycle.html</loc></url>
@@ -41,5 +41,6 @@
 <url><loc>/reference/wkpool-accessors.html</loc></url>
 <url><loc>/reference/wkpool-crs.html</loc></url>
 <url><loc>/reference/wkpool-package.html</loc></url>
+<url><loc>/reference/wkpool.html</loc></url>
 </urlset>
 

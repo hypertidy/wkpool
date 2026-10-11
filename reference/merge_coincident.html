@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">wkpool</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9006</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.4.0</span>
       </span>
     </div>
 
@@ -66,7 +66,7 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">merge_coincident</span><span class="op">(</span><span class="va">x</span>, tolerance <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">merge_coincident</span><span class="op">(</span><span class="va">x</span>, tolerance <span class="op">=</span> <span class="fl">0</span>, period_x <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -80,6 +80,13 @@
 <dt id="arg-tolerance">tolerance<a class="anchor" aria-label="anchor" href="#arg-tolerance"></a></dt>
 <dd><p>Numeric tolerance for coordinate matching.
 Default 0 means exact match only.</p></dd>
+
+
+<dt id="arg-period-x">period_x<a class="anchor" aria-label="anchor" href="#arg-period-x"></a></dt>
+<dd><p><code>NULL</code> (default) for no wrapping, or a single positive
+number: x is treated as periodic with this period when deciding which
+vertices coincide (for example 360 for longitude in degrees). See
+'Periodic x' below.</p></dd>
 
 </dl></div>
     <div id="value">
@@ -103,6 +110,38 @@ straddle a grid-cell boundary do not merge.</p>
 columns: equal x/y with different z remain distinct vertices.</p>
 <p>This is where you discover shared boundaries between polygons,
 network connectivity, mesh topology, etc.</p>
+    </div>
+    <div id="periodic-x">
+    <h2>Periodic x</h2>
+
+
+<p>With <code>period_x</code> set, vertices are keyed on <code>x %% period_x</code> (then on the
+tolerance snap grid, if any, wrapped again so that the grid cell at the
+period boundary is the same cell as the one at zero). This fuses the
+two copies of a seam, for example x = -180 and x = 180 for longitude,
+and with <code>period_x = 360</code> data in a 0 to 360 convention fuses at 0 and
+360 in the same way. Once fused, a seam is an ordinary internal
+boundary: <code><a href="find_shared_edges.html">find_shared_edges()</a></code>, <code><a href="find_internal_boundaries.html">find_internal_boundaries()</a></code> and the
+<code>quotient</code> argument of <code><a href="find_arcs.html">find_arcs()</a></code> treat it like any other shared
+boundary.</p>
+<p>The period is never inferred: wkpool carries the crs without
+interpreting it, so it cannot know that x is longitude. The decision to
+fuse is made here, explicitly.</p>
+<p>Coordinates are still never moved: the canonical vertex keeps the x of
+its first occurrence (say -180), and segments from the other side of the
+seam now reference it. The topology is correct on the cylinder, but
+geometry emitted from the pool (for example by <code><a href="cycles_to_wkt.html">cycles_to_wkb()</a></code>) has
+coordinate jumps of about one period across the seam. Consumers that
+understand wrapping (s2, great-circle densification) are fine; a planar
+consumer needs the seam split again downstream.</p>
+<p>Segments are identified by their two vertices, so on the cylinder a
+segment cannot say which way round it goes. Two segments whose ends
+fuse to the same pair but which run opposite ways around become the
+same edge, for example the edge from -180 to 0 in one feature and from
+0 to 180 in another. This needs a segment that spans at least half the
+period, so densify long segments before merging with <code>period_x</code>.</p>
+<p>Only x is periodic. Poles (where all x coincide on the sphere),
+periodic y, and any detection from the crs are out of scope.</p>
 <p>Feature provenance (.feature) is preserved - segments keep their
 original feature assignment even after vertex merging.</p>
     </div>
@@ -159,6 +198,28 @@ original feature assignment even after vertex merging.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $n_features</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># two hemispheres, each with its own copy of the antimeridian</span></span></span>
+<span class="r-in"><span><span class="va">g</span> <span class="op">&lt;-</span> <span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/wkb.html" class="external-link">as_wkb</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="st">"POLYGON ((-180 -60, 0 -60, 0 60, -180 60, -180 -60))"</span>,</span></span>
+<span class="r-in"><span>  <span class="st">"POLYGON ((0 -60, 180 -60, 180 60, 0 60, 0 -60))"</span></span></span>
+<span class="r-in"><span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">pool</span> <span class="op">&lt;-</span> <span class="fu"><a href="establish_topology.html">establish_topology</a></span><span class="op">(</span><span class="va">g</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="fu"><a href="wkpool-accessors.html">pool_vertices</a></span><span class="op">(</span><span class="fu">merge_coincident</span><span class="op">(</span><span class="va">pool</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 6</span>
+<span class="r-in"><span><span class="va">fused</span> <span class="op">&lt;-</span> <span class="fu">merge_coincident</span><span class="op">(</span><span class="va">pool</span>, period_x <span class="op">=</span> <span class="fl">360</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="fu"><a href="wkpool-accessors.html">pool_vertices</a></span><span class="op">(</span><span class="va">fused</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 4</span>
+<span class="r-in"><span><span class="fu"><a href="find_shared_edges.html">find_shared_edges</a></span><span class="op">(</span><span class="va">fused</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   edge_key .vx0 .vx1 .feature segment_idx features</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      1-2    1    2        1           1     1, 2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      2-3    2    3        1           2     1, 2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3      3-4    3    4        1           3     1, 2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4      1-4    1    4        1           4     1, 2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5      1-2    1    2        2           5     1, 2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6      1-4    1    4        2           6     1, 2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7      3-4    3    4        2           7     1, 2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8      2-3    2    3        2           8     1, 2</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

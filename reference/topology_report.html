@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">wkpool</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9006</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.4.0</span>
       </span>
     </div>
 
@@ -66,7 +66,7 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">topology_report</span><span class="op">(</span><span class="va">x</span>, tolerance <span class="op">=</span> <span class="fl">1e-08</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">topology_report</span><span class="op">(</span><span class="va">x</span>, tolerance <span class="op">=</span> <span class="fl">1e-08</span>, period_x <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -79,6 +79,11 @@
 
 <dt id="arg-tolerance">tolerance<a class="anchor" aria-label="anchor" href="#arg-tolerance"></a></dt>
 <dd><p>Tolerance for "near miss" detection</p></dd>
+
+
+<dt id="arg-period-x">period_x<a class="anchor" aria-label="anchor" href="#arg-period-x"></a></dt>
+<dd><p><code>NULL</code>, or the period of x, as in <code><a href="merge_coincident.html">merge_coincident()</a></code>;
+duplicates and near misses are then counted with x wrapped.</p></dd>
 
 </dl></div>
     <div id="value">
