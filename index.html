@@ -217,26 +217,25 @@
 <span><span class="fu"><a href="reference/find_arcs.html">find_arcs</a></span><span class="op">(</span><span class="va">pool</span>, quotient <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>    <span class="co"># 201 arcs</span></span>
 <span><span class="fu"><a href="reference/find_nodes.html">find_nodes</a></span><span class="op">(</span><span class="va">pool</span>, quotient <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>   <span class="co"># 13 nodes where three or more edges meet</span></span>
 <span><span class="fu"><a href="reference/classify_cycles.html">classify_cycles</a></span><span class="op">(</span><span class="va">pool</span><span class="op">)</span>               <span class="co"># 189 rings: 157 outer, 32 holes</span></span></code></pre></div>
-<div class="float">
-<img src="reference/figures/inlandwaters.png" alt="inlandwaters arcs, nodes and rings"><div class="figcaption">inlandwaters arcs, nodes and rings</div>
-</div>
-<p>Without <code>quotient = TRUE</code> every vertex inside a shared boundary has degree 4 (each feature carries its own copy of the edge), so <code><a href="reference/find_nodes.html">find_nodes()</a></code> returns 2,619 nodes and <code><a href="reference/find_arcs.html">find_arcs()</a></code> 5,418 arcs. Use the quotient graph for coverages; the default counts every segment.</p>
+<figure><img src="reference/figures/inlandwaters.png" alt="inlandwaters arcs, nodes and rings"><figcaption aria-hidden="true">
+inlandwaters arcs, nodes and rings
+</figcaption></figure><p>Without <code>quotient = TRUE</code> every vertex inside a shared boundary has degree 4 (each feature carries its own copy of the edge), so <code><a href="reference/find_nodes.html">find_nodes()</a></code> returns 2,619 nodes and <code><a href="reference/find_arcs.html">find_arcs()</a></code> 5,418 arcs. Use the quotient graph for coverages; the default counts every segment.</p>
 </div>
 <div class="section level2">
 <h2 id="vertex-identity">Vertex identity<a class="anchor" aria-label="anchor" href="#vertex-identity"></a>
 </h2>
 <p>wkpool covers two rungs of a ladder of ways a vertex can be “the same”: exact float (<code>merge_coincident(tolerance = 0)</code>) and snapped (<code>tolerance &gt; 0</code>). It does not node: a vertex lying on another feature’s edge stays a T-junction until something like GEOS inserts it. Above exact float, a lattice (a raster, a discrete global grid) can give identity by construction, with no comparison at all.</p>
-<div class="float">
-<img src="reference/figures/ladder.png" alt="the vertex identity ladder"><div class="figcaption">the vertex identity ladder</div>
-</div>
+<figure><img src="reference/figures/ladder.png" alt="the vertex identity ladder"><figcaption aria-hidden="true">
+the vertex identity ladder
+</figcaption></figure>
 </div>
 <div class="section level2">
 <h2 id="performance">Performance<a class="anchor" aria-label="anchor" href="#performance"></a>
 </h2>
 <p>All pipelines scale linearly. Against silicate on the same inputs (<code>bench/README.md</code> has the full tables), wkpool is 1.6 to 29 times faster than <code>PATH0()</code> for vertices and 12 to 1300 times faster than <code>SC()</code> and <code>ARC()</code> for edges and arcs.</p>
-<div class="float">
-<img src="reference/figures/scaling.png" alt="silicate vs wkpool scaling on hexagon coverages"><div class="figcaption">silicate vs wkpool scaling on hexagon coverages</div>
-</div>
+<figure><img src="reference/figures/scaling.png" alt="silicate vs wkpool scaling on hexagon coverages"><figcaption aria-hidden="true">
+silicate vs wkpool scaling on hexagon coverages
+</figcaption></figure>
 </div>
 <div class="section level2">
 <h2 id="related">Related<a class="anchor" aria-label="anchor" href="#related"></a>
@@ -355,7 +354,7 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Michael Sumner <br><small class="roles"> Author, maintainer </small>   </li>
+<li>Michael Sumner <br><small class="roles"> Author, maintainer, copyright holder </small>   </li>
 </ul>
 </div>
 
