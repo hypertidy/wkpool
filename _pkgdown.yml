@@ -1,0 +1,113 @@
+url: https://hypertidy.github.io/wkpool/
+
+template:
+  bootstrap: 5
+  light-switch: true
+
+home:
+  title: wkpool - vertex pool topology for well-known geometry
+  links:
+  - text: hypertidy on GitHub
+    href: https://github.com/hypertidy
+  - text: wk (geometry handlers)
+    href: https://paleolimbot.github.io/wk/
+
+navbar:
+  structure:
+    left: [intro, reference, articles, news]
+    right: [search, github, lightswitch]
+
+reference:
+- title: Build a pool
+  desc: >
+    Decompose any wk-handleable geometry into a shared vertex pool and
+    segments that reference it, or assemble a pool from tables.
+  contents:
+  - establish_topology
+  - wkpool
+  - new_wkpool
+  - pool_combine
+  - vec_c
+  - pool_compact
+
+- title: Inspect and draw
+  desc: >
+    Accessors for the vertices, segments and feature structure of a pool,
+    CRS handling, wk handlers, and plotting.
+  contents:
+  - wkpool-accessors
+  - wkpool-crs
+  - wk_handle.wkpool
+  - starts_with("plot")
+
+- title: Vertex identity
+  desc: >
+    Coincident vertex detection and merging (with optional periodic x for
+    the antimeridian), and topology diagnostics.
+  contents:
+  - merge_coincident
+  - topology_report
+  - vertex_degree
+
+- title: Shared edges and neighbours
+  desc: >
+    Edges used by more than one feature, internal boundaries, and feature
+    adjacency.
+  contents:
+  - find_shared_edges
+  - find_internal_boundaries
+  - find_neighbours
+
+- title: Arcs and nodes
+  desc: >
+    Arc-node topology, maximal segment runs between nodes of degree other
+    than two.
+  contents:
+  - find_nodes
+  - find_arcs
+  - as_arcs
+  - arc_node_summary
+
+- title: Cycles
+  desc: >
+    Closed rings in the segment graph, classified by winding into outer
+    rings and holes.
+  contents:
+  - find_cycles
+  - classify_cycles
+  - cycle_signed_area
+  - reverse_cycle
+
+- title: Triangulation (experimental)
+  desc: >
+    Triangle pools that share the vertex pool, and the inputs constrained
+    triangulators need (holes, PSLG). This interface may change.
+  contents:
+  - pool_triangulate
+  - new_wkpool_tri
+  - pool_triangles
+  - pool_holes
+  - as_pslg
+
+- title: Export
+  desc: >
+    Back to WKT or WKB, as segments, arcs or polygons from cycles.
+  contents:
+  - segments_to_wkt
+  - arcs_to_wkt
+  - cycles_to_wkt
+
+- title: Package
+  contents:
+  - wkpool-package
+
+articles:
+- title: Concepts
+  navbar: ~
+  contents:
+  - wkpool-vignette-segments
+
+news:
+  releases:
+  - text: wkpool on CRAN
+    href: https://cran.r-project.org/package=wkpool
