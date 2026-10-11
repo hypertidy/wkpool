@@ -11,6 +11,10 @@
 #' whose corners are vertex ids into a shared vertex pool, the same pool
 #' structure a [wkpool][new_wkpool] uses for segments.
 #'
+#' The `wkpool_tri` class is experimental: how a triangle records the
+#' polygon part it came from (currently a `.part` field) may change in a
+#' later release.
+#'
 #' @param vertices A data.frame with columns `.vx` (integer vertex ids),
 #'   `x`, `y`, and optionally `z`.
 #' @param vx0,vx1,vx2 Integer vectors of triangle corner vertex ids, each
@@ -72,8 +76,12 @@ wkpool_tri_empty <- function(crs = wk::wk_crs_inherit(), geodesic = NA) {
 
 #' Triangulate the polygons in a pool
 #'
-#' Triangulate each polygon of a [wkpool] (built by [establish_topology()])
+#' Triangulate each polygon of a [wkpool()] (built by [establish_topology()])
 #' and return the triangles as a `wkpool_tri` on the same vertex pool.
+#'
+#' The `wkpool_tri` class is experimental: how a triangle records the
+#' polygon part it came from (currently a `.part` field) may change in a
+#' later release.
 #'
 #' The `"decido"` engine is ear cutting ([decido::earcut()]), which never
 #' creates vertices: every triangle corner is an existing vertex of the
@@ -189,7 +197,7 @@ ring_chain <- function(vx0, vx1, v) {
 #' @returns
 #' - `pool_triangles()`: a data frame with columns `.vx0`, `.vx1`, `.vx2`
 #'   and, when present, `.feature` and `.part`.
-#' - `tri_segments()`: a [wkpool] of the triangle edges, three per triangle
+#' - `tri_segments()`: a [wkpool()] of the triangle edges, three per triangle
 #'   in triangle order and counter-clockwise, on the same vertex pool, with
 #'   the triangle's feature. Edges used by one triangle are on the boundary
 #'   of the triangulated region, edges used by two are internal (after
@@ -228,9 +236,9 @@ tri_segments <- function(x) {
              geodesic = attr(x, "geodesic", exact = TRUE))
 }
 
-merge_coincident_tri <- function(x, tolerance = 0) {
+merge_coincident_tri <- function(x, tolerance = 0, period_x = NULL) {
   pool <- pool_vertices(x)
-  g <- vertex_groups(pool, tolerance)
+  g <- vertex_groups(pool, tolerance, period_x)
   first <- g > c(0L, cummax(g)[-length(g)])
   new_pool <- pool[first, , drop = FALSE]
   new_pool$.vx <- seq_len(nrow(new_pool))

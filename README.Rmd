@@ -165,8 +165,8 @@ and so can other mesh models. Work in progress on top of it:
 - [x] PSLG for constrained triangulation (`as_pslg()`, RTriangle)
 - [x] Vectorised verbs with no quadratic scans; C++ (cpp11) for arcs
 - [ ] Apply to production package (trip)
-- [ ] Triangulation integration (decido): indexed triangles from the
-  same pool
+- [x] Triangulation integration (decido): indexed triangles from the
+  same pool (`pool_triangulate()`, experimental)
 
 
 ## Code of Conduct

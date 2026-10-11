@@ -4,3 +4,4 @@
 .httr-oauth
 .DS_Store
 .quarto
+tests/testthat/Rplots.pdf

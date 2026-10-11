@@ -27,6 +27,22 @@ test_that("wkpool() picks up .feature from segment data.frame", {
   expect_equal(pool_feature(pool), c(1L, 1L, 1L, 1L))
 })
 
+test_that("wkpool() rejects segments without .vx0/.vx1", {
+  v <- data.frame(.vx = 1:2, x = c(0, 1), y = c(0, 0))
+  expect_error(wkpool(v, list(.vx0 = 1L, .vx1 = 2L)), "data.frame")
+  expect_error(wkpool(v, data.frame(a = 1L, b = 2L)), ".vx0")
+})
+
+test_that("wkpool() round trips through the accessors", {
+  pool <- establish_topology(wk::as_wkb(
+    "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))"
+  ))
+  pool2 <- wkpool(pool_vertices(pool), pool_segments(pool),
+                  paths = pool_paths(pool), crs = wk::wk_crs(pool))
+  expect_identical(pool_segments(pool2), pool_segments(pool))
+  expect_identical(pool_vertices(pool2), pool_vertices(pool))
+})
+
 test_that("wkpool() without .feature gives NULL feature", {
   v <- data.frame(.vx = 1:3, x = c(0, 1, 0.5), y = c(0, 0, 1))
   s <- data.frame(.vx0 = c(1L, 2L, 3L), .vx1 = c(2L, 3L, 1L))

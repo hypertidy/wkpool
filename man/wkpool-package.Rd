@@ -2,7 +2,6 @@
 % Please edit documentation in R/wkpool-package.R
 \docType{package}
 \name{wkpool-package}
-\alias{wkpool}
 \alias{wkpool-package}
 \title{wkpool: Vertex Pool Topology for Well-Known Geometry}
 \description{

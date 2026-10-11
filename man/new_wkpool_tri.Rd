@@ -47,6 +47,11 @@ A low-level constructor for \code{wkpool_tri} objects: a vector of triangles
 whose corners are vertex ids into a shared vertex pool, the same pool
 structure a \link[=new_wkpool]{wkpool} uses for segments.
 }
+\details{
+The \code{wkpool_tri} class is experimental: how a triangle records the
+polygon part it came from (currently a \code{.part} field) may change in a
+later release.
+}
 \examples{
 v <- data.frame(.vx = 1:4, x = c(0, 1, 1, 0), y = c(0, 0, 1, 1))
 new_wkpool_tri(v, vx0 = c(1L, 1L), vx1 = c(2L, 3L), vx2 = c(3L, 4L))

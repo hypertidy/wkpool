@@ -17,10 +17,14 @@ pool_triangulate(x, engine = c("decido"), ...)
 A \code{wkpool_tri}.
 }
 \description{
-Triangulate each polygon of a \link{wkpool} (built by \code{\link[=establish_topology]{establish_topology()}})
+Triangulate each polygon of a \code{\link[=wkpool]{wkpool()}} (built by \code{\link[=establish_topology]{establish_topology()}})
 and return the triangles as a \code{wkpool_tri} on the same vertex pool.
 }
 \details{
+The \code{wkpool_tri} class is experimental: how a triangle records the
+polygon part it came from (currently a \code{.part} field) may change in a
+later release.
+
 The \code{"decido"} engine is ear cutting (\code{\link[decido:earcut]{decido::earcut()}}), which never
 creates vertices: every triangle corner is an existing vertex of the
 pool, so the vertex table is passed through unchanged. Each polygon (each

@@ -4,13 +4,18 @@
 \alias{merge_coincident}
 \title{Merge coincident vertices in a pool}
 \usage{
-merge_coincident(x, tolerance = 0)
+merge_coincident(x, tolerance = 0, period_x = NULL)
 }
 \arguments{
 \item{x}{A wkpool, or a \code{wkpool_tri} (see \code{\link[=pool_triangulate]{pool_triangulate()}})}
 
 \item{tolerance}{Numeric tolerance for coordinate matching.
 Default 0 means exact match only.}
+
+\item{period_x}{\code{NULL} (default) for no wrapping, or a single positive
+number: x is treated as periodic with this period when deciding which
+vertices coincide (for example 360 for longitude in degrees). See
+'Periodic x' below.}
 }
 \value{
 A wkpool (or \code{wkpool_tri}) with shared vertices merged (fewer
@@ -37,10 +42,45 @@ columns: equal x/y with different z remain distinct vertices.
 
 This is where you discover shared boundaries between polygons,
 network connectivity, mesh topology, etc.
+}
+\section{Periodic x}{
+
+With \code{period_x} set, vertices are keyed on \code{x \%\% period_x} (then on the
+tolerance snap grid, if any, wrapped again so that the grid cell at the
+period boundary is the same cell as the one at zero). This fuses the
+two copies of a seam, for example x = -180 and x = 180 for longitude,
+and with \code{period_x = 360} data in a 0 to 360 convention fuses at 0 and
+360 in the same way. Once fused, a seam is an ordinary internal
+boundary: \code{\link[=find_shared_edges]{find_shared_edges()}}, \code{\link[=find_internal_boundaries]{find_internal_boundaries()}} and the
+\code{quotient} argument of \code{\link[=find_arcs]{find_arcs()}} treat it like any other shared
+boundary.
+
+The period is never inferred: wkpool carries the crs without
+interpreting it, so it cannot know that x is longitude. The decision to
+fuse is made here, explicitly.
+
+Coordinates are still never moved: the canonical vertex keeps the x of
+its first occurrence (say -180), and segments from the other side of the
+seam now reference it. The topology is correct on the cylinder, but
+geometry emitted from the pool (for example by \code{\link[=cycles_to_wkb]{cycles_to_wkb()}}) has
+coordinate jumps of about one period across the seam. Consumers that
+understand wrapping (s2, great-circle densification) are fine; a planar
+consumer needs the seam split again downstream.
+
+Segments are identified by their two vertices, so on the cylinder a
+segment cannot say which way round it goes. Two segments whose ends
+fuse to the same pair but which run opposite ways around become the
+same edge, for example the edge from -180 to 0 in one feature and from
+0 to 180 in another. This needs a segment that spans at least half the
+period, so densify long segments before merging with \code{period_x}.
+
+Only x is periodic. Poles (where all x coincide on the sphere),
+periodic y, and any detection from the crs are out of scope.
 
 Feature provenance (.feature) is preserved - segments keep their
 original feature assignment even after vertex merging.
 }
+
 \examples{
 x <- wk::as_wkb(c(
   "POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))",
@@ -50,5 +90,16 @@ pool <- establish_topology(x)
 topology_report(pool)
 merged <- merge_coincident(pool)
 topology_report(merged)
+
+# two hemispheres, each with its own copy of the antimeridian
+g <- wk::as_wkb(c(
+  "POLYGON ((-180 -60, 0 -60, 0 60, -180 60, -180 -60))",
+  "POLYGON ((0 -60, 180 -60, 180 60, 0 60, 0 -60))"
+))
+pool <- establish_topology(g)
+nrow(pool_vertices(merge_coincident(pool)))
+fused <- merge_coincident(pool, period_x = 360)
+nrow(pool_vertices(fused))
+find_shared_edges(fused)
 
 }

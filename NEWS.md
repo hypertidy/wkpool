@@ -1,8 +1,8 @@
-# wkpool (development version)
+# wkpool 0.4.0
 
-## Triangles
+## Triangles (experimental)
 
-* New `wkpool_tri` class: a vector of triangles (`.vx0`, `.vx1`, `.vx2`,
+* New, experimental `wkpool_tri` class: a vector of triangles (`.vx0`, `.vx1`, `.vx2`,
   `.feature`, `.part`) on the same kind of vertex pool as a wkpool.
   `pool_triangulate(x, engine = "decido")` ear-cuts each polygon of a pool
   using its path provenance; ear cutting creates no vertices, so the
@@ -13,10 +13,33 @@
   POLYGON per triangle, with crs and geodesic carried. 'decido' is
   suggested.
 
-* For later consideration: the part is stored as a `.part` field on each
-  triangle (the simplest option). The alternative is a `.path` field
-  pointing at the outer ring's path, recovering feature and part from
-  `pool_paths()` as segments do.
+* `wkpool_tri` is experimental and may change in a later release. In
+  particular the part is stored as a `.part` field on each triangle (the
+  simplest option); the alternative is a `.path` field pointing at the
+  outer ring's path, recovering feature and part from `pool_paths()` as
+  segments do.
+
+## Periodic x (antimeridian)
+
+* `merge_coincident()` and `topology_report()` gain `period_x` (default
+  `NULL`, behaviour unchanged). With `period_x = 360`, vertices are keyed
+  on `x %% 360`, so the two copies of a +-180 seam fuse (and 0 to 360
+  data fuses at 0 and 360); after merging, the seam is an ordinary shared
+  boundary for `find_shared_edges()`, `find_internal_boundaries()` and
+  quotient arcs. The period is never inferred from the crs. Coordinates
+  are not moved, so geometry emitted from a fused pool jumps by one period
+  across the seam. With a tolerance, x is wrapped, snapped, then wrapped
+  again (#3).
+
+## Constructors and naming
+
+* `wkpool(vertices, segments)` is now exported and documented: the
+  user-level constructor from a vertex table and a segment table, as
+  returned by `pool_vertices()` and `pool_segments()` (#2).
+
+* New `pool_holes()`, the same function as `hole_points()` under a name
+  that matches the other `pool_*()` accessors. `hole_points()` is kept
+  (#1).
 
 ## Performance
 
