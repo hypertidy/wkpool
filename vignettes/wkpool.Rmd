@@ -178,7 +178,7 @@ pslg <- as_pslg(pool)
 str(pslg)
 ```
 
-For polygons with holes, use `hole_points()` to generate interior points that
+For polygons with holes, use `pool_holes()` to generate interior points that
 tell the triangulator which regions to exclude:
 
 ```{r triangulate, eval = requireNamespace("RTriangle", quietly = TRUE)}
@@ -189,7 +189,7 @@ holed <- wk::as_wkb(
 hp <- establish_topology(holed)
 hp <- merge_coincident(hp)
 pslg_h <- as_pslg(hp)
-holes <- hole_points(hp)
+holes <- pool_holes(hp)
 tri <- RTriangle::triangulate(
   RTriangle::pslg(P = pslg_h$P, S = pslg_h$S, H = holes)
 )

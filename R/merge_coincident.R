@@ -550,6 +550,10 @@ reverse_cycle <- function(cycle) {
 
 #' Get hole points for constrained triangulation
 #'
+#' `pool_holes()` and `hole_points()` are the same function: `pool_holes()`
+#' is the name that matches the other `pool_*()` accessors, and
+#' `hole_points()` is kept for existing code.
+#'
 #' @param x A wkpool (ideally after merge_coincident)
 #' @param convention Which winding convention to use when the pool has
 #'   no path provenance: "sf" (default) or "ogc"
@@ -574,17 +578,17 @@ reverse_cycle <- function(cycle) {
 #'
 #' x <- establish_topology(polygons_with_holes)
 #' merged <- merge_coincident(x)
-#' hole_points(merged)
+#' pool_holes(merged)
 #' if (requireNamespace("RTriangle", quietly = TRUE)) {
 #'   pslg <- as_pslg(merged)
-#'   holes <- hole_points(merged)
+#'   holes <- pool_holes(merged)
 #'   tri <- RTriangle::triangulate(
 #'     RTriangle::pslg(P = pslg$P, S = pslg$S, H = holes)
 #'   )
 #' }
 #'
 #' @export
-hole_points <- function(x, convention = c("sf", "ogc")) {
+pool_holes <- function(x, convention = c("sf", "ogc")) {
   check_wkpool(x)
   convention <- match.arg(convention)
   cycles <- find_cycles(x)
@@ -621,6 +625,12 @@ hole_points <- function(x, convention = c("sf", "ogc")) {
 
   colnames(pts) <- c("x", "y")
   pts
+}
+
+#' @rdname pool_holes
+#' @export
+hole_points <- function(x, convention = c("sf", "ogc")) {
+  pool_holes(x, convention = convention)
 }
 
 

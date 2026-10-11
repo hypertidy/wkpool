@@ -183,3 +183,12 @@ test_that("hole_points on simple polygon returns NULL (winding resolved)", {
   expect_null(hole_points(merged))
   expect_null(hole_points(merged, convention = "ogc"))
 })
+
+test_that("pool_holes and hole_points agree", {
+  merged <- merge_coincident(establish_topology(wk::as_wkb(
+    "POLYGON ((0 0, 4 0, 4 4, 0 4, 0 0), (1 1, 1 2, 2 2, 2 1, 1 1))"
+  )))
+  expect_identical(pool_holes(merged), hole_points(merged))
+  expect_identical(pool_holes(merged, convention = "ogc"),
+                   hole_points(merged, convention = "ogc"))
+})

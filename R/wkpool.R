@@ -95,9 +95,38 @@ new_wkpool <- function(vertices, vx0, vx1, feature = NULL,
 
 # User constructor -------------------------------------------------------
 
+#' Create a wkpool from a vertex table and a segment table
+#'
+#' The user-level constructor: give a vertex table and a segment table
+#' (as returned by [pool_vertices()] and [pool_segments()]) and get a
+#' wkpool back. It is a thin wrapper around [new_wkpool()], which checks
+#' that every segment endpoint is a vertex id present in the pool.
+#'
+#' @param vertices A data.frame with columns `.vx` (integer vertex ids),
+#'   `x`, `y`, and optionally `z`.
+#' @param segments A data.frame with integer columns `.vx0` and `.vx1`
+#'   (vertex ids), and optionally `.feature` and `.path`.
+#' @inheritParams new_wkpool
+#'
+#' @returns A wkpool object.
+#' @seealso [new_wkpool()] for the low-level constructor,
+#'   [establish_topology()] to build a pool from wk geometry.
+#'
+#' @examples
+#' v <- data.frame(.vx = 1:4, x = c(0, 1, 1, 0), y = c(0, 0, 1, 1))
+#' s <- data.frame(.vx0 = 1:4, .vx1 = c(2:4, 1L), .feature = 1L)
+#' pool <- wkpool(v, s)
+#' pool
+#'
+#' # round trip through the accessors
+#' wkpool(pool_vertices(pool), pool_segments(pool))
+#'
+#' @export
 wkpool <- function(vertices, segments, paths = NULL, crs = NULL, geodesic = FALSE) {
-  #vctrs::vec_assert(segments, data.frame())
-  if (!is.data.frame(segments)) stop("`segments` must be a data.frame")
+  if (!is.data.frame(segments)) stop("`segments` must be a data.frame", call. = FALSE)
+  if (!all(c(".vx0", ".vx1") %in% names(segments))) {
+    stop("`segments` must have columns `.vx0` and `.vx1`", call. = FALSE)
+  }
   feature <- if (".feature" %in% names(segments)) segments$.feature else NULL
   path <- if (".path" %in% names(segments)) segments$.path else NULL
   new_wkpool(vertices, segments$.vx0, segments$.vx1, feature = feature,
@@ -466,16 +495,6 @@ plot.wkpool <- function(x, col = NULL, ...) {
 
 
 
-
-
-# Validation helper for wkpool
-#
-# Add this to wkpool.R (or a new validate.R file)
-
-#' Check if input is a wkpool, with helpful error
-#' @param x Input to check
-#' @param arg Name of argument for error message
-#' @noRd
 # Position of vertex ids in a pool's .vx column, as match(ids, vx).
 # Pools minted by establish_topology(), merge_coincident() and
 # pool_compact() have .vx = 1..n, where an id is its own position, so
@@ -493,6 +512,7 @@ vx_match <- function(ids, vx) {
   match(ids, vx)
 }
 
+# Check if input is a wkpool, with a helpful error.
 check_wkpool <- function(x, arg = "x") {
   if (!inherits(x, "wkpool")) {
     stop(

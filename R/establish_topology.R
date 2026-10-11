@@ -12,7 +12,7 @@
 #' Vertices are minted as-is from the input coordinates.
 #' No snapping or deduplication is performed - the pool represents
 #' the exact truth of the input geometry. Use merge_coincident()
-#' afterward to discover/establish shared topology.
+#' afterwards to discover/establish shared topology.
 #'
 #' Segments track their feature origin via `.feature` attribute,
 #' enabling discovery of shared boundaries and neighbour relations.

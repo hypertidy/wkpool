@@ -25,7 +25,7 @@ tri_segments(x)
 \itemize{
 \item \code{pool_triangles()}: a data frame with columns \code{.vx0}, \code{.vx1}, \code{.vx2}
 and, when present, \code{.feature} and \code{.part}.
-\item \code{tri_segments()}: a \link{wkpool} of the triangle edges, three per triangle
+\item \code{tri_segments()}: a \code{\link[=wkpool]{wkpool()}} of the triangle edges, three per triangle
 in triangle order and counter-clockwise, on the same vertex pool, with
 the triangle's feature. Edges used by one triangle are on the boundary
 of the triangulated region, edges used by two are internal (after
