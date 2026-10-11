@@ -236,9 +236,9 @@ tri_segments <- function(x) {
              geodesic = attr(x, "geodesic", exact = TRUE))
 }
 
-merge_coincident_tri <- function(x, tolerance = 0) {
+merge_coincident_tri <- function(x, tolerance = 0, period_x = NULL) {
   pool <- pool_vertices(x)
-  g <- vertex_groups(pool, tolerance)
+  g <- vertex_groups(pool, tolerance, period_x)
   first <- g > c(0L, cummax(g)[-length(g)])
   new_pool <- pool[first, , drop = FALSE]
   new_pool$.vx <- seq_len(nrow(new_pool))

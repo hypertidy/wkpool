@@ -4,12 +4,15 @@
 \alias{topology_report}
 \title{Report topology diagnostics}
 \usage{
-topology_report(x, tolerance = 1e-08)
+topology_report(x, tolerance = 1e-08, period_x = NULL)
 }
 \arguments{
 \item{x}{A wkpool}
 
 \item{tolerance}{Tolerance for "near miss" detection}
+
+\item{period_x}{\code{NULL}, or the period of x, as in \code{\link[=merge_coincident]{merge_coincident()}};
+duplicates and near misses are then counted with x wrapped.}
 }
 \value{
 List of diagnostic information

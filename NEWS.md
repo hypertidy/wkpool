@@ -19,6 +19,18 @@
   outer ring's path, recovering feature and part from `pool_paths()` as
   segments do.
 
+## Periodic x (antimeridian)
+
+* `merge_coincident()` and `topology_report()` gain `period_x` (default
+  `NULL`, behaviour unchanged). With `period_x = 360`, vertices are keyed
+  on `x %% 360`, so the two copies of a +-180 seam fuse (and 0 to 360
+  data fuses at 0 and 360); after merging, the seam is an ordinary shared
+  boundary for `find_shared_edges()`, `find_internal_boundaries()` and
+  quotient arcs. The period is never inferred from the crs. Coordinates
+  are not moved, so geometry emitted from a fused pool jumps by one period
+  across the seam. With a tolerance, x is wrapped, snapped, then wrapped
+  again (#3).
+
 ## Constructors and naming
 
 * `wkpool(vertices, segments)` is now exported and documented: the

@@ -7,6 +7,10 @@
 #' @param x A wkpool, or a `wkpool_tri` (see [pool_triangulate()])
 #' @param tolerance Numeric tolerance for coordinate matching.
 #'   Default 0 means exact match only.
+#' @param period_x `NULL` (default) for no wrapping, or a single positive
+#'   number: x is treated as periodic with this period when deciding which
+#'   vertices coincide (for example 360 for longitude in degrees). See
+#'   'Periodic x' below.
 #' @return A wkpool (or `wkpool_tri`) with shared vertices merged (fewer
 #'   unique vertices)
 #'
@@ -29,6 +33,39 @@
 #' This is where you discover shared boundaries between polygons,
 #' network connectivity, mesh topology, etc.
 #'
+#' @section Periodic x:
+#' With `period_x` set, vertices are keyed on `x %% period_x` (then on the
+#' tolerance snap grid, if any, wrapped again so that the grid cell at the
+#' period boundary is the same cell as the one at zero). This fuses the
+#' two copies of a seam, for example x = -180 and x = 180 for longitude,
+#' and with `period_x = 360` data in a 0 to 360 convention fuses at 0 and
+#' 360 in the same way. Once fused, a seam is an ordinary internal
+#' boundary: [find_shared_edges()], [find_internal_boundaries()] and the
+#' `quotient` argument of [find_arcs()] treat it like any other shared
+#' boundary.
+#'
+#' The period is never inferred: wkpool carries the crs without
+#' interpreting it, so it cannot know that x is longitude. The decision to
+#' fuse is made here, explicitly.
+#'
+#' Coordinates are still never moved: the canonical vertex keeps the x of
+#' its first occurrence (say -180), and segments from the other side of the
+#' seam now reference it. The topology is correct on the cylinder, but
+#' geometry emitted from the pool (for example by [cycles_to_wkb()]) has
+#' coordinate jumps of about one period across the seam. Consumers that
+#' understand wrapping (s2, great-circle densification) are fine; a planar
+#' consumer needs the seam split again downstream.
+#'
+#' Segments are identified by their two vertices, so on the cylinder a
+#' segment cannot say which way round it goes. Two segments whose ends
+#' fuse to the same pair but which run opposite ways around become the
+#' same edge, for example the edge from -180 to 0 in one feature and from
+#' 0 to 180 in another. This needs a segment that spans at least half the
+#' period, so densify long segments before merging with `period_x`.
+#'
+#' Only x is periodic. Poles (where all x coincide on the sphere),
+#' periodic y, and any detection from the crs are out of scope.
+#'
 #' Feature provenance (.feature) is preserved - segments keep their
 #' original feature assignment even after vertex merging.
 #'
@@ -42,10 +79,22 @@
 #' merged <- merge_coincident(pool)
 #' topology_report(merged)
 #'
+#' # two hemispheres, each with its own copy of the antimeridian
+#' g <- wk::as_wkb(c(
+#'   "POLYGON ((-180 -60, 0 -60, 0 60, -180 60, -180 -60))",
+#'   "POLYGON ((0 -60, 180 -60, 180 60, 0 60, 0 -60))"
+#' ))
+#' pool <- establish_topology(g)
+#' nrow(pool_vertices(merge_coincident(pool)))
+#' fused <- merge_coincident(pool, period_x = 360)
+#' nrow(pool_vertices(fused))
+#' find_shared_edges(fused)
+#'
 #' @export
-merge_coincident <- function(x, tolerance = 0) {
+merge_coincident <- function(x, tolerance = 0, period_x = NULL) {
+  check_period_x(period_x)
   if (inherits(x, "wkpool_tri")) {
-    return(merge_coincident_tri(x, tolerance))
+    return(merge_coincident_tri(x, tolerance, period_x))
   }
   check_wkpool(x)
   pool <- pool_vertices(x)
@@ -59,7 +108,7 @@ merge_coincident <- function(x, tolerance = 0) {
   # .vx numbering follows pool order - same behaviour as before, minus
   # the formatted-text keys (which silently collapsed doubles differing
   # beyond ~15 significant digits).
-  g <- vertex_groups(pool, tolerance)
+  g <- vertex_groups(pool, tolerance, period_x)
 
   # group ids are numbered by first appearance, so a row is the first of
   # its group exactly when its id exceeds every id before it
@@ -80,14 +129,31 @@ merge_coincident <- function(x, tolerance = 0) {
 # Integer group id per pool row, keyed on the coordinate columns
 # (x, y, and z when present), exact on the double bit pattern.
 # tolerance > 0 keys on a snap grid of that cell size instead.
+# period_x keys x on x %% period_x (before the snap, and again after it
+# so the snapped value at the period boundary wraps to zero).
 # Group ids are numbered in order of first appearance.
-vertex_groups <- function(pool, tolerance = 0) {
+vertex_groups <- function(pool, tolerance = 0, period_x = NULL) {
   cols <- intersect(c("x", "y", "z"), names(pool))
   key <- pool[cols]
+  if (!is.null(period_x)) {
+    key$x <- key$x %% period_x
+  }
   if (tolerance != 0) {
     key <- as.data.frame(lapply(key, function(v) round(v / tolerance) * tolerance))
+    if (!is.null(period_x)) {
+      key$x <- key$x %% period_x
+    }
   }
   vctrs::vec_group_id(key)
+}
+
+check_period_x <- function(period_x) {
+  if (!is.null(period_x) &&
+      !(is.numeric(period_x) && length(period_x) == 1L &&
+        is.finite(period_x) && period_x > 0)) {
+    stop("`period_x` must be NULL or a single positive number", call. = FALSE)
+  }
+  invisible(period_x)
 }
 
 
@@ -737,6 +803,8 @@ unique_rows <- function(x) {
 #'
 #' @param x A wkpool
 #' @param tolerance Tolerance for "near miss" detection
+#' @param period_x `NULL`, or the period of x, as in [merge_coincident()];
+#'   duplicates and near misses are then counted with x wrapped.
 #' @return List of diagnostic information
 #'
 #' @examples
@@ -748,20 +816,21 @@ unique_rows <- function(x) {
 #' topology_report(pool)
 #'
 #' @export
-topology_report <- function(x, tolerance = 1e-8) {
+topology_report <- function(x, tolerance = 1e-8, period_x = NULL) {
   check_wkpool(x)
+  check_period_x(period_x)
   pool <- pool_vertices(x)
   vx0 <- vctrs::field(x, ".vx0")
   vx1 <- vctrs::field(x, ".vx1")
   feature <- pool_feature(x)
 
   # Exact duplicates (bit-pattern identity, same key as merge_coincident)
-  g <- vertex_groups(pool, 0)
+  g <- vertex_groups(pool, 0, period_x)
   n_unique_exact <- if (length(g)) max(g) else 0L
   n_dup_exact <- nrow(pool) - n_unique_exact
 
   # Near misses (would merge with tolerance)
-  gt <- vertex_groups(pool, tolerance)
+  gt <- vertex_groups(pool, tolerance, period_x)
   n_unique_tol <- if (length(gt)) max(gt) else 0L
   n_near_miss <- n_unique_exact - n_unique_tol
 
