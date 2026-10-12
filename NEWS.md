@@ -1,5 +1,23 @@
 # wkpool (development version)
 
+* New vignette "Triangulation": ear cutting with `pool_triangulate()`,
+  the PSLG route (`as_pslg()` with `pool_holes()`) to RTriangle, and
+  taking its triangles back onto a vertex pool with `new_wkpool_tri()`,
+  on silicate's `inlandwaters`. The other vignettes now cover periodic x,
+  `wkpool(vertices, segments)` and triangle pools, and point to it.
+
+* `pool_holes()` returns a point inside each hole even when the hole is
+  not convex: the centroid of an ear of the hole ring, clear of every
+  pool vertex, instead of the mean of the ring's vertices, which could
+  fall outside the hole and make RTriangle erase the polygon around it
+  (on `inlandwaters` this lost most of the area). Holes filled exactly by
+  another polygon of the pool (enclaves) are no longer returned, since
+  they are not holes of the coverage.
+
+* `plot()` for `wkpool_tri` accepts `xlab` and `ylab`, and sets the plot
+  extent from the triangles drawn rather than the whole vertex pool, so a
+  subset is drawn at its own extent.
+
 * New `plot()` method for `wkpool_tri`: one `polygon()` call indexing the
   vertex pool, filled by feature (40,000 triangles draw in about 0.4 s to
   png, where casting to wk polygons and plotting those took over a minute).

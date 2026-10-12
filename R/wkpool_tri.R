@@ -99,6 +99,10 @@ wkpool_tri_empty <- function(crs = wk::wk_crs_inherit(), geodesic = NA) {
 #'
 #' Triangles are counter-clockwise.
 #'
+#' For constrained Delaunay triangulation, with Steiner points added for
+#' quality or area, pass [as_pslg()] to RTriangle; see
+#' `vignette("triangulation", package = "wkpool")`.
+#'
 #' @param x A wkpool with path provenance (from [establish_topology()]).
 #' @param engine Triangulation engine, currently only `"decido"`.
 #' @param ... Unused.
@@ -376,6 +380,7 @@ vec_restore.wkpool_tri <- function(x, to, ...) {
 #'   [plot.wkpool()].
 #' @param border Border colour(s) for triangle edges, `NA` for none.
 #' @param add If `TRUE`, draw on the current plot.
+#' @param xlab,ylab Axis labels when `add = FALSE`.
 #' @param ... Further arguments passed to [plot.default()] when
 #'   `add = FALSE`.
 #'
@@ -393,7 +398,8 @@ vec_restore.wkpool_tri <- function(x, to, ...) {
 #' }
 #'
 #' @export
-plot.wkpool_tri <- function(x, col = NULL, border = "black", add = FALSE, ...) {
+plot.wkpool_tri <- function(x, col = NULL, border = "black", add = FALSE,
+                            xlab = "x", ylab = "y", ...) {
   check_wkpool_tri(x)
   v <- pool_vertices(x)
 
@@ -408,17 +414,22 @@ plot.wkpool_tri <- function(x, col = NULL, border = "black", add = FALSE, ...) {
     }
   }
 
-  if (!add) {
-    plot(range(v$x), range(v$y), type = "n", xlab = "x", ylab = "y", ...)
-  }
-  if (length(x) == 0L) return(invisible(x))
-
   # corners of each triangle then NA, dropping the final NA
   idx <- vx_match(as.vector(rbind(vctrs::field(x, ".vx0"),
                                   vctrs::field(x, ".vx1"),
                                   vctrs::field(x, ".vx2"),
                                   NA_integer_)), v$.vx)
   idx <- idx[-length(idx)]
+
+  if (!add) {
+    # extent of the triangles drawn, not of the whole vertex pool (a
+    # subset keeps the full pool)
+    used <- if (length(x) == 0L) seq_len(nrow(v)) else idx[!is.na(idx)]
+    plot(range(v$x[used]), range(v$y[used]), type = "n",
+         xlab = xlab, ylab = ylab, ...)
+  }
+  if (length(x) == 0L) return(invisible(x))
+
   graphics::polygon(v$x[idx], v$y[idx], col = col, border = border)
 
   invisible(x)

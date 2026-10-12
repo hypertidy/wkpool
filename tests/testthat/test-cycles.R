@@ -192,3 +192,49 @@ test_that("pool_holes and hole_points agree", {
   expect_identical(pool_holes(merged, convention = "ogc"),
                    hole_points(merged, convention = "ogc"))
 })
+
+test_that("pool_holes point is inside a non-convex hole", {
+  # a C-shaped hole whose vertex mean is outside the hole
+  merged <- merge_coincident(establish_topology(wk::as_wkb(paste0(
+    "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0), ",
+    "(2 2, 8 2, 8 3, 3 3, 3 7, 8 7, 8 8, 2 8, 2 2))"
+  ))))
+  hp <- pool_holes(merged)
+  expect_equal(nrow(hp), 1L)
+  hole_x <- c(2, 8, 8, 3, 3, 8, 8, 2)
+  hole_y <- c(2, 2, 3, 3, 7, 7, 8, 8)
+  # mean of the ring is (5.25, 5): outside the C
+  inside <- function(px, py, x, y) {
+    j <- c(length(x), seq_len(length(x) - 1L))
+    sum(((y > py) != (y[j] > py)) &
+        (px < (x[j] - x) * (py - y) / (y[j] - y) + x)) %% 2 == 1
+  }
+  expect_false(inside(mean(hole_x), mean(hole_y), hole_x, hole_y))
+  expect_true(inside(hp[1, "x"], hp[1, "y"], hole_x, hole_y))
+})
+
+test_that("pool_holes point avoids an island in the hole", {
+  # the fattest ear of the square hole would contain the island
+  merged <- merge_coincident(establish_topology(wk::as_wkb(c(
+    "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0), (2 2, 8 2, 8 8, 2 8, 2 2))",
+    "POLYGON ((4 4, 5 4, 5 5, 4 5, 4 4))"
+  ))))
+  hp <- pool_holes(merged)
+  expect_equal(nrow(hp), 1L)
+  expect_false(hp[1, "x"] >= 4 && hp[1, "x"] <= 5 &&
+               hp[1, "y"] >= 4 && hp[1, "y"] <= 5)
+  expect_true(hp[1, "x"] > 2 && hp[1, "x"] < 8 &&
+              hp[1, "y"] > 2 && hp[1, "y"] < 8)
+})
+
+test_that("pool_holes drops a hole filled by another polygon", {
+  enclave <- wk::as_wkb(c(
+    "POLYGON ((0 0, 10 0, 10 10, 0 10, 0 0), (2 2, 8 2, 8 8, 2 8, 2 2))",
+    "POLYGON ((2 2, 8 2, 8 8, 2 8, 2 2))"
+  ))
+  expect_null(pool_holes(merge_coincident(establish_topology(enclave))))
+  # the hole alone is still a hole
+  expect_equal(
+    nrow(pool_holes(merge_coincident(establish_topology(enclave[1])))), 1L
+  )
+})

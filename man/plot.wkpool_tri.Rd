@@ -4,7 +4,7 @@
 \alias{plot.wkpool_tri}
 \title{Plot a triangle pool}
 \usage{
-\method{plot}{wkpool_tri}(x, col = NULL, border = "black", add = FALSE, ...)
+\method{plot}{wkpool_tri}(x, col = NULL, border = "black", add = FALSE, xlab = "x", ylab = "y", ...)
 }
 \arguments{
 \item{x}{A \code{wkpool_tri}.}
@@ -16,6 +16,8 @@ triangles are coloured by feature using the same palette as
 \item{border}{Border colour(s) for triangle edges, \code{NA} for none.}
 
 \item{add}{If \code{TRUE}, draw on the current plot.}
+
+\item{xlab, ylab}{Axis labels when \code{add = FALSE}.}
 
 \item{...}{Further arguments passed to \code{\link[=plot.default]{plot.default()}} when
 \code{add = FALSE}.}
