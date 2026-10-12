@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">wkpool</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -156,8 +156,9 @@ features share, once from each side:</p>
 <p><code>inlandwaters</code> from silicate is six regions of Australia
 (and New Caledonia) with many holes and long shared boundaries.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"inlandwaters"</span>, package <span class="op">=</span> <span class="st">"silicate"</span><span class="op">)</span></span>
-<span><span class="co"># the geometry column as WKB, so sf is not needed</span></span>
+<code class="sourceCode R"><span><span class="va">op</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">4L</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"inlandwaters"</span>, package <span class="op">=</span> <span class="st">"silicate"</span><span class="op">)</span></span>
+<span><span class="co"># the geometry column as WKB</span></span>
 <span><span class="va">iw_geom</span> <span class="op">&lt;-</span> <span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/wk_handle.html" class="external-link">wk_handle</a></span><span class="op">(</span><span class="va">inlandwaters</span><span class="op">$</span><span class="va">geom</span>, <span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/wk_writer.html" class="external-link">wkb_writer</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">iw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merge_coincident.html">merge_coincident</a></span><span class="op">(</span><span class="fu"><a href="../reference/establish_topology.html">establish_topology</a></span><span class="op">(</span><span class="va">iw_geom</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">iw_tri</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pool_triangulate.html">pool_triangulate</a></span><span class="op">(</span><span class="va">iw</span><span class="op">)</span></span>
@@ -167,6 +168,8 @@ features share, once from each side:</p>
 <span><span class="co">#&gt; [1] TRUE</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">iw_tri</span>, border <span class="op">=</span> <span class="cn">NA</span>, asp <span class="op">=</span> <span class="fl">1</span>, axes <span class="op">=</span> <span class="cn">FALSE</span>, xlab <span class="op">=</span> <span class="st">""</span>, ylab <span class="op">=</span> <span class="st">""</span><span class="op">)</span></span></code></pre></div>
 <p><img src="triangulation_files/figure-html/inlandwaters-1.png" class="r-plt" alt="" width="672"></p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
 <p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> draws every triangle in one
 <code><a href="https://rdrr.io/r/graphics/polygon.html" class="external-link">polygon()</a></code> call indexed into the pool, so tens of thousands
 of triangles draw in well under a second.</p>
@@ -177,8 +180,9 @@ South Wales feature; and the feature labelled New Caledonia to the north
 east. Each triangle records its feature and part, so the islands can be
 found from the triangles themselves and dropped with a subset. The plot
 extent follows the triangles that are drawn:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">tt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pool_triangles.html">pool_triangles</a></span><span class="op">(</span><span class="va">iw_tri</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">op</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">4L</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">tt</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pool_triangles.html">pool_triangles</a></span><span class="op">(</span><span class="va">iw_tri</span><span class="op">)</span></span>
 <span><span class="va">ev</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wkpool-accessors.html">pool_vertices</a></span><span class="op">(</span><span class="va">iw_tri</span><span class="op">)</span></span>
 <span><span class="va">tx</span> <span class="op">&lt;-</span> <span class="va">ev</span><span class="op">$</span><span class="va">x</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/match.html" class="external-link">match</a></span><span class="op">(</span><span class="va">tt</span><span class="op">$</span><span class="va">.vx0</span>, <span class="va">ev</span><span class="op">$</span><span class="va">.vx</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="va">ty</span> <span class="op">&lt;-</span> <span class="va">ev</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/match.html" class="external-link">match</a></span><span class="op">(</span><span class="va">tt</span><span class="op">$</span><span class="va">.vx0</span>, <span class="va">ev</span><span class="op">$</span><span class="va">.vx</span><span class="op">)</span><span class="op">]</span></span>
@@ -195,6 +199,8 @@ extent follows the triangles that are drawn:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">iw_tri</span><span class="op">[</span><span class="op">!</span><span class="va">tt</span><span class="op">$</span><span class="va">.part</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">islands</span><span class="op">]</span>, border <span class="op">=</span> <span class="cn">NA</span>, asp <span class="op">=</span> <span class="fl">1</span>, axes <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>     xlab <span class="op">=</span> <span class="st">""</span>, ylab <span class="op">=</span> <span class="st">""</span><span class="op">)</span></span></code></pre></div>
 <p><img src="triangulation_files/figure-html/inlandwaters-trim-1.png" class="r-plt" alt="" width="672"></p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="constrained-delaunay-the-pslg-route">Constrained Delaunay: the PSLG route<a class="anchor" aria-label="anchor" href="#constrained-delaunay-the-pslg-route"></a>
@@ -207,7 +213,7 @@ that must appear as triangle edges. A merged pool is already a PSLG;
 <code><a href="../reference/as_pslg.html">as_pslg()</a></code> just gives it as matrices, <code>P</code> for the
 vertices and <code>S</code> for the segments, in the form RTriangle
 uses.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_pslg.html">as_pslg</a></span><span class="op">(</span><span class="fu"><a href="../reference/establish_topology.html">establish_topology</a></span><span class="op">(</span><span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/wkb.html" class="external-link">as_wkb</a></span><span class="op">(</span></span>
 <span>  <span class="st">"POLYGON ((0 0, 4 0, 4 4, 0 4, 0 0), (1 1, 1 3, 2 2, 3 3, 3 1, 1 1))"</span></span>
 <span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
@@ -220,7 +226,7 @@ removes the triangles outside the outer boundary, and needs a point in
 each hole to remove those too. <code><a href="../reference/pool_holes.html">pool_holes()</a></code> gives one point
 inside each hole ring (a hole that another polygon fills exactly, like
 an enclave, is not a hole of the coverage and is left out):</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">h</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pool_holes.html">pool_holes</a></span><span class="op">(</span><span class="fu"><a href="../reference/merge_coincident.html">merge_coincident</a></span><span class="op">(</span><span class="fu"><a href="../reference/establish_topology.html">establish_topology</a></span><span class="op">(</span><span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/wkb.html" class="external-link">as_wkb</a></span><span class="op">(</span></span>
 <span>  <span class="st">"POLYGON ((0 0, 4 0, 4 4, 0 4, 0 0), (1 1, 1 3, 2 2, 3 3, 3 1, 1 1))"</span></span>
 <span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
@@ -243,7 +249,7 @@ are the Steiner points, appended after the input vertices.</p>
 <code>wkpool_tri</code> is. The input vertices come first in the same
 order as the pool, so their ids are unchanged and Steiner points get new
 ids after them:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">v</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>.vx <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">rt</span><span class="op">$</span><span class="va">P</span><span class="op">)</span><span class="op">)</span>, x <span class="op">=</span> <span class="va">rt</span><span class="op">$</span><span class="va">P</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span>, y <span class="op">=</span> <span class="va">rt</span><span class="op">$</span><span class="va">P</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="va">rt_tri</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/new_wkpool_tri.html">new_wkpool_tri</a></span><span class="op">(</span><span class="va">v</span>, <span class="va">rt</span><span class="op">$</span><span class="cn">T</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span>, <span class="va">rt</span><span class="op">$</span><span class="cn">T</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span>, <span class="va">rt</span><span class="op">$</span><span class="cn">T</span><span class="op">[</span>, <span class="fl">3</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">rt_tri</span><span class="op">)</span></span>
@@ -256,7 +262,7 @@ feature of <code>inlandwaters</code> is the Australian Capital
 Territory: ear cut on the left, long thin triangles fanning from a few
 vertices; through RTriangle with a minimum angle of 25 degrees on the
 right, back on a triangle pool:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">act</span> <span class="op">&lt;-</span> <span class="va">iw_tri</span><span class="op">[</span><span class="fu"><a href="../reference/wkpool-accessors.html">pool_feature</a></span><span class="op">(</span><span class="va">iw_tri</span><span class="op">)</span> <span class="op">==</span> <span class="fl">1</span><span class="op">]</span></span>
 <span><span class="va">act_p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_pslg.html">as_pslg</a></span><span class="op">(</span><span class="fu"><a href="../reference/establish_topology.html">establish_topology</a></span><span class="op">(</span><span class="va">iw_geom</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">act_rt</span> <span class="op">&lt;-</span> <span class="fu">RTriangle</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/RTriangle/man/triangulate.html" class="external-link">triangulate</a></span><span class="op">(</span><span class="fu">RTriangle</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/RTriangle/man/pslg.html" class="external-link">pslg</a></span><span class="op">(</span>P <span class="op">=</span> <span class="va">act_p</span><span class="op">$</span><span class="va">P</span>, S <span class="op">=</span> <span class="va">act_p</span><span class="op">$</span><span class="va">S</span><span class="op">)</span>,</span>
@@ -273,7 +279,7 @@ right, back on a triangle pool:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">act_rt_tri</span>, col <span class="op">=</span> <span class="st">"grey90"</span>, border <span class="op">=</span> <span class="st">"grey40"</span>, asp <span class="op">=</span> <span class="fl">1</span>, axes <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>     xlab <span class="op">=</span> <span class="st">""</span>, ylab <span class="op">=</span> <span class="st">""</span><span class="op">)</span></span></code></pre></div>
 <p><img src="triangulation_files/figure-html/act-rt-1.png" class="r-plt" alt="" width="672"></p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
 <p>The PSLG route triangulates the whole pool at once and does not
 record which feature a triangle belongs to;
@@ -284,7 +290,7 @@ cutting, up to one thing a PSLG cannot express with hole points alone: a
 region enclosed by neighbouring polygons that none of them covers is not
 a hole of any ring, so <code><a href="../reference/pool_holes.html">pool_holes()</a></code> gives no point for it
 and RTriangle keeps it.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tri_area</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">P</span>, <span class="va">T</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="op">(</span><span class="va">P</span><span class="op">[</span><span class="cn">T</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="va">P</span><span class="op">[</span><span class="cn">T</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span>, <span class="fl">1</span><span class="op">]</span><span class="op">)</span> <span class="op">*</span> <span class="op">(</span><span class="va">P</span><span class="op">[</span><span class="cn">T</span><span class="op">[</span>, <span class="fl">3</span><span class="op">]</span>, <span class="fl">2</span><span class="op">]</span> <span class="op">-</span> <span class="va">P</span><span class="op">[</span><span class="cn">T</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span>, <span class="fl">2</span><span class="op">]</span><span class="op">)</span> <span class="op">-</span></span>
 <span>          <span class="op">(</span><span class="va">P</span><span class="op">[</span><span class="cn">T</span><span class="op">[</span>, <span class="fl">3</span><span class="op">]</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="va">P</span><span class="op">[</span><span class="cn">T</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span>, <span class="fl">1</span><span class="op">]</span><span class="op">)</span> <span class="op">*</span> <span class="op">(</span><span class="va">P</span><span class="op">[</span><span class="cn">T</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span>, <span class="fl">2</span><span class="op">]</span> <span class="op">-</span> <span class="va">P</span><span class="op">[</span><span class="cn">T</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span>, <span class="fl">2</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span> <span class="fl">2</span></span>
@@ -306,14 +312,14 @@ and RTriangle keeps it.</p>
 </h2>
 <p>The three islands, each drawn from its own subset of the triangle
 pool:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">op</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">3</span><span class="op">)</span>, mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="fl">2</span>, <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="kw">for</span> <span class="op">(</span><span class="va">nm</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">islands</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">iw_tri</span><span class="op">[</span><span class="va">tt</span><span class="op">$</span><span class="va">.part</span> <span class="op">==</span> <span class="va">islands</span><span class="op">[</span><span class="va">nm</span><span class="op">]</span><span class="op">]</span>, border <span class="op">=</span> <span class="st">"grey30"</span>, asp <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>       axes <span class="op">=</span> <span class="cn">FALSE</span>, xlab <span class="op">=</span> <span class="st">""</span>, ylab <span class="op">=</span> <span class="st">""</span>, main <span class="op">=</span> <span class="va">nm</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <p><img src="triangulation_files/figure-html/islands-1.png" class="r-plt" alt="" width="672"></p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
 <p>A few things to notice:</p>
 <ul>
@@ -321,7 +327,7 @@ pool:</p>
 <p>A subset is a set of triangles, not a copy of the coordinates:
 each island still references the full vertex pool, and its vertex ids
 are the ids in the whole coverage.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mq</span> <span class="op">&lt;-</span> <span class="va">iw_tri</span><span class="op">[</span><span class="va">tt</span><span class="op">$</span><span class="va">.part</span> <span class="op">==</span> <span class="va">islands</span><span class="op">[</span><span class="st">"Macquarie Island"</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>triangles <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">mq</span><span class="op">)</span>, pool_vertices <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="fu"><a href="../reference/wkpool-accessors.html">pool_vertices</a></span><span class="op">(</span><span class="va">mq</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;     triangles pool_vertices </span></span>
@@ -332,7 +338,7 @@ are the ids in the whole coverage.</p>
 a polygon with <code>n</code> vertices and <code>h</code> holes gives
 <code>n + 2h - 2</code> triangles. These islands have no holes, so each
 has two fewer triangles than vertices:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">islands</span>, <span class="kw">function</span><span class="op">(</span><span class="va">k</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">i</span> <span class="op">&lt;-</span> <span class="va">tt</span><span class="op">$</span><span class="va">.part</span> <span class="op">==</span> <span class="va">k</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>vertices <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">tt</span><span class="op">[</span><span class="va">i</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, triangles <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">i</span><span class="op">)</span><span class="op">)</span></span>

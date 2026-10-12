@@ -98,8 +98,9 @@ Caledonia) with many holes and long shared boundaries.
 
 ``` r
 
+op <- par(mar = rep(0, 4L))
 data("inlandwaters", package = "silicate")
-# the geometry column as WKB, so sf is not needed
+# the geometry column as WKB
 iw_geom <- wk::wk_handle(inlandwaters$geom, wk::wkb_writer())
 iw <- merge_coincident(establish_topology(iw_geom))
 iw_tri <- pool_triangulate(iw)
@@ -111,6 +112,11 @@ plot(iw_tri, border = NA, asp = 1, axes = FALSE, xlab = "", ylab = "")
 ```
 
 ![](triangulation_files/figure-html/inlandwaters-1.png)
+
+``` r
+
+par(op)
+```
 
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws every
 triangle in one [`polygon()`](https://rdrr.io/r/graphics/polygon.html)
@@ -127,6 +133,7 @@ extent follows the triangles that are drawn:
 
 ``` r
 
+op <- par(mar = rep(0, 4L))
 tt <- pool_triangles(iw_tri)
 ev <- pool_vertices(iw_tri)
 tx <- ev$x[match(tt$.vx0, ev$.vx)]
@@ -146,6 +153,11 @@ plot(iw_tri[!tt$.part %in% islands], border = NA, asp = 1, axes = FALSE,
 ```
 
 ![](triangulation_files/figure-html/inlandwaters-trim-1.png)
+
+``` r
+
+par(op)
+```
 
 ## Constrained Delaunay: the PSLG route
 

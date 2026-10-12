@@ -20,8 +20,8 @@ Useful links:
 
 ## Author
 
-**Maintainer**: Michael Sumner <mdsumner@gmail.com>
+**Maintainer**: Michael Sumner <mdsumner@gmail.com> \[copyright holder\]
 
 Authors:
 
-- Michael Sumner <mdsumner@gmail.com>
+- Michael Sumner <mdsumner@gmail.com> \[copyright holder\]
