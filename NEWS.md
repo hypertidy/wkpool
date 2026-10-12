@@ -1,11 +1,10 @@
 # wkpool (development version)
 
 * New vignette "Triangulation": ear cutting with `pool_triangulate()`,
-  the PSLG route (`as_pslg()` with `pool_holes()`) to RTriangle and
-  cdtr, and taking either engine's triangles back onto a vertex pool
-  with `new_wkpool_tri()`, on silicate's `inlandwaters`. The other
-  vignettes now cover periodic x, `wkpool(vertices, segments)` and
-  triangle pools, and point to it.
+  the PSLG route (`as_pslg()` with `pool_holes()`) to RTriangle, and
+  taking its triangles back onto a vertex pool with `new_wkpool_tri()`,
+  on silicate's `inlandwaters`. The other vignettes now cover periodic x,
+  `wkpool(vertices, segments)` and triangle pools, and point to it.
 
 * `pool_holes()` returns a point inside each hole even when the hole is
   not convex: the centroid of an ear of the hole ring, clear of every

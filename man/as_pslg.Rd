@@ -13,7 +13,7 @@ as_pslg(x, ...)
 }
 \value{
 A list with P (vertex matrix) and S (segment matrix), the form
-used by RTriangle::pslg() and cdtr::cdt_pslg()
+used by RTriangle::pslg()
 }
 \description{
 Convert wkpool to a PSLG (planar straight line graph)
@@ -25,8 +25,7 @@ map directly to S (both 1-indexed). Shared boundaries appear once per
 feature.
 
 A PSLG does not record which side of a segment is inside. For RTriangle,
-pass hole points from \code{\link[=pool_holes]{pool_holes()}} as \code{H}. cdtr works out holes from
-boundary depth instead (\code{erase = "holes"}). The triangles come back as
+pass hole points from \code{\link[=pool_holes]{pool_holes()}} as \code{H}. The triangles come back as
 vertex and index matrices, and \code{\link[=new_wkpool_tri]{new_wkpool_tri()}} puts them on a vertex
 pool again; see \code{vignette("triangulation", package = "wkpool")}.
 

@@ -42,7 +42,7 @@ corners.
 Triangles are counter-clockwise.
 
 For constrained Delaunay triangulation, with Steiner points added for
-quality or area, pass \code{\link[=as_pslg]{as_pslg()}} to RTriangle or cdtr; see
+quality or area, pass \code{\link[=as_pslg]{as_pslg()}} to RTriangle; see
 \code{vignette("triangulation", package = "wkpool")}.
 }
 \examples{

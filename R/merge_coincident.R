@@ -280,7 +280,7 @@ find_internal_boundaries <- function(x) {
 #' @param x A wkpool (will be passed through merge_coincident if not already)
 #' @param ... passed to merge_coincident
 #' @return A list with P (vertex matrix) and S (segment matrix), the form
-#'   used by RTriangle::pslg() and cdtr::cdt_pslg()
+#'   used by RTriangle::pslg()
 #'
 #' @details
 #' Produces a planar straight line graph for constrained Delaunay
@@ -289,8 +289,7 @@ find_internal_boundaries <- function(x) {
 #' feature.
 #'
 #' A PSLG does not record which side of a segment is inside. For RTriangle,
-#' pass hole points from [pool_holes()] as `H`. cdtr works out holes from
-#' boundary depth instead (`erase = "holes"`). The triangles come back as
+#' pass hole points from [pool_holes()] as `H`. The triangles come back as
 #' vertex and index matrices, and [new_wkpool_tri()] puts them on a vertex
 #' pool again; see `vignette("triangulation", package = "wkpool")`.
 #'

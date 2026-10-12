@@ -189,7 +189,7 @@ nrow(find_shared_edges(merge_coincident(hp, period_x = 360)))
 Triangles can share the same vertex pool. `pool_triangulate()`
 (experimental) ear cuts each polygon and returns a `wkpool_tri`, and
 `as_pslg()` with `pool_holes()` gives the input for constrained Delaunay
-engines such as RTriangle and cdtr. See
+engines such as RTriangle. See
 `vignette("triangulation", package = "wkpool")`.
 
 ```{r tri, eval = requireNamespace("decido", quietly = TRUE), fig.width = 6, fig.height = 4}
@@ -247,9 +247,8 @@ plot(pool)
 |---------|-------|-------|
 | [decido](https://CRAN.R-project.org/package=decido) | CRAN | Ear cutting, the engine for `pool_triangulate()` (experimental) |
 | [RTriangle](https://CRAN.R-project.org/package=RTriangle) | CRAN | Shewchuk's Triangle, constrained Delaunay with quality refinement; takes `as_pslg()` and `pool_holes()` |
-| [cdtr](https://github.com/hypertidy/cdtr) | GitHub | Constrained Delaunay (CDT library, MIT); takes `as_pslg()`, finds holes by depth |
 | [laridae](https://github.com/hypertidy/laridae) | GitHub | Constrained Delaunay and meshing with CGAL |
-| [meshcore](https://github.com/hypertidy/meshcore) | GitHub | Mesh tables and `tri_mesh()` over cdtr and laridae |
+| [meshcore](https://github.com/hypertidy/meshcore) | GitHub | Mesh tables and `tri_mesh()` over further constrained Delaunay engines |
 | [sfdct](https://CRAN.R-project.org/package=sfdct) | CRAN | RTriangle wrapper for sf objects |
 
 ### Adjacency (computed, not stored)

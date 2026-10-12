@@ -100,7 +100,7 @@ wkpool_tri_empty <- function(crs = wk::wk_crs_inherit(), geodesic = NA) {
 #' Triangles are counter-clockwise.
 #'
 #' For constrained Delaunay triangulation, with Steiner points added for
-#' quality or area, pass [as_pslg()] to RTriangle or cdtr; see
+#' quality or area, pass [as_pslg()] to RTriangle; see
 #' `vignette("triangulation", package = "wkpool")`.
 #'
 #' @param x A wkpool with path provenance (from [establish_topology()]).

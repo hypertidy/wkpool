@@ -192,7 +192,7 @@ Simple Features is the interchange format. Segments are the working format.
 
 The vertex pool and segment table are already the input a constrained
 triangulator wants, a planar straight line graph (PSLG). `as_pslg()`
-gives it as the `P` and `S` matrices RTriangle and cdtr take, with no
+gives it as the `P` and `S` matrices RTriangle takes, with no
 coordinate extraction or reformatting:
 
 ```{r pslg}
