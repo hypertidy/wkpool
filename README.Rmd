@@ -163,7 +163,8 @@ and so can other mesh models. Work in progress on top of it:
   connectivity
 - [x] Arc-node topology and cycles, with quotient semantics for
   shared boundaries
-- [x] PSLG for constrained triangulation (`as_pslg()`, RTriangle)
+- [x] PSLG for constrained triangulation (`as_pslg()`, for RTriangle
+  or cdtr; see the triangulation vignette)
 - [x] Vectorised verbs with no quadratic scans; C++ (cpp11) for arcs
 - [ ] Apply to production package (trip)
 - [x] Triangulation integration (decido): indexed triangles from the

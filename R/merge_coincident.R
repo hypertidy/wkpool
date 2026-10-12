@@ -246,8 +246,8 @@ edge_frame <- function(edge_lo, edge_hi, feature, keep) {
 #' @return A wkpool containing only internal boundary segments
 #'
 #' @details
-#' Internal boundaries are edges where one feature has segment (v0→v1) and
-#' another feature has (v1→v0) — i.e., they share the edge but traverse it
+#' Internal boundaries are edges where one feature has segment (v0 -> v1) and
+#' another feature has (v1 -> v0), i.e. they share the edge but traverse it
 #' in opposite directions. This is the defining characteristic of a shared
 #' polygon boundary.
 #'
@@ -275,21 +275,27 @@ find_internal_boundaries <- function(x) {
 }
 
 
-#' Convert wkpool to RTriangle pslg format
+#' Convert wkpool to a PSLG (planar straight line graph)
 #'
 #' @param x A wkpool (will be passed through merge_coincident if not already)
 #' @param ... passed to merge_coincident
-#' @return A list with P (vertex matrix) and S (segment matrix) for RTriangle::pslg()
+#' @return A list with P (vertex matrix) and S (segment matrix), the form
+#'   used by RTriangle::pslg() and cdtr::cdt_pslg()
 #'
 #' @details
-#' Produces a Planar Straight Line Graph suitable for constrained triangulation
-#' with RTriangle. The vertex pool maps directly to P, and segment indices
-#' map directly to S (both 1-indexed).
+#' Produces a planar straight line graph for constrained Delaunay
+#' triangulation. The vertex pool maps directly to P, and segment indices
+#' map directly to S (both 1-indexed). Shared boundaries appear once per
+#' feature.
 #'
-#' Note: Hole detection is not currently supported. The returned pslg
-#' does not include hole points (H). For polygons with holes, you may
-#' need to identify hole points manually using `find_cycles()` and
-#' `cycle_signed_area()`.
+#' A PSLG does not record which side of a segment is inside. For RTriangle,
+#' pass hole points from [pool_holes()] as `H`. cdtr works out holes from
+#' boundary depth instead (`erase = "holes"`). The triangles come back as
+#' vertex and index matrices, and [new_wkpool_tri()] puts them on a vertex
+#' pool again; see `vignette("triangulation", package = "wkpool")`.
+#'
+#' For ear cutting that keeps the feature of each triangle, see
+#' [pool_triangulate()] (experimental).
 #'
 #' @examples
 #' x <- wk::as_wkb("POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))")
@@ -474,7 +480,7 @@ find_cycles_walk <- function(x) {
 #' - Negative area = outer ring
 #' - Positive area = hole
 #'
-#' This is intrinsic to the geometry — we observe winding, not declare it.
+#' This is intrinsic to the geometry: we observe winding, not declare it.
 #'
 #' @examples
 #' x <- wk::as_wkb("POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))")
@@ -623,11 +629,23 @@ reverse_cycle <- function(cycle) {
 #' @param x A wkpool (ideally after merge_coincident)
 #' @param convention Which winding convention to use when the pool has
 #'   no path provenance: "sf" (default) or "ogc"
-#' @return A matrix of hole points (centroids of hole cycles), or NULL if no holes
+#' @return A matrix of hole points, one point inside each hole cycle, or
+#'   NULL if no holes
 #'
 #' @details
-#' For use with RTriangle::triangulate(). Each row is the centroid of a hole,
+#' For use with RTriangle::triangulate(). Each row is a point inside a hole,
 #' which tells the triangulator to exclude that region.
+#'
+#' The point is found on a horizontal line across the hole: the middle of
+#' the widest stretch of that line that starts at the hole's boundary and
+#' crosses no segment of the pool. It is inside the hole even when the hole
+#' is not convex, where the centroid of the ring's vertices can fall
+#' outside it (and a triangulator would then erase the polygon around the
+#' hole instead), and it is clear of any island in the hole.
+#'
+#' A hole that is exactly filled by another polygon in the pool (an
+#' enclave in a coverage, such as a lake island that is its own feature)
+#' is not a hole of the pool and is not returned.
 #'
 #' When the pool carries path provenance, holes are identified
 #' structurally (non-first rings of their part) and `convention` is
@@ -677,15 +695,32 @@ pool_holes <- function(x, convention = c("sf", "ogc")) {
     }
   }
 
+  # A hole that another polygon fills exactly (an enclave in a coverage)
+  # is not a hole of the pool: drop it, matching rings by their corner
+  # coordinates
+  if (length(hole_idx) > 0) {
+    ring_key <- function(cyc) {
+      i <- vx_match(cyc, pool$.vx)
+      paste(sort(unique(paste(pool$x[i], pool$y[i]))), collapse = ";")
+    }
+    keys <- vapply(cycles, ring_key, character(1))
+    filled <- keys[hole_idx] %in% keys[-hole_idx]
+    hole_idx <- hole_idx[!filled]
+  }
+
   if (length(hole_idx) == 0) return(NULL)
 
   hole_cycles <- cycles[hole_idx]
 
-  # Centroid of each hole: one match() for all holes, then per-hole slices
+  # A point inside each hole: one match() for all holes, then per-hole slices
   idx <- split(vx_match(unlist(hole_cycles), pool$.vx),
                rep(seq_along(hole_cycles), lengths(hole_cycles)))
+  segs <- pool_segments(x)
+  i0 <- vx_match(segs$.vx0, pool$.vx)
+  i1 <- vx_match(segs$.vx1, pool$.vx)
   pts <- t(vapply(idx, function(i) {
-    c(mean(pool$x[i]), mean(pool$y[i]))
+    ring_interior_point(pool$x[i], pool$y[i],
+                        pool$x[i0], pool$y[i0], pool$x[i1], pool$y[i1])
   }, numeric(2)))
   dimnames(pts) <- NULL
 
@@ -697,6 +732,55 @@ pool_holes <- function(x, convention = c("sf", "ogc")) {
 #' @export
 hole_points <- function(x, convention = c("sf", "ogc")) {
   pool_holes(x, convention = convention)
+}
+
+# A point inside the ring (x, y) and outside every other ring: cast a
+# horizontal line across the ring (through the widest gap between vertex
+# y values in the ring's y range, so no vertex is on it), cut it at every crossing
+# of the ring and of the other segments (sx0, sy0)-(sx1, sy1), and take
+# the middle of the widest piece that starts where the line enters the
+# ring. That piece touches the ring from the inside and crosses nothing,
+# so it is in the ring's own face, clear of islands. Falls back to the
+# vertex mean for a degenerate ring.
+ring_interior_point <- function(x, y, sx0 = NULL, sy0 = NULL,
+                                sx1 = NULL, sy1 = NULL) {
+  n <- length(x)
+  if (n > 1L && x[1L] == x[n] && y[1L] == y[n]) {
+    x <- x[-n]
+    y <- y[-n]
+    n <- n - 1L
+  }
+  fallback <- c(mean(x), mean(y))
+  uy <- sort(unique(c(y, sy0, sy1)))
+  uy <- uy[uy >= min(y) & uy <= max(y)]
+  if (n < 3L || length(uy) < 2L) return(fallback)
+  gap <- which.max(diff(uy))
+  y0 <- (uy[gap] + uy[gap + 1L]) / 2
+
+  # endpoints ordered by y, so a shared edge gives the same x whichever
+  # way each copy runs
+  cross_x <- function(ax, ay, bx, by) {
+    hit <- (ay > y0) != (by > y0)
+    ax <- ax[hit]; ay <- ay[hit]; bx <- bx[hit]; by <- by[hit]
+    up <- ay < by
+    lx <- ifelse(up, ax, bx); ly <- ifelse(up, ay, by)
+    hx <- ifelse(up, bx, ax); hy <- ifelse(up, by, ay)
+    lx + (y0 - ly) * (hx - lx) / (hy - ly)
+  }
+  j <- c(seq.int(2L, n), 1L)
+  ring <- sort(cross_x(x, y, x[j], y[j]))
+  other <- if (is.null(sx0)) numeric() else cross_x(sx0, sy0, sx1, sy1)
+  if (length(ring) < 2L) return(fallback)
+
+  # entering crossings are the odd ones along the line; each piece runs
+  # to the next crossing of anything strictly to its right
+  enter <- ring[seq.int(1L, length(ring), by = 2L)]
+  stops <- sort(unique(c(ring, other)))
+  right <- stops[findInterval(enter, stops) + 1L]
+  width <- right - enter
+  k <- which.max(width)
+  if (length(k) == 0L || is.na(width[k]) || width[k] <= 0) return(fallback)
+  c((enter[k] + right[k]) / 2, y0)
 }
 
 

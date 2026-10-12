@@ -40,6 +40,10 @@ later with \code{\link[=merge_coincident]{merge_coincident()}} gives adjacent fe
 corners.
 
 Triangles are counter-clockwise.
+
+For constrained Delaunay triangulation, with Steiner points added for
+quality or area, pass \code{\link[=as_pslg]{as_pslg()}} to RTriangle or cdtr; see
+\code{vignette("triangulation", package = "wkpool")}.
 }
 \examples{
 x <- wk::as_wkb(c(

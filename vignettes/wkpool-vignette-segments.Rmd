@@ -23,7 +23,7 @@ polygon boundary is a cycle of segments. Every track step between consecutive
 GPS fixes is a segment with a duration. It's the simplest spatial primitive that
 encodes *connection* rather than just *position*.
 
-Simple Features --- a dominant spatial data model --- hides segments inside
+Simple Features, a dominant spatial data model, hides segments inside
 sealed coordinate sequences. A polygon is a ring of coordinates. A line is a
 list of coordinates. The connections between consecutive vertices are implicit.
 To discover them you extract coordinates, pair consecutive points, and rebuild
@@ -142,10 +142,12 @@ arc_node_summary(pool)
 
 This is the arc-node model from computational geometry (de Berg et al. 2008),
 expressed as data frames rather than linked-list pointer structures. The same
-decomposition that PostGIS topology provides, and Arc/INFO is probably the most
-famous implementation, remnants exist in .e00 format and some other softwares. This
-linear-only topology also highlights clearly how polygons are *just lines*, they aren't
-composed of 2D topology (triangles) in many modern geo software. 
+decomposition that PostGIS topology provides; Arc/INFO is probably the most
+famous implementation, and remnants survive in the .e00 format and elsewhere.
+This linear-only topology also shows clearly that polygons are *just lines*:
+in most geospatial software they are not composed of 2D topology
+(triangles). For triangles on the same vertex pool, see
+`vignette("triangulation", package = "wkpool")`.
 
 ## Cycles and winding
 
@@ -188,18 +190,18 @@ Simple Features is the interchange format. Segments are the working format.
 
 ## Integration: triangulation
 
-The vertex pool and segment table map directly to constrained triangulation
-inputs --- no coordinate extraction or reformatting needed:
+The vertex pool and segment table are already the input a constrained
+triangulator wants, a planar straight line graph (PSLG). `as_pslg()`
+gives it as the `P` and `S` matrices RTriangle and cdtr take, with no
+coordinate extraction or reformatting:
 
-RTriangle PSLG format (without classing)
-
-```{r interch, include = FALSE}
-pslg <- as_pslg(pool)
-str(pslg)
-#RTriangle::pslg(P = pslg$P, S = pslg$S)
-
+```{r pslg}
+str(as_pslg(pool))
 ```
+
 The pool *is* the PSLG. The mapping is structural, not a conversion.
+Triangles can come back onto a vertex pool too, as a `wkpool_tri`
+(experimental): see `vignette("triangulation", package = "wkpool")`.
 
 ## Segments in movement data
 

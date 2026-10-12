@@ -41,12 +41,15 @@ test_that("classify_cycles areas match cycle_signed_area per cycle", {
   expect_equal(sum(classify_cycles(m)$type == "hole"), 3)
 })
 
-test_that("hole_points are per-hole vertex means", {
+test_that("hole_points are one point inside each hole", {
   m <- merge_coincident(establish_topology(holes()))
   hp <- hole_points(m)
   expect_equal(nrow(hp), 3)
-  expect_equal(unname(hp[1, ]), c(1.5, 1.5))
-  expect_equal(unname(hp[2, ]), c(6, 6))
+  expect_true(all(hp[1, ] > 1 & hp[1, ] < 2))
+  expect_true(all(hp[2, ] > 5 & hp[2, ] < 7))
+  # triangle hole (21 1, 22 1, 22 2): below the diagonal
+  expect_true(hp[3, "x"] > 21 && hp[3, "x"] < 22 &&
+              hp[3, "y"] > 1 && hp[3, "y"] < hp[3, "x"] - 20)
   expect_equal(colnames(hp), c("x", "y"))
 })
 

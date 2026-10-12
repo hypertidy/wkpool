@@ -106,6 +106,7 @@ articles:
   navbar: ~
   contents:
   - wkpool-vignette-segments
+  - triangulation
 
 news:
   releases:

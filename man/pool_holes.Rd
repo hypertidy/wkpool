@@ -16,7 +16,8 @@ hole_points(x, convention = c("sf", "ogc"))
 no path provenance: "sf" (default) or "ogc"}
 }
 \value{
-A matrix of hole points (centroids of hole cycles), or NULL if no holes
+A matrix of hole points, one point inside each hole cycle, or
+NULL if no holes
 }
 \description{
 \code{pool_holes()} and \code{hole_points()} are the same function: \code{pool_holes()}
@@ -24,8 +25,19 @@ is the name that matches the other \verb{pool_*()} accessors, and
 \code{hole_points()} is kept for existing code.
 }
 \details{
-For use with RTriangle::triangulate(). Each row is the centroid of a hole,
+For use with RTriangle::triangulate(). Each row is a point inside a hole,
 which tells the triangulator to exclude that region.
+
+The point is found on a horizontal line across the hole: the middle of
+the widest stretch of that line that starts at the hole's boundary and
+crosses no segment of the pool. It is inside the hole even when the hole
+is not convex, where the centroid of the ring's vertices can fall
+outside it (and a triangulator would then erase the polygon around the
+hole instead), and it is clear of any island in the hole.
+
+A hole that is exactly filled by another polygon in the pool (an
+enclave in a coverage, such as a lake island that is its own feature)
+is not a hole of the pool and is not returned.
 
 When the pool carries path provenance, holes are identified
 structurally (non-first rings of their part) and \code{convention} is

@@ -1,3 +1,4 @@
+CGAL
 CGAZ
 CMD
 DCEL
@@ -26,6 +27,9 @@ WKT
 Worboys
 antimeridian
 bigcurve
+cdt
+cdtr
+cdtr's
 cpp
 crs
 decido
@@ -38,6 +42,7 @@ geo
 geos
 hypertidy
 inlandwaters
+laridae
 linestring
 linestrings
 meshcore

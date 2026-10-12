@@ -20,14 +20,18 @@ Imports:
     vctrs,
     wk (>= 0.9.4)
 Suggests:
+    cdtr,
     decido,
     knitr,
     rmarkdown,
     RTriangle,
+    silicate,
     spelling,
     testthat (>= 3.0.0),
     traipse
 VignetteBuilder: knitr
+Remotes:
+    hypertidy/cdtr
 LinkingTo:
     cpp11
 Config/testthat/edition: 3
