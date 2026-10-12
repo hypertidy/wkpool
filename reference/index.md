@@ -38,6 +38,8 @@ CRS handling, wk handlers, and plotting.
   : Handle wkpool objects with wk handlers
 - [`plot(`*`<wkpool>`*`)`](https://hypertidy.github.io/wkpool/reference/plot.wkpool.md)
   : Plot a wkpool object
+- [`plot(`*`<wkpool_tri>`*`)`](https://hypertidy.github.io/wkpool/reference/plot.wkpool_tri.md)
+  : Plot a triangle pool
 
 ## Vertex identity
 
