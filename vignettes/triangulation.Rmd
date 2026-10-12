@@ -92,6 +92,23 @@ plot(iw_tri, border = NA, asp = 1, axes = FALSE, xlab = "", ylab = "")
 `plot()` draws every triangle in one `polygon()` call indexed into the
 pool, so tens of thousands of triangles draw in well under a second.
 
+The view is much bigger than the land. Two small, distant pieces set the
+extent: New Caledonia (the second feature) to the north east, and
+Macquarie Island, which is one part of the Tasmania feature, far to the
+south. Each triangle records its feature and part, so trimming them is a
+subset; the plot extent follows the triangles that are drawn:
+
+```{r inlandwaters-trim, eval = has_decido && has_silicate}
+tt <- pool_triangles(iw_tri)
+ev <- pool_vertices(iw_tri)
+ty <- ev$y[match(tt$.vx0, ev$.vx)]
+tas <- inlandwaters$Province == "Tasmania"
+macquarie <- tt$.feature == which(tas) & tt$.part == tt$.part[which.min(ty)]
+unique(tt$.part[macquarie])
+keep <- !macquarie & tt$.feature != 2
+plot(iw_tri[keep], border = NA, asp = 1, axes = FALSE, xlab = "", ylab = "")
+```
+
 ## Constrained Delaunay: the PSLG route
 
 Ear cutting gives valid triangles but they are often long and thin, and
