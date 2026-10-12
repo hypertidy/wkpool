@@ -16,11 +16,11 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Michael Sumner \email{mdsumner@gmail.com}
+\strong{Maintainer}: Michael Sumner \email{mdsumner@gmail.com} [copyright holder]
 
 Authors:
 \itemize{
-  \item Michael Sumner \email{mdsumner@gmail.com}
+  \item Michael Sumner \email{mdsumner@gmail.com} [copyright holder]
 }
 
 }
