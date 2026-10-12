@@ -21,10 +21,10 @@ A wkpool containing only internal boundary segments
 
 ## Details
 
-Internal boundaries are edges where one feature has segment (v0→v1) and
-another feature has (v1→v0) — i.e., they share the edge but traverse it
-in opposite directions. This is the defining characteristic of a shared
-polygon boundary.
+Internal boundaries are edges where one feature has segment (v0 -\> v1)
+and another feature has (v1 -\> v0), i.e. they share the edge but
+traverse it in opposite directions. This is the defining characteristic
+of a shared polygon boundary.
 
 ## Examples
 

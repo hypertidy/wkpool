@@ -9,7 +9,7 @@ Every polygon boundary is a cycle of segments. Every track step between
 consecutive GPS fixes is a segment with a duration. It’s the simplest
 spatial primitive that encodes *connection* rather than just *position*.
 
-Simple Features — a dominant spatial data model — hides segments inside
+Simple Features, a dominant spatial data model, hides segments inside
 sealed coordinate sequences. A polygon is a ring of coordinates. A line
 is a list of coordinates. The connections between consecutive vertices
 are implicit. To discover them you extract coordinates, pair consecutive
@@ -228,11 +228,13 @@ arc_node_summary(pool)
 
 This is the arc-node model from computational geometry (de Berg et
 al. 2008), expressed as data frames rather than linked-list pointer
-structures. The same decomposition that PostGIS topology provides, and
-Arc/INFO is probably the most famous implementation, remnants exist in
-.e00 format and some other softwares. This linear-only topology also
-highlights clearly how polygons are *just lines*, they aren’t composed
-of 2D topology (triangles) in many modern geo software.
+structures. The same decomposition that PostGIS topology provides;
+Arc/INFO is probably the most famous implementation, and remnants
+survive in the .e00 format and elsewhere. This linear-only topology also
+shows clearly that polygons are *just lines*: in most geospatial
+software they are not composed of 2D topology (triangles). For triangles
+on the same vertex pool, see
+[`vignette("triangulation", package = "wkpool")`](https://hypertidy.github.io/wkpool/articles/triangulation.md).
 
 ## Cycles and winding
 
@@ -296,12 +298,24 @@ format.
 
 ## Integration: triangulation
 
-The vertex pool and segment table map directly to constrained
-triangulation inputs — no coordinate extraction or reformatting needed:
+The vertex pool and segment table are already the input a constrained
+triangulator wants, a planar straight line graph (PSLG).
+[`as_pslg()`](https://hypertidy.github.io/wkpool/reference/as_pslg.md)
+gives it as the `P` and `S` matrices RTriangle takes, with no coordinate
+extraction or reformatting:
 
-RTriangle PSLG format (without classing)
+``` r
+
+str(as_pslg(pool))
+#> List of 2
+#>  $ P: num [1:6, 1:2] 0 1 1 0 2 2 0 0 1 1 ...
+#>  $ S: int [1:8, 1:2] 1 2 3 4 2 5 6 3 2 3 ...
+```
 
 The pool *is* the PSLG. The mapping is structural, not a conversion.
+Triangles can come back onto a vertex pool too, as a `wkpool_tri`
+(experimental): see
+[`vignette("triangulation", package = "wkpool")`](https://hypertidy.github.io/wkpool/articles/triangulation.md).
 
 ## Segments in movement data
 
@@ -331,8 +345,11 @@ traipse doesn’t construct a LINESTRING and decompose it. It works
 directly on the consecutive vertex pairs. The segments *are* the data.
 The trip package builds on this: a trip is a grouped tibble of ordered
 coordinates, and every analytical operation runs on the segment view via
-`dplyr::lead()` and `dplyr::lag()` within groups. No geometry column, no
-format conversion, no decomposition/reconstruction cycle.
+[`dplyr::lead()`](https://dplyr.tidyverse.org/reference/lead-lag.html)
+and
+[`dplyr::lag()`](https://dplyr.tidyverse.org/reference/lead-lag.html)
+within groups. No geometry column, no format conversion, no
+decomposition/reconstruction cycle.
 
 ## Why this matters now
 

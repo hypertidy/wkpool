@@ -37,6 +37,7 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="articles/wkpool-vignette-segments.html">Segments: the atoms of geometry</a></li>
+    <li><a class="dropdown-item" href="articles/triangulation.html">Triangulation</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -200,7 +201,7 @@
 </h2>
 <p><code>inlandwaters</code> (in silicate) has six features with 189 rings, 32 of them holes, and neighbouring states that share long boundaries vertex for vertex. After <code><a href="reference/merge_coincident.html">merge_coincident()</a></code> those boundaries are the same vertex pairs, so the quotient graph walks each shared boundary once:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/wkb.html" class="external-link">as_wkb</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu">st_geometry</span><span class="op">(</span><span class="fu">silicate</span><span class="fu">::</span><span class="va">inlandwaters</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/wkb.html" class="external-link">as_wkb</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu">st_geometry</span><span class="op">(</span><span class="fu">silicate</span><span class="fu">::</span><span class="va"><a href="https://hypertidy.github.io/silicate/reference/inlandwaters.html" class="external-link">inlandwaters</a></span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pool</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/merge_coincident.html">merge_coincident</a></span><span class="op">(</span><span class="fu"><a href="reference/establish_topology.html">establish_topology</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/find_arcs.html">find_arcs</a></span><span class="op">(</span><span class="va">pool</span>, quotient <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>    <span class="co"># 201 arcs</span></span>
 <span><span class="fu"><a href="reference/find_nodes.html">find_nodes</a></span><span class="op">(</span><span class="va">pool</span>, quotient <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>   <span class="co"># 13 nodes where three or more edges meet</span></span>
@@ -291,7 +292,7 @@ silicate vs wkpool scaling on hexagon coverages
 <li><label><input type="checkbox" checked><code><a href="reference/wk_handle.wkpool.html">wk_handle.wkpool()</a></code>: round-trip back to wk geometry</label></li>
 <li><label><input type="checkbox" checked>Path reconstruction: derive linestrings/rings from segment connectivity</label></li>
 <li><label><input type="checkbox" checked>Arc-node topology and cycles, with quotient semantics for shared boundaries</label></li>
-<li><label><input type="checkbox" checked>PSLG for constrained triangulation (<code><a href="reference/as_pslg.html">as_pslg()</a></code>, RTriangle)</label></li>
+<li><label><input type="checkbox" checked>PSLG for constrained triangulation (<code><a href="reference/as_pslg.html">as_pslg()</a></code>, for RTriangle; see the triangulation vignette)</label></li>
 <li><label><input type="checkbox" checked>Vectorised verbs with no quadratic scans; C++ (cpp11) for arcs</label></li>
 <li><label><input type="checkbox">Apply to production package (trip)</label></li>
 <li><label><input type="checkbox" checked>Triangulation integration (decido): indexed triangles from the same pool (<code><a href="reference/pool_triangulate.html">pool_triangulate()</a></code>, experimental)</label></li>

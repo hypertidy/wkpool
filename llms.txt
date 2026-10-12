@@ -228,7 +228,7 @@ boundaries
 
 PSLG for constrained triangulation
 ([`as_pslg()`](https://hypertidy.github.io/wkpool/reference/as_pslg.md),
-RTriangle)
+for RTriangle; see the triangulation vignette)
 
 Vectorised verbs with no quadratic scans; C++ (cpp11) for arcs
 
@@ -358,7 +358,7 @@ triangulators need (holes, PSLG). This interface may change.
   [`hole_points()`](https://hypertidy.github.io/wkpool/reference/pool_holes.md)
   : Get hole points for constrained triangulation
 - [`as_pslg()`](https://hypertidy.github.io/wkpool/reference/as_pslg.md)
-  : Convert wkpool to RTriangle pslg format
+  : Convert wkpool to a PSLG (planar straight line graph)
 
 ## Export
 
@@ -385,3 +385,4 @@ Back to WKT or WKB, as segments, arcs or polygons from cycles.
 
 - [Segments: the atoms of
   geometry](https://hypertidy.github.io/wkpool/articles/wkpool-vignette-segments.md):
+- [Triangulation](https://hypertidy.github.io/wkpool/articles/triangulation.md):

@@ -35,6 +35,7 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/wkpool-vignette-segments.html">Segments: the atoms of geometry</a></li>
+    <li><a class="dropdown-item" href="../articles/triangulation.html">Triangulation</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">
@@ -91,11 +92,11 @@ segments. Every polygon boundary is a cycle of segments. Every track
 step between consecutive GPS fixes is a segment with a duration. It’s
 the simplest spatial primitive that encodes <em>connection</em> rather
 than just <em>position</em>.</p>
-<p>Simple Features — a dominant spatial data model — hides segments
-inside sealed coordinate sequences. A polygon is a ring of coordinates.
-A line is a list of coordinates. The connections between consecutive
-vertices are implicit. To discover them you extract coordinates, pair
-consecutive points, and rebuild the structure.</p>
+<p>Simple Features, a dominant spatial data model, hides segments inside
+sealed coordinate sequences. A polygon is a ring of coordinates. A line
+is a list of coordinates. The connections between consecutive vertices
+are implicit. To discover them you extract coordinates, pair consecutive
+points, and rebuild the structure.</p>
 <p>wkpool makes segments explicit.</p>
 </div>
 <div class="section level2">
@@ -270,11 +271,13 @@ nodes:</p>
 <span><span class="co">#&gt; [1] 2</span></span></code></pre></div>
 <p>This is the arc-node model from computational geometry (de Berg et
 al. 2008), expressed as data frames rather than linked-list pointer
-structures. The same decomposition that PostGIS topology provides, and
-Arc/INFO is probably the most famous implementation, remnants exist in
-.e00 format and some other softwares. This linear-only topology also
-highlights clearly how polygons are <em>just lines</em>, they aren’t
-composed of 2D topology (triangles) in many modern geo software.</p>
+structures. The same decomposition that PostGIS topology provides;
+Arc/INFO is probably the most famous implementation, and remnants
+survive in the .e00 format and elsewhere. This linear-only topology also
+shows clearly that polygons are <em>just lines</em>: in most geospatial
+software they are not composed of 2D topology (triangles). For triangles
+on the same vertex pool, see
+<code><a href="../articles/triangulation.html">vignette("triangulation", package = "wkpool")</a></code>.</p>
 </div>
 <div class="section level2">
 <h2 id="cycles-and-winding">Cycles and winding<a class="anchor" aria-label="anchor" href="#cycles-and-winding"></a>
@@ -329,12 +332,20 @@ format.</p>
 <div class="section level2">
 <h2 id="integration-triangulation">Integration: triangulation<a class="anchor" aria-label="anchor" href="#integration-triangulation"></a>
 </h2>
-<p>The vertex pool and segment table map directly to constrained
-triangulation inputs — no coordinate extraction or reformatting
-needed:</p>
-<p>RTriangle PSLG format (without classing)</p>
+<p>The vertex pool and segment table are already the input a constrained
+triangulator wants, a planar straight line graph (PSLG).
+<code><a href="../reference/as_pslg.html">as_pslg()</a></code> gives it as the <code>P</code> and <code>S</code>
+matrices RTriangle takes, with no coordinate extraction or
+reformatting:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="fu"><a href="../reference/as_pslg.html">as_pslg</a></span><span class="op">(</span><span class="va">pool</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; List of 2</span></span>
+<span><span class="co">#&gt;  $ P: num [1:6, 1:2] 0 1 1 0 2 2 0 0 1 1 ...</span></span>
+<span><span class="co">#&gt;  $ S: int [1:8, 1:2] 1 2 3 4 2 5 6 3 2 3 ...</span></span></code></pre></div>
 <p>The pool <em>is</em> the PSLG. The mapping is structural, not a
-conversion.</p>
+conversion. Triangles can come back onto a vertex pool too, as a
+<code>wkpool_tri</code> (experimental): see
+<code><a href="../articles/triangulation.html">vignette("triangulation", package = "wkpool")</a></code>.</p>
 </div>
 <div class="section level2">
 <h2 id="segments-in-movement-data">Segments in movement data<a class="anchor" aria-label="anchor" href="#segments-in-movement-data"></a>
@@ -344,7 +355,7 @@ tracks, GPS logs — is inherently a sequence of segments. Each step
 between consecutive fixes carries a bearing, distance, speed, and
 duration.</p>
 <p>The traipse package works directly on this segment view:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/AustralianAntarcticDivision/traipse" class="external-link">traipse</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># 5 GPS fixes from a Southern Ocean track</span></span>
@@ -360,7 +371,7 @@ duration.</p>
 directly on the consecutive vertex pairs. The segments <em>are</em> the
 data. The trip package builds on this: a trip is a grouped tibble of
 ordered coordinates, and every analytical operation runs on the segment
-view via <code>dplyr::lead()</code> and <code>dplyr::lag()</code> within
+view via <code><a href="https://dplyr.tidyverse.org/reference/lead-lag.html" class="external-link">dplyr::lead()</a></code> and <code><a href="https://dplyr.tidyverse.org/reference/lead-lag.html" class="external-link">dplyr::lag()</a></code> within
 groups. No geometry column, no format conversion, no
 decomposition/reconstruction cycle.</p>
 </div>

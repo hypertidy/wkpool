@@ -228,7 +228,7 @@ boundaries
 
 PSLG for constrained triangulation
 ([`as_pslg()`](https://hypertidy.github.io/wkpool/reference/as_pslg.md),
-RTriangle)
+for RTriangle; see the triangulation vignette)
 
 Vectorised verbs with no quadratic scans; C++ (cpp11) for arcs
 

@@ -24,6 +24,7 @@ hole_points() is kept for existing code."></head><body>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/wkpool-vignette-segments.html">Segments: the atoms of geometry</a></li>
+    <li><a class="dropdown-item" href="../articles/triangulation.html">Triangulation</a></li>
   </ul></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-news" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">News</button>
@@ -82,12 +83,22 @@ no path provenance: "sf" (default) or "ogc"</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A matrix of hole points (centroids of hole cycles), or NULL if no holes</p>
+    <p>A matrix of hole points, one point inside each hole cycle, or
+NULL if no holes</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>For use with RTriangle::triangulate(). Each row is the centroid of a hole,
+    <p>For use with RTriangle::triangulate(). Each row is a point inside a hole,
 which tells the triangulator to exclude that region.</p>
+<p>The point is found on a horizontal line across the hole: the middle of
+the widest stretch of that line that starts at the hole's boundary and
+crosses no segment of the pool. It is inside the hole even when the hole
+is not convex, where the centroid of the ring's vertices can fall
+outside it (and a triangulator would then erase the polygon around the
+hole instead), and it is clear of any island in the hole.</p>
+<p>A hole that is exactly filled by another polygon in the pool (an
+enclave in a coverage, such as a lake island that is its own feature)
+is not a hole of the pool and is not returned.</p>
 <p>When the pool carries path provenance, holes are identified
 structurally (non-first rings of their part) and <code>convention</code> is
 not consulted.</p>
@@ -106,8 +117,8 @@ not consulted.</p>
 <span class="r-in"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="establish_topology.html">establish_topology</a></span><span class="op">(</span><span class="va">polygons_with_holes</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">merged</span> <span class="op">&lt;-</span> <span class="fu"><a href="merge_coincident.html">merge_coincident</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">pool_holes</span><span class="op">(</span><span class="va">merged</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         x    y</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1,] 0.34 0.36</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          x   y</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1,] 0.325 0.5</span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"RTriangle"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="va">pslg</span> <span class="op">&lt;-</span> <span class="fu"><a href="as_pslg.html">as_pslg</a></span><span class="op">(</span><span class="va">merged</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">holes</span> <span class="op">&lt;-</span> <span class="fu">pool_holes</span><span class="op">(</span><span class="va">merged</span><span class="op">)</span></span></span>

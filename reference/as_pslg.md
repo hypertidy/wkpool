@@ -1,6 +1,6 @@
-# Convert wkpool to RTriangle pslg format
+# Convert wkpool to a PSLG (planar straight line graph)
 
-Convert wkpool to RTriangle pslg format
+Convert wkpool to a PSLG (planar straight line graph)
 
 ## Usage
 
@@ -20,21 +20,27 @@ as_pslg(x, ...)
 
 ## Value
 
-A list with P (vertex matrix) and S (segment matrix) for
+A list with P (vertex matrix) and S (segment matrix), the form used by
 RTriangle::pslg()
 
 ## Details
 
-Produces a Planar Straight Line Graph suitable for constrained
-triangulation with RTriangle. The vertex pool maps directly to P, and
-segment indices map directly to S (both 1-indexed).
+Produces a planar straight line graph for constrained Delaunay
+triangulation. The vertex pool maps directly to P, and segment indices
+map directly to S (both 1-indexed). Shared boundaries appear once per
+feature.
 
-Note: Hole detection is not currently supported. The returned pslg does
-not include hole points (H). For polygons with holes, you may need to
-identify hole points manually using
-[`find_cycles()`](https://hypertidy.github.io/wkpool/reference/find_cycles.md)
-and
-[`cycle_signed_area()`](https://hypertidy.github.io/wkpool/reference/cycle_signed_area.md).
+A PSLG does not record which side of a segment is inside. For RTriangle,
+pass hole points from
+[`pool_holes()`](https://hypertidy.github.io/wkpool/reference/pool_holes.md)
+as `H`. The triangles come back as vertex and index matrices, and
+[`new_wkpool_tri()`](https://hypertidy.github.io/wkpool/reference/new_wkpool_tri.md)
+puts them on a vertex pool again; see
+[`vignette("triangulation", package = "wkpool")`](https://hypertidy.github.io/wkpool/articles/triangulation.md).
+
+For ear cutting that keeps the feature of each triangle, see
+[`pool_triangulate()`](https://hypertidy.github.io/wkpool/reference/pool_triangulate.md)
+(experimental).
 
 ## Examples
 

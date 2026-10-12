@@ -32,7 +32,7 @@ convention):
 
 - Positive area = hole
 
-This is intrinsic to the geometry — we observe winding, not declare it.
+This is intrinsic to the geometry: we observe winding, not declare it.
 
 ## Examples
 

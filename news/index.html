@@ -20,6 +20,7 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/wkpool-vignette-segments.html">Segments: the atoms of geometry</a></li>
+    <li><a class="dropdown-item" href="../articles/triangulation.html">Triangulation</a></li>
   </ul></li>
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-news" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">News</button>
@@ -51,7 +52,10 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="wkpool-development-version">wkpool (development version)<a class="anchor" aria-label="anchor" href="#wkpool-development-version"></a></h2>
-<ul><li>New <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method for <code>wkpool_tri</code>: one <code><a href="https://rdrr.io/r/graphics/polygon.html" class="external-link">polygon()</a></code> call indexing the vertex pool, filled by feature (40,000 triangles draw in about 0.4 s to png, where casting to wk polygons and plotting those took over a minute).</li>
+<ul><li><p>New vignette “Triangulation”: ear cutting with <code><a href="../reference/pool_triangulate.html">pool_triangulate()</a></code>, the PSLG route (<code><a href="../reference/as_pslg.html">as_pslg()</a></code> with <code><a href="../reference/pool_holes.html">pool_holes()</a></code>) to RTriangle, and taking its triangles back onto a vertex pool with <code><a href="../reference/new_wkpool_tri.html">new_wkpool_tri()</a></code>, on silicate’s <code>inlandwaters</code>. The other vignettes now cover periodic x, <code>wkpool(vertices, segments)</code> and triangle pools, and point to it.</p></li>
+<li><p><code><a href="../reference/pool_holes.html">pool_holes()</a></code> returns a point inside each hole even when the hole is not convex: the centroid of an ear of the hole ring, clear of every pool vertex, instead of the mean of the ring’s vertices, which could fall outside the hole and make RTriangle erase the polygon around it (on <code>inlandwaters</code> this lost most of the area). Holes filled exactly by another polygon of the pool (enclaves) are no longer returned, since they are not holes of the coverage.</p></li>
+<li><p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> for <code>wkpool_tri</code> accepts <code>xlab</code> and <code>ylab</code>, and sets the plot extent from the triangles drawn rather than the whole vertex pool, so a subset is drawn at its own extent.</p></li>
+<li><p>New <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method for <code>wkpool_tri</code>: one <code><a href="https://rdrr.io/r/graphics/polygon.html" class="external-link">polygon()</a></code> call indexing the vertex pool, filled by feature (40,000 triangles draw in about 0.4 s to png, where casting to wk polygons and plotting those took over a minute).</p></li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0" id="wkpool-040">wkpool 0.4.0<a class="anchor" aria-label="anchor" href="#wkpool-040"></a></h2>

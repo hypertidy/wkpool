@@ -7,9 +7,9 @@ pool. Topology emerges naturally: shared edges, neighbours, and ring
 structure become simple lookups.
 
 Simple features store geometry as complete coordinate sequences per
-feature. Two adjacent polygons duplicate their shared boundary —
-wasteful in entropy and requiring spatial predicates (GEOS) to
-rediscover adjacency.
+feature. Two adjacent polygons duplicate their shared boundary, which
+wastes space and needs spatial predicates (GEOS) to rediscover
+adjacency.
 
 ## Basic workflow
 
@@ -37,7 +37,7 @@ pool
 #> [5] <segment: 6->7>  <segment: 7->8>  <segment: 8->9>  <segment: 9->10>
 ```
 
-At this stage, vertices are indexed but not yet merged — the shared edge
+At this stage, vertices are indexed but not yet merged: the shared edge
 exists as duplicate coordinate pairs.
 
 ### Inspect the raw state
@@ -210,7 +210,7 @@ to flip winding if needed.
 ## Arc-node topology
 
 Arcs are maximal sequences of segments passing through degree-2
-vertices. Nodes are vertices where degree ≠ 2 (branch points or
+vertices. Nodes are vertices where degree != 2 (branch points or
 endpoints).
 
 ``` r
@@ -303,44 +303,48 @@ segments_to_wkt(pool, type = "linestring")[1:3]
 #> [1] LINESTRING (0 0, 1 0) LINESTRING (1 0, 1 1) LINESTRING (1 1, 0 1)
 ```
 
-## Triangulation integration
+## Periodic x (antimeridian)
 
-The pool maps directly to constrained triangulation inputs.
-
-### RTriangle (PSLG)
+Longitude wraps. Two hemispheres that meet at -180 and 180 have two
+copies of the seam, and plain merging keeps them apart. With
+`period_x = 360` the copies fuse and the seam becomes an ordinary shared
+boundary (coordinates are not moved):
 
 ``` r
 
-pslg <- as_pslg(pool)
-str(pslg)
-#> List of 2
-#>  $ P: num [1:6, 1:2] 0 1 1 0 2 2 0 0 1 1 ...
-#>  $ S: int [1:8, 1:2] 1 2 3 4 2 5 6 3 2 3 ...
+hemi <- wk::as_wkb(c(
+  "POLYGON ((-180 -60, 0 -60, 0 60, -180 60, -180 -60))",
+  "POLYGON ((0 -60, 180 -60, 180 60, 0 60, 0 -60))"
+))
+hp <- establish_topology(hemi)
+nrow(find_shared_edges(merge_coincident(hp)))
+#> [1] 2
+nrow(find_shared_edges(merge_coincident(hp, period_x = 360)))
+#> [1] 8
 ```
 
-For polygons with holes, use
+## Triangulation
+
+Triangles can share the same vertex pool.
+[`pool_triangulate()`](https://hypertidy.github.io/wkpool/reference/pool_triangulate.md)
+(experimental) ear cuts each polygon and returns a `wkpool_tri`, and
+[`as_pslg()`](https://hypertidy.github.io/wkpool/reference/as_pslg.md)
+with
 [`pool_holes()`](https://hypertidy.github.io/wkpool/reference/pool_holes.md)
-to generate interior points that tell the triangulator which regions to
-exclude:
+gives the input for constrained Delaunay engines such as RTriangle. See
+[`vignette("triangulation", package = "wkpool")`](https://hypertidy.github.io/wkpool/articles/triangulation.md).
 
 ``` r
 
-# A polygon with a hole
-holed <- wk::as_wkb(
-  "POLYGON ((0 0, 4 0, 4 4, 0 4, 0 0), (1 1, 3 1, 3 3, 1 3, 1 1))"
-)
-hp <- establish_topology(holed)
-hp <- merge_coincident(hp)
-pslg_h <- as_pslg(hp)
-holes <- pool_holes(hp)
-tri <- RTriangle::triangulate(
-  RTriangle::pslg(P = pslg_h$P, S = pslg_h$S, H = holes)
-)
+tri <- pool_triangulate(pool)
+plot(tri, asp = 1)
 ```
+
+![](wkpool_files/figure-html/tri-1.png)
 
 ## Subsetting and combining
 
-Pools support `[` subsetting — the full vertex pool is retained:
+Pools support `[` subsetting; the full vertex pool is retained:
 
 ``` r
 
@@ -361,6 +365,25 @@ pool_combine(pool_a, pool_b)
 #> [5] <segment: 6->7>  <segment: 7->8>  <segment: 8->9>  <segment: 9->10>
 ```
 
+## Building a pool from tables
+
+`wkpool(vertices, segments)` assembles a pool from a vertex table and a
+segment table, the same shapes that
+[`pool_vertices()`](https://hypertidy.github.io/wkpool/reference/wkpool-accessors.md)
+and
+[`pool_segments()`](https://hypertidy.github.io/wkpool/reference/wkpool-accessors.md)
+return. This is the way in for data that is already indexed, such as a
+mesh read from another format:
+
+``` r
+
+v <- data.frame(.vx = 1:4, x = c(0, 1, 1, 0), y = c(0, 0, 1, 1))
+s <- data.frame(.vx0 = 1:4, .vx1 = c(2:4, 1L), .feature = 1L)
+wkpool(v, s)
+#> <wkpool[4 segments, 4 vertices]>
+#> [1] <segment: 1->2> <segment: 2->3> <segment: 3->4> <segment: 4->1>
+```
+
 ## Visualization
 
 ``` r
@@ -376,16 +399,18 @@ plot(pool)
 
 | Package | Where | Relationship to wkpool |
 |----|----|----|
-| [silicate](https://CRAN.R-project.org/package=silicate) | CRAN | Mature predecessor — `SC` (edge-vertex), `ARC` (shared boundaries), `PATH` models. wkpool is the `wk`-native successor |
-| [unjoin](https://CRAN.R-project.org/package=unjoin) | CRAN | Vertex deduplication via data frame normalization — used internally by silicate |
+| [silicate](https://CRAN.R-project.org/package=silicate) | CRAN | Topological models: `SC` (edge-vertex), `ARC` (shared boundaries), `PATH`, `TRI`. Its `silicate2` branch routes geometry through wkpool |
+| [unjoin](https://CRAN.R-project.org/package=unjoin) | CRAN | Vertex deduplication via data frame normalization, used internally by silicate |
 | [wk](https://CRAN.R-project.org/package=wk) | CRAN | Path/geometry indexing via [`wk_coords()`](https://paleolimbot.github.io/wk/reference/wk_vertices.html) |
 
 ### Mesh/triangulation
 
 | Package | Where | Notes |
 |----|----|----|
-| [RTriangle](https://CRAN.R-project.org/package=RTriangle) | CRAN | Shewchuk’s Triangle — constrained Delaunay, [`as_pslg()`](https://hypertidy.github.io/wkpool/reference/as_pslg.md) target |
-| [decido](https://CRAN.R-project.org/package=decido) | CRAN | Earcut, fast, returns vertex indices (implicit pool); no wkpool converter yet |
+| [decido](https://CRAN.R-project.org/package=decido) | CRAN | Ear cutting, the engine for [`pool_triangulate()`](https://hypertidy.github.io/wkpool/reference/pool_triangulate.md) (experimental) |
+| [RTriangle](https://CRAN.R-project.org/package=RTriangle) | CRAN | Shewchuk’s Triangle, constrained Delaunay with quality refinement; takes [`as_pslg()`](https://hypertidy.github.io/wkpool/reference/as_pslg.md) and [`pool_holes()`](https://hypertidy.github.io/wkpool/reference/pool_holes.md) |
+| [laridae](https://github.com/hypertidy/laridae) | GitHub | Constrained Delaunay and meshing with CGAL |
+| [meshcore](https://github.com/hypertidy/meshcore) | GitHub | Mesh tables and `tri_mesh()` over further constrained Delaunay engines |
 | [sfdct](https://CRAN.R-project.org/package=sfdct) | CRAN | RTriangle wrapper for sf objects |
 
 ### Adjacency (computed, not stored)
@@ -393,8 +418,9 @@ plot(pool)
 | Package | Where | Approach |
 |----|----|----|
 | [sfdep](https://CRAN.R-project.org/package=sfdep) | CRAN | `st_contiguity()` computes on-demand |
-| [sf](https://CRAN.R-project.org/package=sf) | CRAN | `st_touches()`, `st_relate()` via GEOS — recomputes each time |
+| [sf](https://CRAN.R-project.org/package=sf) | CRAN | `st_touches()`, `st_relate()` via GEOS, recomputed each time |
 
 **Key distinction**: wkpool differs from sf/spdep by *storing* topology
 (shared edges are explicit) rather than *computing* it on demand via
-GEOS. It’s a lightweight, `wk`-native evolution of silicate’s approach.
+GEOS. It is the lightweight, `wk`-native machinery under silicate’s
+approach.

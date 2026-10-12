@@ -111,7 +111,7 @@ triangulators need (holes, PSLG). This interface may change.
   [`hole_points()`](https://hypertidy.github.io/wkpool/reference/pool_holes.md)
   : Get hole points for constrained triangulation
 - [`as_pslg()`](https://hypertidy.github.io/wkpool/reference/as_pslg.md)
-  : Convert wkpool to RTriangle pslg format
+  : Convert wkpool to a PSLG (planar straight line graph)
 
 ## Export
 

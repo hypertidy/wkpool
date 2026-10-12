@@ -11,7 +11,7 @@ minute.
 
 ``` r
 # S3 method for class 'wkpool_tri'
-plot(x, col = NULL, border = "black", add = FALSE, ...)
+plot(x, col = NULL, border = "black", add = FALSE, xlab = "x", ylab = "y", ...)
 ```
 
 ## Arguments
@@ -33,6 +33,10 @@ plot(x, col = NULL, border = "black", add = FALSE, ...)
 - add:
 
   If `TRUE`, draw on the current plot.
+
+- xlab, ylab:
+
+  Axis labels when `add = FALSE`.
 
 - ...:
 

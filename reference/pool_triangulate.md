@@ -57,6 +57,12 @@ gives adjacent features shared triangle corners.
 
 Triangles are counter-clockwise.
 
+For constrained Delaunay triangulation, with Steiner points added for
+quality or area, pass
+[`as_pslg()`](https://hypertidy.github.io/wkpool/reference/as_pslg.md)
+to RTriangle; see
+[`vignette("triangulation", package = "wkpool")`](https://hypertidy.github.io/wkpool/articles/triangulation.md).
+
 ## Examples
 
 ``` r

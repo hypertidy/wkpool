@@ -25,12 +25,24 @@ hole_points(x, convention = c("sf", "ogc"))
 
 ## Value
 
-A matrix of hole points (centroids of hole cycles), or NULL if no holes
+A matrix of hole points, one point inside each hole cycle, or NULL if no
+holes
 
 ## Details
 
-For use with RTriangle::triangulate(). Each row is the centroid of a
+For use with RTriangle::triangulate(). Each row is a point inside a
 hole, which tells the triangulator to exclude that region.
+
+The point is found on a horizontal line across the hole: the middle of
+the widest stretch of that line that starts at the hole's boundary and
+crosses no segment of the pool. It is inside the hole even when the hole
+is not convex, where the centroid of the ring's vertices can fall
+outside it (and a triangulator would then erase the polygon around the
+hole instead), and it is clear of any island in the hole.
+
+A hole that is exactly filled by another polygon in the pool (an enclave
+in a coverage, such as a lake island that is its own feature) is not a
+hole of the pool and is not returned.
 
 When the pool carries path provenance, holes are identified structurally
 (non-first rings of their part) and `convention` is not consulted.
@@ -49,8 +61,8 @@ polygons_with_holes <- wk::as_wkb(c(
 x <- establish_topology(polygons_with_holes)
 merged <- merge_coincident(x)
 pool_holes(merged)
-#>         x    y
-#> [1,] 0.34 0.36
+#>          x   y
+#> [1,] 0.325 0.5
 if (requireNamespace("RTriangle", quietly = TRUE)) {
   pslg <- as_pslg(merged)
   holes <- pool_holes(merged)
