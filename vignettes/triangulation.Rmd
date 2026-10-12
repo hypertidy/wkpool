@@ -274,3 +274,11 @@ A few things to notice:
 [meshcore](https://github.com/hypertidy/meshcore) offers further
 constrained Delaunay engines behind `tri_mesh()`, with vertex origin (input, crossing, Steiner) and depth
 recorded in its mesh tables.
+
+
+## Further reading
+
+- [trianglewins](https://mdsumner.github.io/trianglewins/): a guide to
+  constrained triangulation in R, with a survey of the packages, earcut
+  and GEOS compared on the same inputs, and a harness that runs RTriangle
+  and newer engines on shared test cases.
