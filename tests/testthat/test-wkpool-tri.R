@@ -108,3 +108,14 @@ test_that("new_wkpool_tri validates vertex ids", {
   expect_error(pool_triangles(establish_topology(wk::wkt("LINESTRING (0 0, 1 1)"))),
                "wkpool_tri")
 })
+
+test_that("plot.wkpool_tri draws and returns its input", {
+  skip_if_not_installed("decido")
+  tri <- pool_triangulate(establish_topology(polys))
+  pdf(NULL)
+  on.exit(grDevices::dev.off())
+  expect_identical(plot(tri), tri)
+  expect_identical(plot(tri, col = "grey", border = NA, asp = 1), tri)
+  expect_identical(plot(tri[0], add = TRUE), tri[0])
+  expect_error(plot.wkpool_tri(establish_topology(polys)), "wkpool_tri")
+})

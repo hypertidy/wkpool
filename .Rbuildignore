@@ -9,3 +9,6 @@
 ^\.github$
 ^CRAN-SUBMISSION$
 ^bench$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$

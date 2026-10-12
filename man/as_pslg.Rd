@@ -2,7 +2,7 @@
 % Please edit documentation in R/merge_coincident.R
 \name{as_pslg}
 \alias{as_pslg}
-\title{Convert wkpool to RTriangle pslg format}
+\title{Convert wkpool to a PSLG (planar straight line graph)}
 \usage{
 as_pslg(x, ...)
 }
@@ -12,20 +12,25 @@ as_pslg(x, ...)
 \item{...}{passed to merge_coincident}
 }
 \value{
-A list with P (vertex matrix) and S (segment matrix) for RTriangle::pslg()
+A list with P (vertex matrix) and S (segment matrix), the form
+used by RTriangle::pslg()
 }
 \description{
-Convert wkpool to RTriangle pslg format
+Convert wkpool to a PSLG (planar straight line graph)
 }
 \details{
-Produces a Planar Straight Line Graph suitable for constrained triangulation
-with RTriangle. The vertex pool maps directly to P, and segment indices
-map directly to S (both 1-indexed).
+Produces a planar straight line graph for constrained Delaunay
+triangulation. The vertex pool maps directly to P, and segment indices
+map directly to S (both 1-indexed). Shared boundaries appear once per
+feature.
 
-Note: Hole detection is not currently supported. The returned pslg
-does not include hole points (H). For polygons with holes, you may
-need to identify hole points manually using \code{find_cycles()} and
-\code{cycle_signed_area()}.
+A PSLG does not record which side of a segment is inside. For RTriangle,
+pass hole points from \code{\link[=pool_holes]{pool_holes()}} as \code{H}. The triangles come back as
+vertex and index matrices, and \code{\link[=new_wkpool_tri]{new_wkpool_tri()}} puts them on a vertex
+pool again; see \code{vignette("triangulation", package = "wkpool")}.
+
+For ear cutting that keeps the feature of each triangle, see
+\code{\link[=pool_triangulate]{pool_triangulate()}} (experimental).
 }
 \examples{
 x <- wk::as_wkb("POLYGON ((0 0, 1 0, 1 1, 0 1, 0 0))")

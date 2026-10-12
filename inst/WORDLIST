@@ -1,3 +1,4 @@
+CGAL
 CGAZ
 CMD
 DCEL
@@ -38,6 +39,7 @@ geo
 geos
 hypertidy
 inlandwaters
+laridae
 linestring
 linestrings
 meshcore
