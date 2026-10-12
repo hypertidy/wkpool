@@ -1,4 +1,4 @@
-## Update
+## wkpool 0.4.0
 
 This is an update to wkpool 0.3.0. It adds faster cycle, neighbour and
 emit verbs, quotient boundary semantics for arc-node topology, CRS and

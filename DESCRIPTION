@@ -1,6 +1,6 @@
 Package: wkpool
 Title: Vertex Pool Topology for Well-Known Geometry
-Version: 0.4.0.9000
+Version: 0.4.0
 Authors@R: 
     person("Michael", "Sumner", , "mdsumner@gmail.com", role = c("aut", "cre", "cph"))
 Description: Establishes and maintains vertex pool topology for geometry 

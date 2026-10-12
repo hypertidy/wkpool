@@ -1,4 +1,4 @@
-# wkpool (development version)
+# wkpool 0.4.0
 
 * New vignette "Triangulation": ear cutting with `pool_triangulate()`,
   the PSLG route (`as_pslg()` with `pool_holes()`) to RTriangle, and
@@ -21,8 +21,6 @@
 * New `plot()` method for `wkpool_tri`: one `polygon()` call indexing the
   vertex pool, filled by feature (40,000 triangles draw in about 0.4 s to
   png, where casting to wk polygons and plotting those took over a minute).
-
-# wkpool 0.4.0
 
 ## Triangles (experimental)
 

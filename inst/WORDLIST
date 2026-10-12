@@ -5,7 +5,6 @@ DCEL
 Delaunay
 Duckham
 EPSG
-Earcut
 Eonfusion
 GEOS
 GeoArrow
@@ -35,7 +34,6 @@ densification
 densify
 doi
 etc
-geo
 geos
 hypertidy
 inlandwaters
@@ -49,12 +47,12 @@ multipolygon
 multipolygons
 nonzero
 ogc
+png
 pslg
 rcrd
 sfc
 sfdct
 sfdep
-softwares
 spdep
 th
 throughs

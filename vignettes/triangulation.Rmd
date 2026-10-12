@@ -79,14 +79,16 @@ find_shared_edges(edges)
 Caledonia) with many holes and long shared boundaries.
 
 ```{r inlandwaters, eval = has_decido && has_silicate, message = FALSE}
+op <- par(mar = rep(0, 4L))
 data("inlandwaters", package = "silicate")
-# the geometry column as WKB, so sf is not needed
+# the geometry column as WKB
 iw_geom <- wk::wk_handle(inlandwaters$geom, wk::wkb_writer())
 iw <- merge_coincident(establish_topology(iw_geom))
 iw_tri <- pool_triangulate(iw)
 length(iw_tri)
 nrow(pool_vertices(iw_tri)) == nrow(pool_vertices(iw))
 plot(iw_tri, border = NA, asp = 1, axes = FALSE, xlab = "", ylab = "")
+par(op)
 ```
 
 `plot()` draws every triangle in one `polygon()` call indexed into the
@@ -101,6 +103,7 @@ from the triangles themselves and dropped with a subset. The plot extent
 follows the triangles that are drawn:
 
 ```{r inlandwaters-trim, eval = has_decido && has_silicate}
+op <- par(mar = rep(0, 4L))
 tt <- pool_triangles(iw_tri)
 ev <- pool_vertices(iw_tri)
 tx <- ev$x[match(tt$.vx0, ev$.vx)]
@@ -115,6 +118,7 @@ islands <- c(
 islands
 plot(iw_tri[!tt$.part %in% islands], border = NA, asp = 1, axes = FALSE,
      xlab = "", ylab = "")
+par(op)
 ```
 
 ## Constrained Delaunay: the PSLG route

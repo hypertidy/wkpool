@@ -23,7 +23,7 @@ test_that("cycles_to_wkt accepts convention = 'ogc'", {
   expect_true(length(wkt_ogc) > 0)
 })
 
-test_that("cycles_to_wkt ogc and sf conventions both produce valid WKT", {
+test_that("cycles_to_wkt ogc and SF conventions both produce valid WKT", {
   pool <- establish_topology(two_squares())
   merged <- merge_coincident(pool)
 
