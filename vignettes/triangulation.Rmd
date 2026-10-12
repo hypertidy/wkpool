@@ -92,21 +92,29 @@ plot(iw_tri, border = NA, asp = 1, axes = FALSE, xlab = "", ylab = "")
 `plot()` draws every triangle in one `polygon()` call indexed into the
 pool, so tens of thousands of triangles draw in well under a second.
 
-The view is much bigger than the land. Two small, distant pieces set the
-extent: New Caledonia (the second feature) to the north east, and
-Macquarie Island, which is one part of the Tasmania feature, far to the
-south. Each triangle records its feature and part, so trimming them is a
-subset; the plot extent follows the triangles that are drawn:
+The view is much bigger than the land. Three small, distant islands set
+the extent: Macquarie Island far to the south, which is one part of the
+Tasmania feature; Lord Howe Island to the east, one part of the New South
+Wales feature; and the feature labelled New Caledonia to the north east.
+Each triangle records its feature and part, so the islands can be found
+from the triangles themselves and dropped with a subset. The plot extent
+follows the triangles that are drawn:
 
 ```{r inlandwaters-trim, eval = has_decido && has_silicate}
 tt <- pool_triangles(iw_tri)
 ev <- pool_vertices(iw_tri)
+tx <- ev$x[match(tt$.vx0, ev$.vx)]
 ty <- ev$y[match(tt$.vx0, ev$.vx)]
-tas <- inlandwaters$Province == "Tasmania"
-macquarie <- tt$.feature == which(tas) & tt$.part == tt$.part[which.min(ty)]
-unique(tt$.part[macquarie])
-keep <- !macquarie & tt$.feature != 2
-plot(iw_tri[keep], border = NA, asp = 1, axes = FALSE, xlab = "", ylab = "")
+prov <- inlandwaters$Province
+nsw <- tt$.feature == which(prov == "New South Wales")
+islands <- c(
+  "Macquarie Island" = tt$.part[which.min(ty)],
+  "Lord Howe Island" = tt$.part[nsw][which.max(tx[nsw])],
+  "New Caledonia" = unique(tt$.part[tt$.feature == which(prov == "New Caledonia")])
+)
+islands
+plot(iw_tri[!tt$.part %in% islands], border = NA, asp = 1, axes = FALSE,
+     xlab = "", ylab = "")
 ```
 
 ## Constrained Delaunay: the PSLG route
@@ -209,6 +217,48 @@ c(
   RTriangle = tri_area(iw_rt$P, iw_rt$T)
 ) / 1e6
 ```
+
+## The islands
+
+The three islands, each drawn from its own subset of the triangle pool:
+
+```{r islands, eval = has_decido && has_silicate, fig.height = 3.5}
+op <- par(mfrow = c(1, 3), mar = c(0.5, 0.5, 2, 0.5))
+for (nm in names(islands)) {
+  plot(iw_tri[tt$.part == islands[nm]], border = "grey30", asp = 1,
+       axes = FALSE, xlab = "", ylab = "", main = nm)
+}
+par(op)
+```
+
+A few things to notice:
+
+* A subset is a set of triangles, not a copy of the coordinates: each
+  island still references the full vertex pool, and its vertex ids are
+  the ids in the whole coverage.
+
+  ```{r islands-pool, eval = has_decido && has_silicate}
+  mq <- iw_tri[tt$.part == islands["Macquarie Island"]]
+  c(triangles = length(mq), pool_vertices = nrow(pool_vertices(mq)))
+  ```
+
+* Ear cutting adds no vertices, so the count is fixed by the input: a
+  polygon with `n` vertices and `h` holes gives `n + 2h - 2` triangles.
+  These islands have no holes, so each has two fewer triangles than
+  vertices:
+
+  ```{r islands-count, eval = has_decido && has_silicate}
+  sapply(islands, function(k) {
+    i <- tt$.part == k
+    c(vertices = length(unique(unlist(tt[i, 1:3]))), triangles = sum(i))
+  })
+  ```
+
+* The islands are a few kilometres to a few tens of kilometres across,
+  the mainland states around a thousand. A maximum triangle area (`a` in
+  RTriangle) is in map units, square metres here, so one value refines a
+  small island and a large state very differently; a minimum angle (`q`)
+  does not depend on scale.
 
 ## Which engine
 
