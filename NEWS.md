@@ -1,3 +1,11 @@
+# wkpool (development version)
+
+* New exploratory article "TIN and other surfaces": the simple features
+  TIN, TRIANGLE and POLYHEDRALSURFACE types onto a vertex pool and back,
+  a TIN round trip through a GeoPackage, a closed-surface check on a
+  polyhedral surface, and how sfc, wkpool and `wkpool_tri` compare. Needs
+  wk with surface reading (wk#236); the code does not run without it.
+
 # wkpool 0.4.0
 
 * New vignette "Triangulation": ear cutting with `pool_triangulate()`,
