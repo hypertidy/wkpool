@@ -285,12 +285,54 @@ it. Again a helper, not package code:</p>
 <span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="blob-and-mesh-side-by-side">Blob and mesh, side by side<a class="anchor" aria-label="anchor" href="#blob-and-mesh-side-by-side"></a>
+</h2>
+<p>The same three triangles, drawn as they are stored. On the left, the
+sfc TIN: each triangle is pulled slightly towards its centre so its own
+copies of the corners show, and each location is labelled with how many
+triangles hold a copy of it. On the right, the merged
+<code>wkpool_tri</code>: each location is one numbered vertex, labelled
+with the features that use it, and the edge the two features share is
+drawn heavy. (The drawing code is in the source of this article.)</p>
+<p><img src="sf-surfaces_files/figure-html/blob-mesh-1.png" class="r-plt" alt="" width="672"></p>
+<p>A mesh is not a topology singleton. Merging makes one connected set
+of triangles, but every triangle keeps the feature it came from, so the
+features are still there inside the mesh, and where they meet can be
+read off the vertex ids. Three polygons meeting at a point, ear cut and
+merged:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">polys</span> <span class="op">&lt;-</span> <span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/wk/man/wkt.html" class="external-link">wkt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"POLYGON ((0 0, 2 0, 2 2, 0 2, 0 0))"</span>,</span>
+<span>  <span class="st">"POLYGON ((2 0, 4 0, 4 2, 2 2, 2 0))"</span>,</span>
+<span>  <span class="st">"POLYGON ((0 2, 2 2, 4 2, 4 3, 0 3, 0 2))"</span></span>
+<span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">three_pool</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merge_coincident.html">merge_coincident</a></span><span class="op">(</span><span class="fu"><a href="../reference/establish_topology.html">establish_topology</a></span><span class="op">(</span><span class="va">polys</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">three</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merge_coincident.html">merge_coincident</a></span><span class="op">(</span><span class="fu"><a href="../reference/pool_triangulate.html">pool_triangulate</a></span><span class="op">(</span><span class="va">three_pool</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/pool_triangles.html">pool_triangles</a></span><span class="op">(</span><span class="va">three</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   .vx0 .vx1 .vx2 .feature .part</span></span>
+<span><span class="co">#&gt; 1    3    4    1        1     1</span></span>
+<span><span class="co">#&gt; 2    1    2    3        1     1</span></span>
+<span><span class="co">#&gt; 3    6    3    2        2     2</span></span>
+<span><span class="co">#&gt; 4    2    5    6        2     2</span></span>
+<span><span class="co">#&gt; 5    7    8    4        3     3</span></span>
+<span><span class="co">#&gt; 6    3    6    7        3     3</span></span>
+<span><span class="co">#&gt; 7    7    4    3        3     3</span></span></code></pre></div>
+<p><img src="sf-surfaces_files/figure-html/three-plot-1.png" class="r-plt" alt="" width="672"></p>
+<p>Vertex 3 is used by all three features, the heavy edges are the
+borders between them, and each feature is still a subset of rows:
+<code>three[pool_feature(three) == 2]</code> is feature 2’s triangles on
+the same vertex pool. An sfc TIN holds the same features, but each one
+as a separate blob, and the borders between them have to be found by
+matching coordinates.</p>
+</div>
+<div class="section level2">
 <h2 id="a-triangulation-out-to-a-geopackage-and-back">A triangulation out to a GeoPackage and back<a class="anchor" aria-label="anchor" href="#a-triangulation-out-to-a-geopackage-and-back"></a>
 </h2>
 <p>Going the other way: triangulate a polygon layer on a pool, write the
 triangles as a TIN per feature, read the file back, and recover the same
 mesh. North Carolina’s 100 counties, ear cut with decido:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">nc</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/sf/man/st_read.html" class="external-link">st_read</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"shape/nc.shp"</span>, package <span class="op">=</span> <span class="st">"sf"</span><span class="op">)</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">nc_pool</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/merge_coincident.html">merge_coincident</a></span><span class="op">(</span><span class="fu"><a href="../reference/establish_topology.html">establish_topology</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/sf/man/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">nc</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">nc_tri</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/pool_triangulate.html">pool_triangulate</a></span><span class="op">(</span><span class="va">nc_pool</span><span class="op">)</span></span>
@@ -301,13 +343,13 @@ mesh. North Carolina’s 100 counties, ear cut with decido:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>triangles <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">nc_tri</span><span class="op">)</span>, vertices <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="fu"><a href="../reference/wkpool-accessors.html">pool_vertices</a></span><span class="op">(</span><span class="va">nc_tri</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; triangles  vertices </span></span>
 <span><span class="co">#&gt;      2205      1255</span></span></code></pre></div>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">op</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">nc_tri</span>, asp <span class="op">=</span> <span class="fl">1</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="fl">36</span> <span class="op">*</span> <span class="va">pi</span> <span class="op">/</span> <span class="fl">180</span><span class="op">)</span>, axes <span class="op">=</span> <span class="cn">FALSE</span>, xlab <span class="op">=</span> <span class="st">""</span>, ylab <span class="op">=</span> <span class="st">""</span><span class="op">)</span></span></code></pre></div>
 <p><img src="sf-surfaces_files/figure-html/nc-plot-1.png" class="r-plt" alt="" width="672"></p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">nc_tin</span> <span class="op">&lt;-</span> <span class="fu">tri_to_tin</span><span class="op">(</span><span class="va">nc_tri</span><span class="op">)</span></span>
 <span><span class="va">f</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".gpkg"</span><span class="op">)</span></span>
 <span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/sf/man/st_write.html" class="external-link">write_sf</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/sf/man/sf.html" class="external-link">st_sf</a></span><span class="op">(</span>NAME <span class="op">=</span> <span class="va">nc</span><span class="op">$</span><span class="va">NAME</span>, geometry <span class="op">=</span> <span class="va">nc_tin</span><span class="op">)</span>, <span class="va">f</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
@@ -331,7 +373,7 @@ triangles and features.</p>
 <p>The cost of the TIN form is plain on this layer: every triangle
 carries four coordinates of its own, against one shared vertex table and
 three integers per triangle in the pool.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>  tin_coordinates <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/wk/man/wk_vertices.html" class="external-link">wk_coords</a></span><span class="op">(</span><span class="va">nc_tin</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  pool_vertices <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="fu"><a href="../reference/wkpool-accessors.html">pool_vertices</a></span><span class="op">(</span><span class="va">nc_tri</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -350,7 +392,7 @@ while <code><a href="https://rdrr.io/pkg/wk/man/wk_vertices.html" class="externa
 </h2>
 <p>A TRIANGLE is a one-ring POLYGON to wk, so a vector of them is one
 triangle per feature:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tris</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/sf/man/st_as_sfc.html" class="external-link">st_as_sfc</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>  <span class="st">"TRIANGLE ((0 0, 1 0, 0 1, 0 0))"</span>,</span>
 <span>  <span class="st">"TRIANGLE ((1 0, 1 1, 0 1, 1 0))"</span></span>
@@ -371,7 +413,7 @@ pool it is just one more row.</p>
 <p>A polyhedral surface is a set of polygon faces that share edges, so
 it is also a MULTIPOLYGON to wk. Its faces need not be triangles, and
 they need not be flat in xy. A unit cube:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cube</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/sf/man/st_as_sfc.html" class="external-link">st_as_sfc</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span></span>
 <span>  <span class="st">"POLYHEDRALSURFACE Z ("</span>,</span>
 <span>  <span class="st">"((0 0 0, 0 1 0, 1 1 0, 1 0 0, 0 0 0)),"</span>,</span>
@@ -396,7 +438,7 @@ they need not be flat in xy. A unit cube:</p>
 the cube’s 8 vertices. With shared ids, closure is a counting question:
 in a closed, consistently oriented surface every directed edge appears
 once and its reverse once.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/wkpool-accessors.html">pool_segments</a></span><span class="op">(</span><span class="va">cube_pool</span><span class="op">)</span></span>
 <span><span class="va">directed</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">s</span><span class="op">$</span><span class="va">.vx0</span>, <span class="va">s</span><span class="op">$</span><span class="va">.vx1</span><span class="op">)</span></span>
 <span><span class="va">reversed</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">s</span><span class="op">$</span><span class="va">.vx1</span>, <span class="va">s</span><span class="op">$</span><span class="va">.vx0</span><span class="op">)</span></span>
