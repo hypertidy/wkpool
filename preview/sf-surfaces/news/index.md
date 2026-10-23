@@ -1,0 +1,480 @@
+# Changelog
+
+## wkpool 0.4.0
+
+- New vignette “Triangulation”: ear cutting with
+  [`pool_triangulate()`](https://hypertidy.github.io/wkpool/reference/pool_triangulate.md),
+  the PSLG route
+  ([`as_pslg()`](https://hypertidy.github.io/wkpool/reference/as_pslg.md)
+  with
+  [`pool_holes()`](https://hypertidy.github.io/wkpool/reference/pool_holes.md))
+  to RTriangle, and taking its triangles back onto a vertex pool with
+  [`new_wkpool_tri()`](https://hypertidy.github.io/wkpool/reference/new_wkpool_tri.md),
+  on silicate’s `inlandwaters`. The other vignettes now cover periodic
+  x, `wkpool(vertices, segments)` and triangle pools, and point to it.
+
+- [`pool_holes()`](https://hypertidy.github.io/wkpool/reference/pool_holes.md)
+  returns a point inside each hole even when the hole is not convex: the
+  centroid of an ear of the hole ring, clear of every pool vertex,
+  instead of the mean of the ring’s vertices, which could fall outside
+  the hole and make RTriangle erase the polygon around it (on
+  `inlandwaters` this lost most of the area). Holes filled exactly by
+  another polygon of the pool (enclaves) are no longer returned, since
+  they are not holes of the coverage.
+
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html) for
+  `wkpool_tri` accepts `xlab` and `ylab`, and sets the plot extent from
+  the triangles drawn rather than the whole vertex pool, so a subset is
+  drawn at its own extent.
+
+- New [`plot()`](https://rdrr.io/r/graphics/plot.default.html) method
+  for `wkpool_tri`: one
+  [`polygon()`](https://rdrr.io/r/graphics/polygon.html) call indexing
+  the vertex pool, filled by feature (40,000 triangles draw in about 0.4
+  s to png, where casting to wk polygons and plotting those took over a
+  minute).
+
+### Triangles (experimental)
+
+- New, experimental `wkpool_tri` class: a vector of triangles (`.vx0`,
+  `.vx1`, `.vx2`, `.feature`, `.part`) on the same kind of vertex pool
+  as a wkpool. `pool_triangulate(x, engine = "decido")` ear-cuts each
+  polygon of a pool using its path provenance; ear cutting creates no
+  vertices, so the vertex table is passed through unchanged.
+  [`merge_coincident()`](https://hypertidy.github.io/wkpool/reference/merge_coincident.md)
+  accepts a `wkpool_tri` (triangulate first, merge later gives the same
+  result as merging first).
+  [`pool_triangles()`](https://hypertidy.github.io/wkpool/reference/pool_triangles.md)
+  and
+  [`tri_segments()`](https://hypertidy.github.io/wkpool/reference/pool_triangles.md)
+  give the triangle table and the triangle edges as a wkpool;
+  [`wk_handle()`](https://paleolimbot.github.io/wk/reference/wk_handle.html)
+  presents one POLYGON per triangle, with crs and geodesic carried.
+  ‘decido’ is suggested.
+
+- `wkpool_tri` is experimental and may change in a later release. In
+  particular the part is stored as a `.part` field on each triangle (the
+  simplest option); the alternative is a `.path` field pointing at the
+  outer ring’s path, recovering feature and part from
+  [`pool_paths()`](https://hypertidy.github.io/wkpool/reference/wkpool-accessors.md)
+  as segments do.
+
+### Periodic x (antimeridian)
+
+- [`merge_coincident()`](https://hypertidy.github.io/wkpool/reference/merge_coincident.md)
+  and
+  [`topology_report()`](https://hypertidy.github.io/wkpool/reference/topology_report.md)
+  gain `period_x` (default `NULL`, behaviour unchanged). With
+  `period_x = 360`, vertices are keyed on `x %% 360`, so the two copies
+  of a +-180 seam fuse (and 0 to 360 data fuses at 0 and 360); after
+  merging, the seam is an ordinary shared boundary for
+  [`find_shared_edges()`](https://hypertidy.github.io/wkpool/reference/find_shared_edges.md),
+  [`find_internal_boundaries()`](https://hypertidy.github.io/wkpool/reference/find_internal_boundaries.md)
+  and quotient arcs. The period is never inferred from the crs.
+  Coordinates are not moved, so geometry emitted from a fused pool jumps
+  by one period across the seam. With a tolerance, x is wrapped,
+  snapped, then wrapped again
+  ([\#3](https://github.com/hypertidy/wkpool/issues/3)).
+
+### Constructors and naming
+
+- `wkpool(vertices, segments)` is now exported and documented: the
+  user-level constructor from a vertex table and a segment table, as
+  returned by
+  [`pool_vertices()`](https://hypertidy.github.io/wkpool/reference/wkpool-accessors.md)
+  and
+  [`pool_segments()`](https://hypertidy.github.io/wkpool/reference/wkpool-accessors.md)
+  ([\#2](https://github.com/hypertidy/wkpool/issues/2)).
+
+- New
+  [`pool_holes()`](https://hypertidy.github.io/wkpool/reference/pool_holes.md),
+  the same function as
+  [`hole_points()`](https://hypertidy.github.io/wkpool/reference/pool_holes.md)
+  under a name that matches the other `pool_*()` accessors.
+  [`hole_points()`](https://hypertidy.github.io/wkpool/reference/pool_holes.md)
+  is kept ([\#1](https://github.com/hypertidy/wkpool/issues/1)).
+
+### Performance
+
+- [`cycles_to_wkb()`](https://hypertidy.github.io/wkpool/reference/cycles_to_wkt.md)
+  /
+  [`cycles_to_wkt()`](https://hypertidy.github.io/wkpool/reference/cycles_to_wkt.md)
+  build all polygons in one
+  [`wk::wk_polygon()`](https://paleolimbot.github.io/wk/reference/wk_linestring.html)
+  call and all multipolygons in one
+  [`wk::wk_collection()`](https://paleolimbot.github.io/wk/reference/wk_linestring.html)
+  call, instead of looping over features and parts (10,000 hexagons: 5.7
+  s to 0.16 s). The fallback for pools without path provenance matches
+  cycle edges to segments with one
+  [`vctrs::vec_match()`](https://vctrs.r-lib.org/reference/vec_match.html)
+  instead of a scan per cycle. Output is unchanged.
+
+- [`establish_topology()`](https://hypertidy.github.io/wkpool/reference/establish_topology.md)
+  and
+  [`merge_coincident()`](https://hypertidy.github.io/wkpool/reference/merge_coincident.md)
+  no longer build hash tables to look up vertex ids: pools they mint
+  have `.vx = 1..n`, where an id is its own position, so validation in
+  [`new_wkpool()`](https://hypertidy.github.io/wkpool/reference/new_wkpool.md)
+  and the segment remap use it directly (other pools fall back to
+  [`match()`](https://rdrr.io/r/base/match.html)). On 1M line
+  coordinates
+  [`merge_coincident()`](https://hypertidy.github.io/wkpool/reference/merge_coincident.md)
+  drops from 0.35 s to 0.12 s, and the vertex pipeline is now faster
+  than silicate’s `PATH0()` on every benchmark input (see
+  `bench/README.md`).
+
+- [`find_cycles()`](https://hypertidy.github.io/wkpool/reference/find_cycles.md),
+  [`classify_cycles()`](https://hypertidy.github.io/wkpool/reference/classify_cycles.md),
+  [`hole_points()`](https://hypertidy.github.io/wkpool/reference/pool_holes.md)
+  and
+  [`find_neighbours()`](https://hypertidy.github.io/wkpool/reference/find_neighbours.md)
+  no longer scale quadratically: on 10,000 hexagons
+  `find_neighbours(type = "edge")` drops from 19 s (13 GB allocated) to
+  0.03 s and
+  [`classify_cycles()`](https://hypertidy.github.io/wkpool/reference/classify_cycles.md)
+  from 8.3 s to 0.23 s.
+  [`find_shared_edges()`](https://hypertidy.github.io/wkpool/reference/find_shared_edges.md),
+  [`find_internal_boundaries()`](https://hypertidy.github.io/wkpool/reference/find_internal_boundaries.md)
+  and
+  [`topology_report()`](https://hypertidy.github.io/wkpool/reference/topology_report.md)
+  key edges with vctrs instead of
+  [`paste()`](https://rdrr.io/r/base/paste.html). Results are unchanged,
+  except that
+  [`find_neighbours()`](https://hypertidy.github.io/wkpool/reference/find_neighbours.md)
+  output no longer carries a stray `out.attrs` attribute and the
+  `features` column of
+  [`find_shared_edges()`](https://hypertidy.github.io/wkpool/reference/find_shared_edges.md)
+  is a plain named list.
+
+- `bench/` holds a benchmark against silicate (not part of the built
+  package).
+
+### Quotient boundary semantics
+
+- [`vertex_degree()`](https://hypertidy.github.io/wkpool/reference/vertex_degree.md),
+  [`find_nodes()`](https://hypertidy.github.io/wkpool/reference/find_nodes.md),
+  [`find_arcs()`](https://hypertidy.github.io/wkpool/reference/find_arcs.md),
+  [`as_arcs()`](https://hypertidy.github.io/wkpool/reference/as_arcs.md),
+  [`arc_node_summary()`](https://hypertidy.github.io/wkpool/reference/arc_node_summary.md),
+  [`arcs_to_wkt()`](https://hypertidy.github.io/wkpool/reference/arcs_to_wkt.md)
+  and
+  [`arcs_to_wkb()`](https://hypertidy.github.io/wkpool/reference/arcs_to_wkt.md)
+  gain a `quotient` argument (default FALSE, behaviour unchanged). In
+  the quotient graph, duplicated shared boundaries - the same undirected
+  vertex pair carried by more than one feature - count once: the first
+  occurrence keeps its direction, multiplicity is discarded whatever its
+  count. A vertex interior to a shared boundary has quotient degree 2
+  (the degree-2 invariant holds at this level, including for vertices
+  minted by densification), true junctions remain nodes, and
+  `find_arcs(x, quotient = TRUE)` yields the TopoJSON-style arc
+  decomposition of a polygon layer: each shared border once, not once
+  per feature.
+
+- Characterization guards pin the default duplicated-boundary and
+  antimeridian-seam semantics as explicit contracts: boundary-interior
+  vertices are degree-4 by default, seams of a +-180 split stay distinct
+  through merge, and merge keys are exact coordinates with no wrapping
+  of any kind.
+
+### Compiled arc kernel (first src/)
+
+- [`find_arcs()`](https://hypertidy.github.io/wkpool/reference/find_arcs.md)
+  now runs on a cpp11 kernel (wkpool’s first compiled code, LinkingTo:
+  cpp11 only, no system requirements). The algorithm, adjacency
+  ordering, node ordering and output are identical to the pure-R
+  implementation, which is retained as the executable specification
+  (`find_arcs_walk_r`, internal) and pinned to the kernel by conformance
+  tests across nodes, loops, open lines, holes, grids, subsets and
+  shuffled pools.
+
+- Scale: the pathological all-nodes grid at 2.56 million segments runs
+  in about 1 second (was ~10x that in R after the linear rewrite, and
+  unboundedly worse before it); 2 million segments of long arcs walk in
+  under a second, with remaining time dominated by the R-side dense-id
+  mapping. Real-world effect: the CGAZ world admin boundaries (~10M
+  segments) drop from ~44s to a few seconds.
+
+### Exact coordinate identity and linear internals
+
+- [`merge_coincident()`](https://hypertidy.github.io/wkpool/reference/merge_coincident.md)
+  now groups vertices on the double-precision bit pattern (via
+  [`vctrs::vec_group_id()`](https://vctrs.r-lib.org/reference/vec_group.html))
+  instead of formatted text keys. This fixes a silent correctness bug:
+  the old keys went through
+  [`as.character()`](https://rdrr.io/r/base/character.html) at ~15
+  significant digits, so distinct doubles differing only beyond
+  printable precision merged even at `tolerance = 0`. Exact now means
+  exact.
+
+- When the pool carries `z`, vertices are keyed on all coordinate
+  columns: equal x/y with different z no longer merge silently.
+  Tolerance is documented honestly as a snap grid (cell size
+  `tolerance`), not a distance guarantee, and canonical vertices keep
+  their original coordinates.
+
+- [`topology_report()`](https://hypertidy.github.io/wkpool/reference/topology_report.md)
+  computes its counts directly from vertex groups instead of performing
+  a full internal
+  [`merge_coincident()`](https://hypertidy.github.io/wkpool/reference/merge_coincident.md)
+  plus
+  [`find_shared_edges()`](https://hypertidy.github.io/wkpool/reference/find_shared_edges.md).
+
+- The quadratic idioms are gone:
+  [`find_arcs()`](https://hypertidy.github.io/wkpool/reference/find_arcs.md)
+  uses dense integer adjacency with amortized cursors and a preallocated
+  walk buffer (was: character-keyed lists grown with
+  [`c()`](https://rdrr.io/r/base/c.html) in loops);
+  [`pool_combine()`](https://hypertidy.github.io/wkpool/reference/pool_combine.md)
+  remaps by position with per-input offsets (was: character-named lookup
+  tables and growing vectors);
+  [`as_arcs()`](https://hypertidy.github.io/wkpool/reference/as_arcs.md)
+  and
+  [`vertex_degree()`](https://hypertidy.github.io/wkpool/reference/vertex_degree.md)
+  are vectorized. On a 160x160 grid of squares (102400 segments)
+  [`find_arcs()`](https://hypertidy.github.io/wkpool/reference/find_arcs.md)
+  drops from minutes to under half a second, and all core verbs now
+  scale linearly.
+
+- [`pool_compact()`](https://hypertidy.github.io/wkpool/reference/pool_compact.md)
+  remap corrected for pools whose segment order does not follow pool
+  order (latent indexing assumption).
+
+### Path provenance (.path)
+
+- [`establish_topology()`](https://hypertidy.github.io/wkpool/reference/establish_topology.md)
+  now mints a `.path` id per segment - one id per input ring or
+  linestring - with a sidecar `paths` table (`.path`, `.feature`,
+  `.part`, `.ring`, captured from
+  [`wk::wk_coords()`](https://paleolimbot.github.io/wk/reference/wk_vertices.html)
+  identifiers). Provenance survives subsetting,
+  [`merge_coincident()`](https://hypertidy.github.io/wkpool/reference/merge_coincident.md),
+  [`pool_compact()`](https://hypertidy.github.io/wkpool/reference/pool_compact.md)
+  and
+  [`pool_combine()`](https://hypertidy.github.io/wkpool/reference/pool_combine.md)
+  (which offsets path ids to keep them unique), and is exposed via the
+  new accessors
+  [`pool_path()`](https://hypertidy.github.io/wkpool/reference/wkpool-accessors.md)
+  and
+  [`pool_paths()`](https://hypertidy.github.io/wkpool/reference/wkpool-accessors.md).
+  [`new_wkpool()`](https://hypertidy.github.io/wkpool/reference/new_wkpool.md)
+  gains `path` and `paths` arguments.
+
+- [`find_cycles()`](https://hypertidy.github.io/wkpool/reference/find_cycles.md)
+  uses provenance when present: a cycle is a path whose segment chain
+  closes. Rings are recovered exactly, in input order and input winding,
+  robust to segment reordering (chains are rebuilt by connectivity), and
+  a broken ring after subsetting is dropped rather than mis-walked. The
+  result carries a `path` attribute mapping cycles to path ids. Pools
+  without provenance keep the legacy storage-order walk.
+
+- The winding-convention issue is resolved structurally: with
+  provenance, ring roles are known (the first ring of each part is the
+  exterior, later rings are its holes), so
+  [`classify_cycles()`](https://hypertidy.github.io/wkpool/reference/classify_cycles.md)
+  and
+  [`hole_points()`](https://hypertidy.github.io/wkpool/reference/pool_holes.md)
+  no longer guess from winding and the `convention` argument is only
+  consulted for provenance-free pools.
+  [`hole_points()`](https://hypertidy.github.io/wkpool/reference/pool_holes.md)
+  on a simple polygon now returns `NULL` as intended.
+
+- `cycles_to_wkb(feature = TRUE)` reconstructs original feature
+  structure exactly when provenance is present: rings grouped into their
+  original part (exterior first, then that part’s own holes), parts
+  grouped into POLYGON or MULTIPOLYGON features. This replaces the
+  heuristics (all holes with the first outer; holes dropped for
+  multi-part features) for established pools; provenance-free pools keep
+  the old behaviour.
+
+### Native emitters
+
+- All round-trip emitters (`arcs_to_*()`, `cycles_to_*()`,
+  `segments_to_*()`) are rebuilt on wk’s C-level construction filters
+  ([`wk::wk_linestring()`](https://paleolimbot.github.io/wk/reference/wk_linestring.html),
+  [`wk::wk_polygon()`](https://paleolimbot.github.io/wk/reference/wk_linestring.html),
+  [`wk::wk_collection()`](https://paleolimbot.github.io/wk/reference/wk_linestring.html)).
+  WKB is now the primary product and WKT is derived from it; no
+  coordinate text is assembled anywhere in wkpool.
+
+- Consequences: WKB output preserves coordinates at full double
+  precision (previously text formatting perturbed doubles at around the
+  15th significant digit); z vertex values are carried through all
+  emitters (previously dropped); rings are closed by wk; crs and
+  geodesic ride along by construction. WKT output uses wk’s writer (16
+  significant digits, trimmed) - use the WKB emitters when bit-exact
+  coordinates matter.
+
+- Behaviour is otherwise unchanged. (The documented simplifications in
+  `cycles_to_wkb(feature = TRUE)` were retained at this stage and have
+  since been superseded by path provenance for established pools - see
+  above; they still describe the provenance-free fallback.)
+
+### wk_handle: a wkpool is wk-handleable
+
+- [`wk::wk_handle()`](https://paleolimbot.github.io/wk/reference/wk_handle.html)
+  is implemented for wkpool: a pool presents as one LINESTRING per
+  segment (length preserved), with crs and geodesic attached. The wk
+  ecosystem’s generic conversions now work directly on a pool:
+  [`wk::as_wkb()`](https://paleolimbot.github.io/wk/reference/wkb.html),
+  [`wk::as_wkt()`](https://paleolimbot.github.io/wk/reference/wkt.html),
+  [`wk::wk_coords()`](https://paleolimbot.github.io/wk/reference/wk_vertices.html),
+  [`wk::wk_meta()`](https://paleolimbot.github.io/wk/reference/wk_meta.html),
+  `geos::as_geos_geometry()`, and anything else built on
+  [`wk_handle()`](https://paleolimbot.github.io/wk/reference/wk_handle.html).
+  Arcs and cycles remain explicit conversions.
+
+- The handled path is built natively from the pool
+  ([`wk::xy()`](https://paleolimbot.github.io/wk/reference/xy.html)
+  indexed by the segment table, through wk’s C-level linestring filter):
+  no text round trip, coordinates at full double precision, XYZ when the
+  pool carries z.
+
+### CRS round trip
+
+- A wkpool now participates in wk’s CRS propagation model. The CRS and
+  geodesic flag of the input are captured by
+  [`establish_topology()`](https://hypertidy.github.io/wkpool/reference/establish_topology.md)
+  (via
+  [`wk::wk_crs()`](https://paleolimbot.github.io/wk/reference/wk_crs.html)
+  and
+  [`wk::wk_is_geodesic()`](https://paleolimbot.github.io/wk/reference/wk_is_geodesic.html)),
+  carried through subsetting,
+  [`merge_coincident()`](https://hypertidy.github.io/wkpool/reference/merge_coincident.md),
+  [`pool_compact()`](https://hypertidy.github.io/wkpool/reference/pool_compact.md),
+  [`as_arcs()`](https://hypertidy.github.io/wkpool/reference/as_arcs.md)
+  and
+  [`pool_combine()`](https://hypertidy.github.io/wkpool/reference/pool_combine.md),
+  and restored onto the output of
+  [`segments_to_wkt()`](https://hypertidy.github.io/wkpool/reference/segments_to_wkt.md),
+  [`arcs_to_wkt()`](https://hypertidy.github.io/wkpool/reference/arcs_to_wkt.md),
+  [`cycles_to_wkt()`](https://hypertidy.github.io/wkpool/reference/cycles_to_wkt.md)
+  and their WKB counterparts.
+
+- Methods for
+  [`wk::wk_crs()`](https://paleolimbot.github.io/wk/reference/wk_crs.html),
+  [`wk::wk_set_crs()`](https://paleolimbot.github.io/wk/reference/wk_crs.html),
+  [`wk::wk_is_geodesic()`](https://paleolimbot.github.io/wk/reference/wk_is_geodesic.html)
+  and
+  [`wk::wk_set_geodesic()`](https://paleolimbot.github.io/wk/reference/wk_is_geodesic.html)
+  are provided for wkpool objects. The CRS is opaque and carried, never
+  interpreted, per wk convention.
+
+- [`pool_combine()`](https://hypertidy.github.io/wkpool/reference/pool_combine.md)
+  resolves the CRS across inputs with
+  [`wk::wk_crs_output()`](https://paleolimbot.github.io/wk/reference/wk_crs.html):
+  inherit values give way to concrete values, and combining pools with
+  unequal concrete CRS is an error.
+
+- [`new_wkpool()`](https://hypertidy.github.io/wkpool/reference/new_wkpool.md)
+  is now exported, so downstream packages that construct pools directly
+  (e.g. bigcurve) can do so through a supported constructor that checks
+  invariants and carries crs/geodesic.
+
+## wkpool 0.3.0
+
+CRAN release: 2026-03-05
+
+- Removed `as_decido()` which wasn’t fully worked out.
+
+- Fixed
+  [`wkpool()`](https://hypertidy.github.io/wkpool/reference/wkpool.md)
+  which never worked before.
+
+- Added check_wkpool helper function.
+
+## wkpool 0.2.0
+
+### Round-trip to wk
+
+- [`arcs_to_wkt()`](https://hypertidy.github.io/wkpool/reference/arcs_to_wkt.md)
+  /
+  [`arcs_to_wkb()`](https://hypertidy.github.io/wkpool/reference/arcs_to_wkt.md)
+  — arcs become linestrings
+- [`cycles_to_wkt()`](https://hypertidy.github.io/wkpool/reference/cycles_to_wkt.md)
+  /
+  [`cycles_to_wkb()`](https://hypertidy.github.io/wkpool/reference/cycles_to_wkt.md)
+  — cycles become polygons, with hole nesting
+- [`segments_to_wkt()`](https://hypertidy.github.io/wkpool/reference/segments_to_wkt.md)
+  /
+  [`segments_to_wkb()`](https://hypertidy.github.io/wkpool/reference/segments_to_wkt.md)
+  — raw segments as linestrings, multilinestring, or points
+
+### Arc-node topology
+
+- [`vertex_degree()`](https://hypertidy.github.io/wkpool/reference/vertex_degree.md)
+  counts segments touching each vertex
+- [`find_nodes()`](https://hypertidy.github.io/wkpool/reference/find_nodes.md)
+  identifies branch points and endpoints (degree ≠ 2)
+- [`find_arcs()`](https://hypertidy.github.io/wkpool/reference/find_arcs.md)
+  extracts maximal segment sequences between nodes
+- [`as_arcs()`](https://hypertidy.github.io/wkpool/reference/as_arcs.md)
+  returns wkpool with `.arc` column for arc membership
+- [`arc_node_summary()`](https://hypertidy.github.io/wkpool/reference/arc_node_summary.md)
+  reports arc/node structure statistics
+
+Arcs are the “uninterrupted lines” — sequences of segments passing only
+through degree-2 vertices. Useful for line simplification, network
+extraction, and efficient storage.
+
+## wkpool 0.1.0
+
+Initial release. Vertex pool topology for wk-handleable geometry.
+
+### Core functions
+
+- [`establish_topology()`](https://hypertidy.github.io/wkpool/reference/establish_topology.md)
+  converts any wk-handleable geometry to segments + vertex pool
+- [`merge_coincident()`](https://hypertidy.github.io/wkpool/reference/merge_coincident.md)
+  discovers shared vertices (exact or tolerance-based)
+- [`pool_vertices()`](https://hypertidy.github.io/wkpool/reference/wkpool-accessors.md),
+  [`pool_segments()`](https://hypertidy.github.io/wkpool/reference/wkpool-accessors.md),
+  [`pool_feature()`](https://hypertidy.github.io/wkpool/reference/wkpool-accessors.md)
+  access the structure
+- [`pool_combine()`](https://hypertidy.github.io/wkpool/reference/pool_combine.md)
+  merges multiple pools with proper index remapping
+- [`pool_compact()`](https://hypertidy.github.io/wkpool/reference/pool_compact.md)
+  removes unreferenced vertices
+
+### Topology discovery
+
+- [`find_shared_edges()`](https://hypertidy.github.io/wkpool/reference/find_shared_edges.md)
+  finds edges shared by multiple features
+- [`find_internal_boundaries()`](https://hypertidy.github.io/wkpool/reference/find_internal_boundaries.md)
+  finds edges traversed in opposite directions (true shared boundaries)
+- [`find_neighbours()`](https://hypertidy.github.io/wkpool/reference/find_neighbours.md)
+  builds adjacency from shared edges or vertices
+- [`topology_report()`](https://hypertidy.github.io/wkpool/reference/topology_report.md)
+  summarizes vertex/edge sharing
+
+### Cycle and winding analysis
+
+- [`find_cycles()`](https://hypertidy.github.io/wkpool/reference/find_cycles.md)
+  discovers closed rings from segment connectivity
+- [`cycle_signed_area()`](https://hypertidy.github.io/wkpool/reference/cycle_signed_area.md)
+  computes signed area (shoelace formula)
+- [`classify_cycles()`](https://hypertidy.github.io/wkpool/reference/classify_cycles.md)
+  identifies outer rings vs holes by winding
+- [`reverse_cycle()`](https://hypertidy.github.io/wkpool/reference/reverse_cycle.md)
+  flips winding direction
+- [`hole_points()`](https://hypertidy.github.io/wkpool/reference/pool_holes.md)
+  extracts hole centroids for triangulation
+- Convention support: `"sf"` (default) or `"ogc"` winding rules
+
+### Triangulation export
+
+- [`as_pslg()`](https://hypertidy.github.io/wkpool/reference/as_pslg.md)
+  exports to RTriangle format (P, S matrices)
+- `as_decido()` exports to decido format (0-indexed)
+
+### vctrs integration
+
+- wkpool is a vctrs rcrd: subset, combine operations work
+- [`plot.wkpool()`](https://hypertidy.github.io/wkpool/reference/plot.wkpool.md)
+  for quick visualization
+
+### Design principles
+
+- Segments are the atomic primitive — the waist of the hourglass
+- Observe, don’t correct — represent truth, fixing is separate
+- Minted `.vx` integers for stable vertex identity
+- Feature provenance tracked via `.feature`
