@@ -404,3 +404,10 @@ faces collapse to lines. That is a gap.
   types in wk.
 - The [Triangulation](triangulation.html) article: ear cutting and
   constrained Delaunay on a pool.
+- [trianglewins](https://mdsumner.github.io/trianglewins/): a guide to
+  triangles for spatial data in R. Start with
+  [Start here](https://mdsumner.github.io/trianglewins/start/); the
+  [Polygon validity](https://mdsumner.github.io/trianglewins/validity/)
+  page covers how sf, shapely and wkpool repair invalid polygons, and the
+  [GeoArrow triangles](https://mdsumner.github.io/trianglewins/dev-drafts/geoarrow-triangles/)
+  draft explores a shared-vertex interchange encoding for meshes like these.
