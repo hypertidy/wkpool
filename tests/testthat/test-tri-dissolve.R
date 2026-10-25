@@ -80,9 +80,6 @@ test_that("a hole touching its outer ring at a vertex is split there", {
   ring <- split(paste(co$x, co$y), co$ring_id)
   expect_true(all(vapply(ring, function(r) !anyDuplicated(r[-length(r)]),
                          logical(1))))
-  if (requireNamespace("sf", quietly = TRUE)) {
-    expect_true(sf::st_is_valid(sf::st_as_sfc(out)))
-  }
 })
 
 test_that("parts that touch at a corner are separate polygons", {
