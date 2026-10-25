@@ -354,6 +354,8 @@ triangulators need (holes, PSLG). This interface may change.
   [`tri_segments()`](https://hypertidy.github.io/wkpool/reference/pool_triangles.md)
   [`wk_handle(`*`<wkpool_tri>`*`)`](https://hypertidy.github.io/wkpool/reference/pool_triangles.md)
   : Access the triangles of a triangle pool
+- [`tri_dissolve()`](https://hypertidy.github.io/wkpool/reference/tri_dissolve.md)
+  : Dissolve triangles into polygons by group
 - [`pool_holes()`](https://hypertidy.github.io/wkpool/reference/pool_holes.md)
   [`hole_points()`](https://hypertidy.github.io/wkpool/reference/pool_holes.md)
   : Get hole points for constrained triangulation

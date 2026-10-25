@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">wkpool</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,7 +51,11 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.4.0" id="wkpool-040">wkpool 0.4.0<a class="anchor" aria-label="anchor" href="#wkpool-040"></a></h2>
+<h2 class="pkg-version" data-toc-text="development version" id="wkpool-development-version">wkpool (development version)<a class="anchor" aria-label="anchor" href="#wkpool-development-version"></a></h2>
+<ul><li>New <code><a href="../reference/tri_dissolve.html">tri_dissolve()</a></code>: dissolve the triangles of a <code>wkpool_tri</code> into one MULTIPOLYGON per group, along shared triangle edges. <code>group</code> is one 1-based id per triangle (<code>NA</code> leaves a triangle out), the <code>set_id</code> of a labelled mesh; the default dissolves each feature’s triangles back into its polygons. Moved here from polymer’s <code>fuse()</code>, with the next boundary edge at a vertex found by turning through the triangle fan instead of comparing angles (the output is identical on polymer’s test meshes).</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.4.0" id="wkpool-040">wkpool 0.4.0<a class="anchor" aria-label="anchor" href="#wkpool-040"></a></h2><p class="text-muted">CRAN release: 2026-10-12</p>
 <ul><li><p>New vignette “Triangulation”: ear cutting with <code><a href="../reference/pool_triangulate.html">pool_triangulate()</a></code>, the PSLG route (<code><a href="../reference/as_pslg.html">as_pslg()</a></code> with <code><a href="../reference/pool_holes.html">pool_holes()</a></code>) to RTriangle, and taking its triangles back onto a vertex pool with <code><a href="../reference/new_wkpool_tri.html">new_wkpool_tri()</a></code>, on silicate’s <code>inlandwaters</code>. The other vignettes now cover periodic x, <code>wkpool(vertices, segments)</code> and triangle pools, and point to it.</p></li>
 <li><p><code><a href="../reference/pool_holes.html">pool_holes()</a></code> returns a point inside each hole even when the hole is not convex: the centroid of an ear of the hole ring, clear of every pool vertex, instead of the mean of the ring’s vertices, which could fall outside the hole and make RTriangle erase the polygon around it (on <code>inlandwaters</code> this lost most of the area). Holes filled exactly by another polygon of the pool (enclaves) are no longer returned, since they are not holes of the coverage.</p></li>
 <li><p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> for <code>wkpool_tri</code> accepts <code>xlab</code> and <code>ylab</code>, and sets the plot extent from the triangles drawn rather than the whole vertex pool, so a subset is drawn at its own extent.</p></li>

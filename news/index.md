@@ -1,6 +1,20 @@
 # Changelog
 
+## wkpool (development version)
+
+- New
+  [`tri_dissolve()`](https://hypertidy.github.io/wkpool/reference/tri_dissolve.md):
+  dissolve the triangles of a `wkpool_tri` into one MULTIPOLYGON per
+  group, along shared triangle edges. `group` is one 1-based id per
+  triangle (`NA` leaves a triangle out), the `set_id` of a labelled
+  mesh; the default dissolves each feature’s triangles back into its
+  polygons. Moved here from polymer’s `fuse()`, with the next boundary
+  edge at a vertex found by turning through the triangle fan instead of
+  comparing angles (the output is identical on polymer’s test meshes).
+
 ## wkpool 0.4.0
+
+CRAN release: 2026-10-12
 
 - New vignette “Triangulation”: ear cutting with
   [`pool_triangulate()`](https://hypertidy.github.io/wkpool/reference/pool_triangulate.md),
