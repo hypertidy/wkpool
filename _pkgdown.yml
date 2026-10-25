@@ -86,6 +86,7 @@ reference:
   - pool_triangulate
   - new_wkpool_tri
   - pool_triangles
+  - tri_dissolve
   - pool_holes
   - as_pslg
 
