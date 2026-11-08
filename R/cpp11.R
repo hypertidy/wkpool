@@ -3,3 +3,7 @@
 find_arcs_cpp <- function(i0, i1, ids) {
   .Call(`_wkpool_find_arcs_cpp`, i0, i1, ids)
 }
+
+find_faces_cpp <- function(i0, i1, x, y) {
+  .Call(`_wkpool_find_faces_cpp`, i0, i1, x, y)
+}

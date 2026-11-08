@@ -1,5 +1,16 @@
 # wkpool (development version)
 
+* New `find_faces()`: the faces of a segment graph, the regions it
+  encloses (street blocks between roads) plus one outer face per
+  connected component. Each edge is two half-edges; at every vertex the
+  outgoing half-edges are ordered by angle and the walk takes the next one
+  clockwise from its arrival, so every half-edge lies on exactly one face
+  and all faces come out in one pass. One row per half-edge with its
+  face, input segment, the face on the other side, the face's signed area
+  and whether the edge is a bridge or dead end. Compiled kernel with a
+  pure-R reference implementation, tested for identical output. On the
+  Greater Hobart road network (483,302 edges) it takes under a second.
+
 * New `tri_dissolve()`: dissolve the triangles of a `wkpool_tri` into one
   MULTIPOLYGON per group, along shared triangle edges. `group` is one
   1-based id per triangle (`NA` leaves a triangle out), the `set_id` of a

@@ -12,10 +12,18 @@ extern "C" SEXP _wkpool_find_arcs_cpp(SEXP i0, SEXP i1, SEXP ids) {
     return cpp11::as_sexp(find_arcs_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::integers>>(i0), cpp11::as_cpp<cpp11::decay_t<cpp11::integers>>(i1), cpp11::as_cpp<cpp11::decay_t<cpp11::integers>>(ids)));
   END_CPP11
 }
+// faces.cpp
+cpp11::list find_faces_cpp(cpp11::integers i0, cpp11::integers i1, cpp11::doubles x, cpp11::doubles y);
+extern "C" SEXP _wkpool_find_faces_cpp(SEXP i0, SEXP i1, SEXP x, SEXP y) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(find_faces_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::integers>>(i0), cpp11::as_cpp<cpp11::decay_t<cpp11::integers>>(i1), cpp11::as_cpp<cpp11::decay_t<cpp11::doubles>>(x), cpp11::as_cpp<cpp11::decay_t<cpp11::doubles>>(y)));
+  END_CPP11
+}
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
-    {"_wkpool_find_arcs_cpp", (DL_FUNC) &_wkpool_find_arcs_cpp, 3},
+    {"_wkpool_find_arcs_cpp",  (DL_FUNC) &_wkpool_find_arcs_cpp,  3},
+    {"_wkpool_find_faces_cpp", (DL_FUNC) &_wkpool_find_faces_cpp, 4},
     {NULL, NULL, 0}
 };
 }
