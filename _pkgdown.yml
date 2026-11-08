@@ -78,6 +78,13 @@ reference:
   - cycle_signed_area
   - reverse_cycle
 
+- title: Faces
+  desc: >
+    The regions a segment graph encloses (street blocks, parcels), with
+    the face on each side of every edge.
+  contents:
+  - find_faces
+
 - title: Triangulation (experimental)
   desc: >
     Triangle pools that share the vertex pool, and the inputs constrained
