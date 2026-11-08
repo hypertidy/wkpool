@@ -94,6 +94,14 @@ rings and holes.
 - [`reverse_cycle()`](https://hypertidy.github.io/wkpool/reference/reverse_cycle.md)
   : Reverse a cycle's winding direction
 
+## Faces
+
+The regions a segment graph encloses (street blocks, parcels), with the
+face on each side of every edge.
+
+- [`find_faces()`](https://hypertidy.github.io/wkpool/reference/find_faces.md)
+  : Find the faces of a segment graph
+
 ## Triangulation (experimental)
 
 Triangle pools that share the vertex pool, and the inputs constrained
