@@ -21,6 +21,7 @@ Imports:
     wk (>= 0.9.4)
 Suggests:
     decido,
+    geos,
     knitr,
     rmarkdown,
     RTriangle,

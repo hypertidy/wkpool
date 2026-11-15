@@ -1,5 +1,15 @@
 # wkpool (development version)
 
+* New `tri_*()` functions answer the usual `ST_*` questions about groups of
+  triangles (one group per triangle, or a table of triangle and group for
+  groups that overlap) without forming polygons, in compiled code:
+  `tri_neighbours()` (the edge table), `tri_measures()` (area, perimeter,
+  centroid, a point inside, extent), `tri_relate()` (the DE-9IM matrix
+  from shared triangles, edges and vertices alone), `tri_boundary()` (the
+  boundary as segments, optionally each shared edge once),
+  `tri_clip_rect()` (clip by a rectangle and stay a mesh) and
+  `tri_convex_hull()`. The tests check them against geos.
+
 * `tri_dissolve()` walks its rings in compiled code (`src/dissolve.cpp`),
   about 10 times faster on a 33,000 triangle mesh. The kernel mirrors the R
   reference step for step and the tests check that both give identical
