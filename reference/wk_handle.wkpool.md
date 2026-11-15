@@ -7,7 +7,8 @@ generic conversions work directly on a pool:
 [`wk::as_wkb()`](https://paleolimbot.github.io/wk/reference/wkb.html),
 [`wk::as_wkt()`](https://paleolimbot.github.io/wk/reference/wkt.html),
 [`wk::wk_coords()`](https://paleolimbot.github.io/wk/reference/wk_vertices.html),
-`geos::as_geos_geometry()`, plotting, and anything else built on
+[`geos::as_geos_geometry()`](https://paleolimbot.github.io/geos/reference/as_geos_geometry.html),
+plotting, and anything else built on
 [`wk::wk_handle()`](https://paleolimbot.github.io/wk/reference/wk_handle.html).
 
 ## Usage

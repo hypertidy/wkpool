@@ -2,6 +2,22 @@
 
 ## wkpool (development version)
 
+- New `tri_*()` functions answer the usual `ST_*` questions about groups
+  of triangles (one group per triangle, or a table of triangle and group
+  for groups that overlap) without forming polygons, in compiled code:
+  [`tri_neighbours()`](https://hypertidy.github.io/wkpool/reference/tri_neighbours.md)
+  (the edge table),
+  [`tri_measures()`](https://hypertidy.github.io/wkpool/reference/tri_measures.md)
+  (area, perimeter, centroid, a point inside, extent),
+  [`tri_relate()`](https://hypertidy.github.io/wkpool/reference/tri_relate.md)
+  (the DE-9IM matrix from shared triangles, edges and vertices alone),
+  [`tri_boundary()`](https://hypertidy.github.io/wkpool/reference/tri_boundary.md)
+  (the boundary as segments, optionally each shared edge once),
+  [`tri_clip_rect()`](https://hypertidy.github.io/wkpool/reference/tri_clip_rect.md)
+  (clip by a rectangle and stay a mesh) and
+  [`tri_convex_hull()`](https://hypertidy.github.io/wkpool/reference/tri_convex_hull.md).
+  The tests check them against geos.
+
 - [`tri_dissolve()`](https://hypertidy.github.io/wkpool/reference/tri_dissolve.md)
   walks its rings in compiled code (`src/dissolve.cpp`), about 10 times
   faster on a 33,000 triangle mesh. The kernel mirrors the R reference
@@ -351,7 +367,8 @@ CRAN release: 2026-10-12
   [`wk::as_wkt()`](https://paleolimbot.github.io/wk/reference/wkt.html),
   [`wk::wk_coords()`](https://paleolimbot.github.io/wk/reference/wk_vertices.html),
   [`wk::wk_meta()`](https://paleolimbot.github.io/wk/reference/wk_meta.html),
-  `geos::as_geos_geometry()`, and anything else built on
+  [`geos::as_geos_geometry()`](https://paleolimbot.github.io/geos/reference/as_geos_geometry.html),
+  and anything else built on
   [`wk_handle()`](https://paleolimbot.github.io/wk/reference/wk_handle.html).
   Arcs and cycles remain explicit conversions.
 
