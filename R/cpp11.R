@@ -12,6 +12,10 @@ find_faces_cpp <- function(i0, i1, x, y) {
   .Call(`_wkpool_find_faces_cpp`, i0, i1, x, y)
 }
 
+tri_locate_cpp <- function(x, y, t0, t1, t2, px, py) {
+  .Call(`_wkpool_tri_locate_cpp`, x, y, t0, t1, t2, px, py)
+}
+
 tri_neighbours_cpp <- function(t0, t1, t2) {
   .Call(`_wkpool_tri_neighbours_cpp`, t0, t1, t2)
 }

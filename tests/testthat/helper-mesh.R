@@ -15,3 +15,27 @@ grid_tri <- function(n = 3L) {
 
 ## group per triangle from a group per cell
 cell_group <- function(g) c(g, g)
+
+## a grid mesh with the inner vertices moved, so that nothing is axis aligned
+jitter_tri <- function(n = 6L, seed = 1L) {
+  tri <- grid_tri(n)
+  v <- pool_vertices(tri)
+  set.seed(seed)
+  inner <- v$x > 0 & v$x < n & v$y > 0 & v$y < n
+  v$x[inner] <- v$x[inner] + stats::runif(sum(inner), -0.3, 0.3)
+  v$y[inner] <- v$y[inner] + stats::runif(sum(inner), -0.3, 0.3)
+  t <- pool_triangles(tri)
+  new_wkpool_tri(v, t$.vx0, t$.vx1, t$.vx2, feature = pool_feature(tri))
+}
+
+## random groups over cells, with some cells left out
+random_groups <- function(n, k, seed = 2L) {
+  set.seed(seed)
+  g <- sample(c(seq_len(k), NA), n * n, replace = TRUE)
+  cell_group(g)
+}
+
+## polygons of each group, as geos geometries
+group_geos <- function(tri, group) {
+  geos::as_geos_geometry(tri_dissolve(tri, group))
+}

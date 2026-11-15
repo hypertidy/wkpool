@@ -4,7 +4,7 @@
 \alias{plot.wkpool}
 \title{Plot a wkpool object}
 \usage{
-\method{plot}{wkpool}(x, col = NULL, ...)
+\method{plot}{wkpool}(x, col = NULL, add = FALSE, ...)
 }
 \arguments{
 \item{x}{A wkpool object.}
@@ -12,7 +12,10 @@
 \item{col}{Colour(s) for segments. If \code{NULL} (default), segments are
 coloured by feature using a built-in palette.}
 
-\item{...}{Further arguments passed to \code{\link[=plot.default]{plot.default()}}.}
+\item{add}{Add to the current plot?}
+
+\item{...}{Further arguments passed to \code{\link[=plot.default]{plot.default()}} (ignored when
+\code{add = TRUE}).}
 }
 \value{
 Invisibly returns \code{x}.

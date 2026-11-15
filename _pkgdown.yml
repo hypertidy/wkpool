@@ -100,6 +100,7 @@ reference:
   - tri_boundary
   - tri_clip_rect
   - tri_convex_hull
+  - tri_locate
   - pool_holes
   - as_pslg
 
@@ -121,6 +122,7 @@ articles:
   contents:
   - wkpool-vignette-segments
   - triangulation
+  - mesh-questions
 
 news:
   releases:
