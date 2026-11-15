@@ -2,6 +2,11 @@
 
 ## wkpool (development version)
 
+- [`tri_dissolve()`](https://hypertidy.github.io/wkpool/reference/tri_dissolve.md)
+  walks its rings in compiled code (`src/dissolve.cpp`), about 10 times
+  faster on a 33,000 triangle mesh. The kernel mirrors the R reference
+  step for step and the tests check that both give identical rings.
+
 - New
   [`find_faces()`](https://hypertidy.github.io/wkpool/reference/find_faces.md):
   the faces of a segment graph, the regions it encloses (street blocks
