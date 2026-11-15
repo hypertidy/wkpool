@@ -94,6 +94,12 @@ reference:
   - new_wkpool_tri
   - pool_triangles
   - tri_dissolve
+  - tri_neighbours
+  - tri_measures
+  - tri_relate
+  - tri_boundary
+  - tri_clip_rect
+  - tri_convex_hull
   - pool_holes
   - as_pslg
 
