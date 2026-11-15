@@ -4,6 +4,10 @@ find_arcs_cpp <- function(i0, i1, ids) {
   .Call(`_wkpool_find_arcs_cpp`, i0, i1, ids)
 }
 
+dissolve_rings_cpp <- function(t0, t1, t2, group, vx, vy) {
+  .Call(`_wkpool_dissolve_rings_cpp`, t0, t1, t2, group, vx, vy)
+}
+
 find_faces_cpp <- function(i0, i1, x, y) {
   .Call(`_wkpool_find_faces_cpp`, i0, i1, x, y)
 }

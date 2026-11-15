@@ -116,3 +116,27 @@ test_that("tri_dissolve() checks its input", {
   expect_error(tri_dissolve(tri, rep(0L, length(tri))), "positive")
   expect_error(tri_dissolve(tri, rep(1.5, length(tri))), "positive")
 })
+
+test_that("the compiled ring walk matches the R reference exactly", {
+  ## random groups on a grid give holes, pinches, several polygons per
+  ## group and several outer rings per component
+  n <- 12L
+  tri <- grid_tri(n)
+  v <- pool_vertices(tri)
+  t <- pool_triangles(tri)
+  t0 <- vx_match(t$.vx0, v$.vx)
+  t1 <- vx_match(t$.vx1, v$.vx)
+  t2 <- vx_match(t$.vx2, v$.vx)
+  for (seed in 1:20) {
+    set.seed(seed)
+    g <- cell_group(sample.int(1L + seed %% 4L, n * n, replace = TRUE))
+    keep <- if (seed %% 3L == 0L) sample(c(TRUE, TRUE, FALSE), length(g), TRUE) else rep(TRUE, length(g))
+    x <- as.double(v$x); y <- as.double(v$y)
+    a <- dissolve_rings(t0[keep], t1[keep], t2[keep], g[keep], x, y)
+    b <- dissolve_rings_r(t0[keep], t1[keep], t2[keep], g[keep], x, y)
+    expect_identical(a, b)
+  }
+  ## empty input
+  expect_identical(nrow(dissolve_rings(integer(), integer(), integer(), integer(),
+                                       v$x, v$y)), 0L)
+})

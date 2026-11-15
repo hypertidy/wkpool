@@ -96,6 +96,15 @@ tri_dissolve <- function(x, group = NULL, ...) {
   wk::wkb(out, crs = crs)
 }
 
+## Boundary rings of each group: the compiled kernel (src/dissolve.cpp),
+## which mirrors dissolve_rings_r() below step for step.
+dissolve_rings <- function(t0, t1, t2, group, vx, vy) {
+  r <- dissolve_rings_cpp(as.integer(t0), as.integer(t1), as.integer(t2),
+                          as.integer(group), as.double(vx), as.double(vy))
+  data.frame(x = r$x, y = r$y, ring = r$ring, poly = r$poly, group = r$group)
+}
+
+## R reference implementation, kept for the tests.
 ## Boundary rings of each group, in output order (by group, then polygon,
 ## outer ring first). `t0`, `t1`, `t2` are row indices into `vx`, `vy`.
 ## Returns a data frame of ring vertices (not closed) with `ring`, `poly`
@@ -104,7 +113,7 @@ tri_dissolve <- function(x, group = NULL, ...) {
 ## Triangles are counter-clockwise, so the boundary of a group, walked along
 ## triangle edges whose twin is not in the group, has the group on its left:
 ## outer rings come out counter-clockwise and holes clockwise.
-dissolve_rings <- function(t0, t1, t2, group, vx, vy) {
+dissolve_rings_r <- function(t0, t1, t2, group, vx, vy) {
   nv <- length(vx)
   nt <- length(t0)
 

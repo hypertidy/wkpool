@@ -1,5 +1,10 @@
 # wkpool (development version)
 
+* `tri_dissolve()` walks its rings in compiled code (`src/dissolve.cpp`),
+  about 10 times faster on a 33,000 triangle mesh. The kernel mirrors the R
+  reference step for step and the tests check that both give identical
+  rings.
+
 * New `find_faces()`: the faces of a segment graph, the regions it
   encloses (street blocks between roads) plus one outer face per
   connected component. Each edge is two half-edges; at every vertex the
