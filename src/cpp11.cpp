@@ -12,6 +12,13 @@ extern "C" SEXP _wkpool_find_arcs_cpp(SEXP i0, SEXP i1, SEXP ids) {
     return cpp11::as_sexp(find_arcs_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::integers>>(i0), cpp11::as_cpp<cpp11::decay_t<cpp11::integers>>(i1), cpp11::as_cpp<cpp11::decay_t<cpp11::integers>>(ids)));
   END_CPP11
 }
+// dissolve.cpp
+cpp11::writable::list dissolve_rings_cpp(cpp11::integers t0, cpp11::integers t1, cpp11::integers t2, cpp11::integers group, cpp11::doubles vx, cpp11::doubles vy);
+extern "C" SEXP _wkpool_dissolve_rings_cpp(SEXP t0, SEXP t1, SEXP t2, SEXP group, SEXP vx, SEXP vy) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(dissolve_rings_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::integers>>(t0), cpp11::as_cpp<cpp11::decay_t<cpp11::integers>>(t1), cpp11::as_cpp<cpp11::decay_t<cpp11::integers>>(t2), cpp11::as_cpp<cpp11::decay_t<cpp11::integers>>(group), cpp11::as_cpp<cpp11::decay_t<cpp11::doubles>>(vx), cpp11::as_cpp<cpp11::decay_t<cpp11::doubles>>(vy)));
+  END_CPP11
+}
 // faces.cpp
 cpp11::list find_faces_cpp(cpp11::integers i0, cpp11::integers i1, cpp11::doubles x, cpp11::doubles y);
 extern "C" SEXP _wkpool_find_faces_cpp(SEXP i0, SEXP i1, SEXP x, SEXP y) {
@@ -22,8 +29,9 @@ extern "C" SEXP _wkpool_find_faces_cpp(SEXP i0, SEXP i1, SEXP x, SEXP y) {
 
 extern "C" {
 static const R_CallMethodDef CallEntries[] = {
-    {"_wkpool_find_arcs_cpp",  (DL_FUNC) &_wkpool_find_arcs_cpp,  3},
-    {"_wkpool_find_faces_cpp", (DL_FUNC) &_wkpool_find_faces_cpp, 4},
+    {"_wkpool_dissolve_rings_cpp", (DL_FUNC) &_wkpool_dissolve_rings_cpp, 6},
+    {"_wkpool_find_arcs_cpp",      (DL_FUNC) &_wkpool_find_arcs_cpp,      3},
+    {"_wkpool_find_faces_cpp",     (DL_FUNC) &_wkpool_find_faces_cpp,     4},
     {NULL, NULL, 0}
 };
 }
