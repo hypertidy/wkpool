@@ -6,7 +6,7 @@ Draws segments coloured by feature membership.
 
 ``` r
 # S3 method for class 'wkpool'
-plot(x, col = NULL, ...)
+plot(x, col = NULL, add = FALSE, ...)
 ```
 
 ## Arguments
@@ -20,10 +20,15 @@ plot(x, col = NULL, ...)
   Colour(s) for segments. If `NULL` (default), segments are coloured by
   feature using a built-in palette.
 
+- add:
+
+  Add to the current plot?
+
 - ...:
 
   Further arguments passed to
-  [`plot.default()`](https://rdrr.io/r/graphics/plot.default.html).
+  [`plot.default()`](https://rdrr.io/r/graphics/plot.default.html)
+  (ignored when `add = TRUE`).
 
 ## Value
 

@@ -129,6 +129,8 @@ triangulators need (holes, PSLG). This interface may change.
   : Clip triangles by a rectangle
 - [`tri_convex_hull()`](https://hypertidy.github.io/wkpool/reference/tri_convex_hull.md)
   : Convex hulls of groups of triangles
+- [`tri_locate()`](https://hypertidy.github.io/wkpool/reference/tri_locate.md)
+  : Locate points in a triangle pool
 - [`pool_holes()`](https://hypertidy.github.io/wkpool/reference/pool_holes.md)
   [`hole_points()`](https://hypertidy.github.io/wkpool/reference/pool_holes.md)
   : Get hole points for constrained triangulation

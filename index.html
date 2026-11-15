@@ -10,8 +10,8 @@
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="wkpool - vertex pool topology for well-known geometry">
-<meta name="description" content="Establishes and maintains vertex pool topology for geometry handled by wk. Segments are the atomic unit, vertices are shared via integer references into a pool. Topology is made discoverable via coincident vertex detection while not requiring modification of the input data. Topological data models follow principles described in Worboys and Duckham (2004, ISBN:978-0415283755). The edge-based topology geometry decomposed into vertices and directed edge pairs is a simplification of the quad-edge case in Guibas &amp; Stolfi (1985) &lt;doi:10.1145/282918.282923&gt;.">
-<meta property="og:description" content="Establishes and maintains vertex pool topology for geometry handled by wk. Segments are the atomic unit, vertices are shared via integer references into a pool. Topology is made discoverable via coincident vertex detection while not requiring modification of the input data. Topological data models follow principles described in Worboys and Duckham (2004, ISBN:978-0415283755). The edge-based topology geometry decomposed into vertices and directed edge pairs is a simplification of the quad-edge case in Guibas &amp; Stolfi (1985) &lt;doi:10.1145/282918.282923&gt;.">
+<meta name="description" content="Establishes and maintains vertex pool topology for geometry handled by wk. Segments are the atomic unit, vertices are shared via integer references into a pool. Topology is made discoverable via coincident vertex detection while not requiring modification of the input data. Topological data models follow principles described in Worboys and Duckham (2004, ISBN:978-0415283755). The edge-based topology geometry decomposed into vertices and directed edge pairs is a simplification of the quad-edge case in Guibas and Stolfi (1985) &lt;doi:10.1145/282918.282923&gt;. Triangle pools on the same vertices answer common polygon questions (area, centroid, the DE-9IM relation between regions, point location, boundaries, clipping, union) from the triangles directly, with exact orientation tests after Shewchuk (1997) &lt;doi:10.1007/PL00009321&gt;.">
+<meta property="og:description" content="Establishes and maintains vertex pool topology for geometry handled by wk. Segments are the atomic unit, vertices are shared via integer references into a pool. Topology is made discoverable via coincident vertex detection while not requiring modification of the input data. Topological data models follow principles described in Worboys and Duckham (2004, ISBN:978-0415283755). The edge-based topology geometry decomposed into vertices and directed edge pairs is a simplification of the quad-edge case in Guibas and Stolfi (1985) &lt;doi:10.1145/282918.282923&gt;. Triangle pools on the same vertices answer common polygon questions (area, centroid, the DE-9IM relation between regions, point location, boundaries, clipping, union) from the triangles directly, with exact orientation tests after Shewchuk (1997) &lt;doi:10.1007/PL00009321&gt;.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -21,7 +21,7 @@
 
     <a class="navbar-brand me-2" href="index.html">wkpool</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,7 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="articles/wkpool-vignette-segments.html">Segments: the atoms of geometry</a></li>
     <li><a class="dropdown-item" href="articles/triangulation.html">Triangulation</a></li>
+    <li><a class="dropdown-item" href="articles/mesh-questions.html">Questions on a mesh</a></li>
   </ul>
 </li>
 <li class="nav-item dropdown">

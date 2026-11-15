@@ -3,6 +3,7 @@
 <url><loc>https://hypertidy.github.io/wkpool/CODE_OF_CONDUCT.html</loc></url>
 <url><loc>https://hypertidy.github.io/wkpool/LICENSE-text.html</loc></url>
 <url><loc>https://hypertidy.github.io/wkpool/articles/index.html</loc></url>
+<url><loc>https://hypertidy.github.io/wkpool/articles/mesh-questions.html</loc></url>
 <url><loc>https://hypertidy.github.io/wkpool/articles/triangulation.html</loc></url>
 <url><loc>https://hypertidy.github.io/wkpool/articles/wkpool-vignette-segments.html</loc></url>
 <url><loc>https://hypertidy.github.io/wkpool/articles/wkpool.html</loc></url>
@@ -42,6 +43,7 @@
 <url><loc>https://hypertidy.github.io/wkpool/reference/tri_clip_rect.html</loc></url>
 <url><loc>https://hypertidy.github.io/wkpool/reference/tri_convex_hull.html</loc></url>
 <url><loc>https://hypertidy.github.io/wkpool/reference/tri_dissolve.html</loc></url>
+<url><loc>https://hypertidy.github.io/wkpool/reference/tri_locate.html</loc></url>
 <url><loc>https://hypertidy.github.io/wkpool/reference/tri_measures.html</loc></url>
 <url><loc>https://hypertidy.github.io/wkpool/reference/tri_neighbours.html</loc></url>
 <url><loc>https://hypertidy.github.io/wkpool/reference/tri_relate.html</loc></url>

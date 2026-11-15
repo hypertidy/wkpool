@@ -376,6 +376,8 @@ triangulators need (holes, PSLG). This interface may change.
   : Clip triangles by a rectangle
 - [`tri_convex_hull()`](https://hypertidy.github.io/wkpool/reference/tri_convex_hull.md)
   : Convex hulls of groups of triangles
+- [`tri_locate()`](https://hypertidy.github.io/wkpool/reference/tri_locate.md)
+  : Locate points in a triangle pool
 - [`pool_holes()`](https://hypertidy.github.io/wkpool/reference/pool_holes.md)
   [`hole_points()`](https://hypertidy.github.io/wkpool/reference/pool_holes.md)
   : Get hole points for constrained triangulation
@@ -408,3 +410,5 @@ Back to WKT or WKB, as segments, arcs or polygons from cycles.
 - [Segments: the atoms of
   geometry](https://hypertidy.github.io/wkpool/articles/wkpool-vignette-segments.md):
 - [Triangulation](https://hypertidy.github.io/wkpool/articles/triangulation.md):
+- [Questions on a
+  mesh](https://hypertidy.github.io/wkpool/articles/mesh-questions.md):
