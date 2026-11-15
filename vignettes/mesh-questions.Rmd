@@ -1,0 +1,185 @@
+---
+title: "Questions on a mesh"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Questions on a mesh}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4.5
+)
+has_geos <- requireNamespace("geos", quietly = TRUE)
+```
+
+Many of the questions asked of polygons, the `ST_*` functions of SQL
+databases and GEOS, can be answered from a triangulation of them without
+forming the polygons at all. Area and centroid are sums over triangles.
+Two regions touch when they share a vertex or an edge but no triangle,
+and that is a question about integer ids, not coordinates. A point is in
+a region when it is in one of its triangles.
+
+The `tri_*()` functions answer these questions on a `wkpool_tri`, a
+triangle pool whose triangles share vertex ids. They are new in wkpool
+0.5.0, and like the triangle pool itself are **experimental**.
+
+```{r setup}
+library(wkpool)
+```
+
+## A small coverage
+
+A grid of unit squares, two triangles each, with the inner vertices
+moved so that nothing lines up. Any constrained triangulation of a
+coverage gives a mesh like this (see the Triangulation vignette); here it
+is built by hand so that nothing else is needed.
+
+```{r grid}
+n <- 6L
+g <- expand.grid(i = 0:n, j = 0:n)
+v <- data.frame(.vx = seq_len(nrow(g)), x = as.double(g$i), y = as.double(g$j))
+set.seed(1)
+inner <- v$x > 0 & v$x < n & v$y > 0 & v$y < n
+v$x[inner] <- v$x[inner] + runif(sum(inner), -0.3, 0.3)
+v$y[inner] <- v$y[inner] + runif(sum(inner), -0.3, 0.3)
+id <- function(i, j) j * (n + 1L) + i + 1L
+cell <- expand.grid(i = seq_len(n) - 1L, j = seq_len(n) - 1L)
+a <- id(cell$i, cell$j)
+b <- id(cell$i + 1L, cell$j)
+c <- id(cell$i + 1L, cell$j + 1L)
+d <- id(cell$i, cell$j + 1L)
+tri <- new_wkpool_tri(v, vx0 = c(a, a), vx1 = c(b, c), vx2 = c(c, d))
+tri
+```
+
+Groups of triangles stand for polygons. Here four regions are made of
+cells, with a hole in region 1 and a few cells left out.
+
+```{r groups}
+region <- ifelse(cell$i < 3, ifelse(cell$j < 3, 1L, 2L), ifelse(cell$j < 3, 3L, 4L))
+region[cell$i == 1 & cell$j == 1] <- NA   # a hole in region 1
+region[cell$i == 5 & cell$j == 5] <- NA   # a notch out of region 4
+group <- c(region, region)                # one value per triangle
+```
+
+```{r plot-groups}
+plot(tri_dissolve(tri, group), col = hcl.colors(4, "Set 2"), asp = 1)
+```
+
+`tri_dissolve()` is `ST_Union()` by group, walking the boundary edges of
+each group into rings. The other functions need no rings at all.
+
+## Measures
+
+`tri_measures()` gives area, perimeter, centroid, a point inside and the
+extent of each group, as `ST_Area()`, `ST_Perimeter()`, `ST_Centroid()`,
+`ST_PointOnSurface()` and `ST_Envelope()` would.
+
+```{r measures}
+tri_measures(tri, group)
+```
+
+## Relations
+
+`tri_relate()` gives the DE-9IM matrix, as `ST_Relate()` does, for every
+pair of groups that share a vertex. Pairs it does not list are disjoint.
+
+```{r relate}
+r <- tri_relate(tri, group)
+r
+```
+
+Each named predicate is a pattern on that string. Two groups touch when
+their interiors do not meet (first character `F`) but they meet at all,
+which in a coverage is every pair listed. Regions 1 and 4 (and 2 and 3)
+meet only at the centre vertex, so the entry for boundary meeting
+boundary (the fifth character) is `0`, a point, where the pairs that
+share a line have `1`:
+
+```{r touches}
+touches <- substr(r$relate, 1, 1) == "F"
+r[touches & substr(r$relate, 5, 5) == "0", c("a", "b")]
+```
+
+Groups may overlap: give `group` as a table of triangle and group
+instead. Here a fifth group covers the middle of the grid.
+
+```{r overlap}
+centre <- which(cell$i %in% 2:3 & cell$j %in% 2:3)
+gt <- data.frame(
+  triangle = c(seq_along(tri), centre, centre + nrow(cell)),
+  group = c(group, rep(5L, 2 * length(centre)))
+)
+gt <- gt[!is.na(gt$group), ]
+r5 <- tri_relate(tri, gt)
+r5[r5$b == 5, ]
+```
+
+The interiors of region 5 and each region meet in two dimensions (first
+character `2`): they overlap.
+
+## Points
+
+`tri_locate()` finds the triangle that holds each point, so the group of
+a point is one lookup away. A point on an edge or vertex goes to the
+lowest triangle that holds it, decided by exact arithmetic.
+
+```{r locate}
+set.seed(2)
+pts <- wk::xy(runif(10, -0.5, 6.5), runif(10, -0.5, 6.5))
+i <- tri_locate(tri, pts)
+data.frame(x = round(wk::wk_coords(pts)$x, 2), y = round(wk::wk_coords(pts)$y, 2),
+           triangle = i, region = group[i])
+```
+
+## Boundaries, clipping and hulls
+
+`tri_boundary()` gives each group's boundary as segments on the same
+vertex pool, directed with the group on the left. With `once = TRUE` an
+edge between two groups is kept once, so each line is drawn once.
+
+```{r boundary}
+bnd <- tri_boundary(tri, group, once = TRUE)
+plot(tri, col = NA, border = "grey85", asp = 1)
+plot(bnd, col = "black", add = TRUE)
+```
+
+`tri_clip_rect()` clips the triangles by a rectangle and returns a mesh
+again, so all of the above still applies to the result.
+`tri_convex_hull()` gives the hull of each group as a polygon.
+
+```{r clip}
+clipped <- tri_clip_rect(tri, c(1.5, 1.5, 4.5, 4.5))
+clipped_group <- group[attr(clipped, "source")]
+tri_measures(clipped, clipped_group)[, c("group", "area", "perimeter")]
+wk::as_wkt(tri_convex_hull(tri, group))[1]
+```
+
+## Checking against GEOS
+
+The tests check every function against geos. The same check here, for
+area and the relation matrices:
+
+```{r geos, eval = has_geos}
+polys <- geos::as_geos_geometry(tri_dissolve(tri, group))
+all.equal(tri_measures(tri, group)$area, geos::geos_area(polys))
+all(r$relate == geos::geos_relate(polys[r$a], polys[r$b]))
+```
+
+## When it applies
+
+The answers are exact for the mesh as given. They are the answers for the
+polygons when every place two polygons meet is a vertex of the mesh,
+which a constrained triangulation that resolves crossings ensures, and
+which a set of ear-cut polygons that already share their boundary
+vertices also gives (run `merge_coincident()` first so they share ids).
+
+The relations come from ids alone, so they cost the same however
+detailed the boundaries are, and the edge table they use is built once
+for all pairs. Questions that need new geometry, such as buffers, are
+not here: dissolve to polygons and hand those to geos.

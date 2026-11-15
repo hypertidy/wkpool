@@ -454,7 +454,9 @@ vec_c.wkpool <- function(..., .ptype = NULL) {
 #' @param x A wkpool object.
 #' @param col Colour(s) for segments. If `NULL` (default), segments are
 #'   coloured by feature using a built-in palette.
-#' @param ... Further arguments passed to [plot.default()].
+#' @param add Add to the current plot?
+#' @param ... Further arguments passed to [plot.default()] (ignored when
+#'   `add = TRUE`).
 #'
 #' @returns Invisibly returns `x`.
 #'
@@ -467,7 +469,7 @@ vec_c.wkpool <- function(..., .ptype = NULL) {
 #' plot(pool)
 #'
 #' @export
-plot.wkpool <- function(x, col = NULL, ...) {
+plot.wkpool <- function(x, col = NULL, add = FALSE, ...) {
   check_wkpool(x)
   v <- pool_vertices(x)
   segs <- pool_segments(x)
@@ -484,7 +486,7 @@ plot.wkpool <- function(x, col = NULL, ...) {
     }
   }
 
-  plot(v$x, v$y, type = "n", ...)
+  if (!isTRUE(add)) plot(v$x, v$y, type = "n", ...)
 
   idx0 <- vx_match(segs$.vx0, v$.vx)
   idx1 <- vx_match(segs$.vx1, v$.vx)

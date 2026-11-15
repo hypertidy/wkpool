@@ -26,6 +26,13 @@ extern "C" SEXP _wkpool_find_faces_cpp(SEXP i0, SEXP i1, SEXP x, SEXP y) {
     return cpp11::as_sexp(find_faces_cpp(cpp11::as_cpp<cpp11::decay_t<cpp11::integers>>(i0), cpp11::as_cpp<cpp11::decay_t<cpp11::integers>>(i1), cpp11::as_cpp<cpp11::decay_t<cpp11::doubles>>(x), cpp11::as_cpp<cpp11::decay_t<cpp11::doubles>>(y)));
   END_CPP11
 }
+// locate.cpp
+integers tri_locate_cpp(doubles x, doubles y, integers t0, integers t1, integers t2, doubles px, doubles py);
+extern "C" SEXP _wkpool_tri_locate_cpp(SEXP x, SEXP y, SEXP t0, SEXP t1, SEXP t2, SEXP px, SEXP py) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(tri_locate_cpp(cpp11::as_cpp<cpp11::decay_t<doubles>>(x), cpp11::as_cpp<cpp11::decay_t<doubles>>(y), cpp11::as_cpp<cpp11::decay_t<integers>>(t0), cpp11::as_cpp<cpp11::decay_t<integers>>(t1), cpp11::as_cpp<cpp11::decay_t<integers>>(t2), cpp11::as_cpp<cpp11::decay_t<doubles>>(px), cpp11::as_cpp<cpp11::decay_t<doubles>>(py)));
+  END_CPP11
+}
 // tri_ops.cpp
 integers tri_neighbours_cpp(integers t0, integers t1, integers t2);
 extern "C" SEXP _wkpool_tri_neighbours_cpp(SEXP t0, SEXP t1, SEXP t2) {
@@ -84,6 +91,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_wkpool_tri_boundary_cpp",     (DL_FUNC) &_wkpool_tri_boundary_cpp,      7},
     {"_wkpool_tri_clip_rect_cpp",    (DL_FUNC) &_wkpool_tri_clip_rect_cpp,     9},
     {"_wkpool_tri_convex_hull_cpp",  (DL_FUNC) &_wkpool_tri_convex_hull_cpp,   8},
+    {"_wkpool_tri_locate_cpp",       (DL_FUNC) &_wkpool_tri_locate_cpp,        7},
     {"_wkpool_tri_measures_cpp",     (DL_FUNC) &_wkpool_tri_measures_cpp,      9},
     {"_wkpool_tri_neighbours_cpp",   (DL_FUNC) &_wkpool_tri_neighbours_cpp,    3},
     {"_wkpool_tri_relate_cpp",       (DL_FUNC) &_wkpool_tri_relate_cpp,       11},

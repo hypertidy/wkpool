@@ -1,4 +1,17 @@
-# wkpool (development version)
+# wkpool 0.5.0
+
+* New vignette "Questions on a mesh": the `tri_*()` functions on a small
+  coverage, with overlapping groups, points, boundaries and clipping, and
+  a check against geos.
+
+* New `tri_locate()`: the triangle that holds each point (point in polygon,
+  `ST_Intersects()` of a point), by a grid of triangle buckets and exact
+  orientation tests, so a point on an edge or vertex goes to the same
+  triangle whatever the rounding (the lowest row that holds it). Points
+  can be any wk geometry, a two-column matrix, or `x` and `y`. No
+  dependency on a triangulation package.
+
+* `plot()` for `wkpool` gains `add`, to draw segments over an existing plot.
 
 * New `tri_*()` functions answer the usual `ST_*` questions about groups of
   triangles (one group per triangle, or a table of triangle and group for
