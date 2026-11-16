@@ -15,12 +15,12 @@ Vertex pool topology for geometry handled by
 
 ## Design philosophy
 
-Simple features throws away topology — every polygon stores its own
-coordinates, shared boundaries are duplicated, and expensive operations
-(GEOS) are needed to rediscover this structure which is then again
-discarded.
+Simple features ignores topology in data structures - every polygon
+stores its own coordinates, shared boundaries are duplicated, and
+expensive operations (GEOS) are needed to rediscover this structure
+which is then again discarded.
 
-**wkpool** takes a different approach:
+**wkpool** takes this approach:
 
 - **Segments are atomic**: Everything is edges (vertex pairs). Polygons,
   linestrings, meshes — all just segments with different grouping.

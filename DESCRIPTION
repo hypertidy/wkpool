@@ -16,7 +16,8 @@ Description: Establishes and maintains vertex pool topology for geometry
     the triangles directly, with exact orientation tests after
     Shewchuk (1997) <doi:10.1007/PL00009321>.
 License: MIT + file LICENSE
-URL: https://github.com/hypertidy/wkpool
+URL: https://hypertidy.github.io/wkpool/,
+    https://github.com/hypertidy/wkpool
 BugReports: https://github.com/hypertidy/wkpool/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -40,4 +41,4 @@ LinkingTo:
     cpp11
 Config/testthat/edition: 3
 Language: en-GB
-Config/roxygen2/version: 8.1.0
+Config/roxygen2/version: 8.1.1
