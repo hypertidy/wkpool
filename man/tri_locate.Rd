@@ -10,7 +10,7 @@ tri_locate(x, at)
 \item{x}{A \code{wkpool_tri}.}
 
 \item{at}{The points: any geometry \code{\link[wk:wk_handle]{wk::wk_handle()}} understands (its
-vertices are used, as \code{\link[wk:wk_vertices]{wk::wk_coords()}} gives them), a two-column
+vertices are used, as \code{\link[wk:wk_coords]{wk::wk_coords()}} gives them), a two-column
 matrix, or a data frame or list with \code{x} and \code{y}.}
 }
 \value{

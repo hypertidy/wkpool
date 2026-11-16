@@ -33,6 +33,27 @@ extern "C" SEXP _wkpool_tri_locate_cpp(SEXP x, SEXP y, SEXP t0, SEXP t1, SEXP t2
     return cpp11::as_sexp(tri_locate_cpp(cpp11::as_cpp<cpp11::decay_t<doubles>>(x), cpp11::as_cpp<cpp11::decay_t<doubles>>(y), cpp11::as_cpp<cpp11::decay_t<integers>>(t0), cpp11::as_cpp<cpp11::decay_t<integers>>(t1), cpp11::as_cpp<cpp11::decay_t<integers>>(t2), cpp11::as_cpp<cpp11::decay_t<doubles>>(px), cpp11::as_cpp<cpp11::decay_t<doubles>>(py)));
   END_CPP11
 }
+// overlay.cpp
+integers_matrix<> overlay_walk_cpp(doubles x, doubles y, integers s0, integers s1, integers a, integers b);
+extern "C" SEXP _wkpool_overlay_walk_cpp(SEXP x, SEXP y, SEXP s0, SEXP s1, SEXP a, SEXP b) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(overlay_walk_cpp(cpp11::as_cpp<cpp11::decay_t<doubles>>(x), cpp11::as_cpp<cpp11::decay_t<doubles>>(y), cpp11::as_cpp<cpp11::decay_t<integers>>(s0), cpp11::as_cpp<cpp11::decay_t<integers>>(s1), cpp11::as_cpp<cpp11::decay_t<integers>>(a), cpp11::as_cpp<cpp11::decay_t<integers>>(b)));
+  END_CPP11
+}
+// overlay.cpp
+integers overlay_regions_cpp(doubles x, doubles y, integers t0, integers t1, integers t2, integers nbr, integers s0, integers s1);
+extern "C" SEXP _wkpool_overlay_regions_cpp(SEXP x, SEXP y, SEXP t0, SEXP t1, SEXP t2, SEXP nbr, SEXP s0, SEXP s1) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(overlay_regions_cpp(cpp11::as_cpp<cpp11::decay_t<doubles>>(x), cpp11::as_cpp<cpp11::decay_t<doubles>>(y), cpp11::as_cpp<cpp11::decay_t<integers>>(t0), cpp11::as_cpp<cpp11::decay_t<integers>>(t1), cpp11::as_cpp<cpp11::decay_t<integers>>(t2), cpp11::as_cpp<cpp11::decay_t<integers>>(nbr), cpp11::as_cpp<cpp11::decay_t<integers>>(s0), cpp11::as_cpp<cpp11::decay_t<integers>>(s1)));
+  END_CPP11
+}
+// overlay.cpp
+strings overlay_relate_cpp(integers t0, integers t1, integers t2, int n_vertex, integers nbr, integers g_dim, integers g_start, integers g_item, integers g_item2, integers a, integers b);
+extern "C" SEXP _wkpool_overlay_relate_cpp(SEXP t0, SEXP t1, SEXP t2, SEXP n_vertex, SEXP nbr, SEXP g_dim, SEXP g_start, SEXP g_item, SEXP g_item2, SEXP a, SEXP b) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(overlay_relate_cpp(cpp11::as_cpp<cpp11::decay_t<integers>>(t0), cpp11::as_cpp<cpp11::decay_t<integers>>(t1), cpp11::as_cpp<cpp11::decay_t<integers>>(t2), cpp11::as_cpp<cpp11::decay_t<int>>(n_vertex), cpp11::as_cpp<cpp11::decay_t<integers>>(nbr), cpp11::as_cpp<cpp11::decay_t<integers>>(g_dim), cpp11::as_cpp<cpp11::decay_t<integers>>(g_start), cpp11::as_cpp<cpp11::decay_t<integers>>(g_item), cpp11::as_cpp<cpp11::decay_t<integers>>(g_item2), cpp11::as_cpp<cpp11::decay_t<integers>>(a), cpp11::as_cpp<cpp11::decay_t<integers>>(b)));
+  END_CPP11
+}
 // tri_ops.cpp
 integers tri_neighbours_cpp(integers t0, integers t1, integers t2);
 extern "C" SEXP _wkpool_tri_neighbours_cpp(SEXP t0, SEXP t1, SEXP t2) {
@@ -88,6 +109,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_wkpool_dissolve_rings_cpp",   (DL_FUNC) &_wkpool_dissolve_rings_cpp,    6},
     {"_wkpool_find_arcs_cpp",        (DL_FUNC) &_wkpool_find_arcs_cpp,         3},
     {"_wkpool_find_faces_cpp",       (DL_FUNC) &_wkpool_find_faces_cpp,        4},
+    {"_wkpool_overlay_regions_cpp",  (DL_FUNC) &_wkpool_overlay_regions_cpp,   8},
+    {"_wkpool_overlay_relate_cpp",   (DL_FUNC) &_wkpool_overlay_relate_cpp,   11},
+    {"_wkpool_overlay_walk_cpp",     (DL_FUNC) &_wkpool_overlay_walk_cpp,      6},
     {"_wkpool_tri_boundary_cpp",     (DL_FUNC) &_wkpool_tri_boundary_cpp,      7},
     {"_wkpool_tri_clip_rect_cpp",    (DL_FUNC) &_wkpool_tri_clip_rect_cpp,     9},
     {"_wkpool_tri_convex_hull_cpp",  (DL_FUNC) &_wkpool_tri_convex_hull_cpp,   8},

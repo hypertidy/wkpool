@@ -1,5 +1,14 @@
 # wkpool 0.5.0
 
+* New `tri_overlay()` and `tri_overlay_relate()`: the full DE-9IM matrix
+  between features of two different layers, polygons (triangle meshes),
+  lines or points in any combination. The layers' boundaries and lines go
+  through one constrained triangulation (cdtr, now in Suggests) so that
+  every place they meet is a shared vertex or edge. The relation is then
+  read from the overlay's triangles, edges and vertices alone, with the
+  mod-2 boundary rule for lines. The tests check every combination of
+  types against geos, including shared and overlapping boundaries.
+
 * New vignette "Questions on a mesh": the `tri_*()` functions on a small
   coverage, with overlapping groups, points, boundaries and clipping, and
   a check against geos.
