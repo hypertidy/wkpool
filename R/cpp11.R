@@ -16,6 +16,18 @@ tri_locate_cpp <- function(x, y, t0, t1, t2, px, py) {
   .Call(`_wkpool_tri_locate_cpp`, x, y, t0, t1, t2, px, py)
 }
 
+overlay_walk_cpp <- function(x, y, s0, s1, a, b) {
+  .Call(`_wkpool_overlay_walk_cpp`, x, y, s0, s1, a, b)
+}
+
+overlay_regions_cpp <- function(x, y, t0, t1, t2, nbr, s0, s1) {
+  .Call(`_wkpool_overlay_regions_cpp`, x, y, t0, t1, t2, nbr, s0, s1)
+}
+
+overlay_relate_cpp <- function(t0, t1, t2, n_vertex, nbr, g_dim, g_start, g_item, g_item2, a, b) {
+  .Call(`_wkpool_overlay_relate_cpp`, t0, t1, t2, n_vertex, nbr, g_dim, g_start, g_item, g_item2, a, b)
+}
+
 tri_neighbours_cpp <- function(t0, t1, t2) {
   .Call(`_wkpool_tri_neighbours_cpp`, t0, t1, t2)
 }

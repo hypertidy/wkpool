@@ -24,6 +24,7 @@ Imports:
     vctrs,
     wk (>= 0.9.4)
 Suggests:
+    cdtr,
     decido,
     geos,
     knitr,

@@ -101,6 +101,8 @@ reference:
   - tri_clip_rect
   - tri_convex_hull
   - tri_locate
+  - tri_overlay
+  - tri_overlay_relate
   - pool_holes
   - as_pslg
 
