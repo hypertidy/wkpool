@@ -77,11 +77,7 @@ tri_dissolve <- function(x, group = NULL, ...) {
     return(wk::wkb(rep(list(empty), ng), crs = crs))
   }
 
-  v <- pool_vertices(x)
-  t <- pool_triangles(x)[keep, , drop = FALSE]
-  group <- group[keep]
-  rings <- dissolve_rings(vx_match(t$.vx0, v$.vx), vx_match(t$.vx1, v$.vx),
-                          vx_match(t$.vx2, v$.vx), group, v$x, v$y)
+  rings <- tri_group_rings(x, group)
 
   polys <- wk::wk_polygon(wk::xy(rings$x, rings$y),
                           feature_id = rings$poly, ring_id = rings$ring)
@@ -94,6 +90,20 @@ tri_dissolve <- function(x, group = NULL, ...) {
   out <- geom[idx]
   out[is.na(idx)] <- list(empty)
   wk::wkb(out, crs = crs)
+}
+
+## Boundary rings of each group (validated integer group per triangle),
+## from the cache when tri_prepare() stored them for this group
+tri_group_rings <- function(x, group) {
+  cache <- tri_cache(x)
+  if (!is.null(cache) && !is.null(cache$rings) && identical(group, cache$ring_group)) {
+    return(cache$rings)
+  }
+  keep <- !is.na(group)
+  v <- pool_vertices(x)
+  t <- pool_triangles(x)[keep, , drop = FALSE]
+  dissolve_rings(vx_match(t$.vx0, v$.vx), vx_match(t$.vx1, v$.vx),
+                 vx_match(t$.vx2, v$.vx), group[keep], v$x, v$y)
 }
 
 ## Boundary rings of each group: the compiled kernel (src/dissolve.cpp),

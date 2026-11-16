@@ -48,6 +48,13 @@ extern "C" SEXP _wkpool_overlay_regions_cpp(SEXP x, SEXP y, SEXP t0, SEXP t1, SE
   END_CPP11
 }
 // overlay.cpp
+integers_matrix<> overlay_pairs_cpp(integers vertex, integers group, int n_vertex, logicals is_a, logicals is_b);
+extern "C" SEXP _wkpool_overlay_pairs_cpp(SEXP vertex, SEXP group, SEXP n_vertex, SEXP is_a, SEXP is_b) {
+  BEGIN_CPP11
+    return cpp11::as_sexp(overlay_pairs_cpp(cpp11::as_cpp<cpp11::decay_t<integers>>(vertex), cpp11::as_cpp<cpp11::decay_t<integers>>(group), cpp11::as_cpp<cpp11::decay_t<int>>(n_vertex), cpp11::as_cpp<cpp11::decay_t<logicals>>(is_a), cpp11::as_cpp<cpp11::decay_t<logicals>>(is_b)));
+  END_CPP11
+}
+// overlay.cpp
 strings overlay_relate_cpp(integers t0, integers t1, integers t2, int n_vertex, integers nbr, integers g_dim, integers g_start, integers g_item, integers g_item2, integers a, integers b);
 extern "C" SEXP _wkpool_overlay_relate_cpp(SEXP t0, SEXP t1, SEXP t2, SEXP n_vertex, SEXP nbr, SEXP g_dim, SEXP g_start, SEXP g_item, SEXP g_item2, SEXP a, SEXP b) {
   BEGIN_CPP11
@@ -109,6 +116,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_wkpool_dissolve_rings_cpp",   (DL_FUNC) &_wkpool_dissolve_rings_cpp,    6},
     {"_wkpool_find_arcs_cpp",        (DL_FUNC) &_wkpool_find_arcs_cpp,         3},
     {"_wkpool_find_faces_cpp",       (DL_FUNC) &_wkpool_find_faces_cpp,        4},
+    {"_wkpool_overlay_pairs_cpp",    (DL_FUNC) &_wkpool_overlay_pairs_cpp,     5},
     {"_wkpool_overlay_regions_cpp",  (DL_FUNC) &_wkpool_overlay_regions_cpp,   8},
     {"_wkpool_overlay_relate_cpp",   (DL_FUNC) &_wkpool_overlay_relate_cpp,   11},
     {"_wkpool_overlay_walk_cpp",     (DL_FUNC) &_wkpool_overlay_walk_cpp,      6},

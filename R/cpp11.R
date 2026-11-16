@@ -24,6 +24,10 @@ overlay_regions_cpp <- function(x, y, t0, t1, t2, nbr, s0, s1) {
   .Call(`_wkpool_overlay_regions_cpp`, x, y, t0, t1, t2, nbr, s0, s1)
 }
 
+overlay_pairs_cpp <- function(vertex, group, n_vertex, is_a, is_b) {
+  .Call(`_wkpool_overlay_pairs_cpp`, vertex, group, n_vertex, is_a, is_b)
+}
+
 overlay_relate_cpp <- function(t0, t1, t2, n_vertex, nbr, g_dim, g_start, g_item, g_item2, a, b) {
   .Call(`_wkpool_overlay_relate_cpp`, t0, t1, t2, n_vertex, nbr, g_dim, g_start, g_item, g_item2, a, b)
 }

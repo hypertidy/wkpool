@@ -1,5 +1,16 @@
 # wkpool 0.5.0
 
+* New `tri_prepare()`: compute the triangle rows, the edge table, the group
+  membership and the boundary rings of a triangle pool once and keep them
+  with it, as a prepared geometry in GEOS. The `tri_*()` functions and
+  `tri_dissolve()` read the cache while the pool and `group` are
+  unchanged (checked on every use). `tri_is_prepared()` says whether a pool
+  has a valid cache. `tri_overlay()` returns a prepared mesh.
+
+* New `tri_structure()`: number of parts, holes and rings per group
+  (`ST_NumGeometries()`, `ST_NumInteriorRings()`), a read on a prepared
+  pool.
+
 * New `tri_overlay()` and `tri_overlay_relate()`: the full DE-9IM matrix
   between features of two different layers, polygons (triangle meshes),
   lines or points in any combination. The layers' boundaries and lines go
