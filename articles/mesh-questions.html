@@ -92,7 +92,10 @@ ids, not coordinates. A point is in a region when it is in one of its
 triangles.</p>
 <p>The <code>tri_*()</code> functions answer these questions on a
 <code>wkpool_tri</code>, a triangle pool whose triangles share vertex
-ids. They are new in wkpool 0.5.0, and like the triangle pool itself are
+ids. For two separate layers (two meshes, or a mesh and some lines or
+points), <code><a href="../reference/tri_overlay.html">tri_overlay()</a></code> first puts them into one mesh, and
+then the relation between any two features is read in the same way. They
+are new in wkpool 0.5.0, and like the triangle pool itself are
 <strong>experimental</strong>.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/hypertidy/wkpool" class="external-link">wkpool</a></span><span class="op">)</span></span></code></pre></div>
@@ -252,13 +255,28 @@ arithmetic.</p>
 <span><span class="co">#&gt; 10 3.35 0.02        4      3</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="parts-and-holes">Parts and holes<a class="anchor" aria-label="anchor" href="#parts-and-holes"></a>
+</h2>
+<p><code><a href="../reference/tri_structure.html">tri_structure()</a></code> counts the parts, holes and rings of
+each group, as <code>ST_NumGeometries()</code> and
+<code>ST_NumInteriorRings()</code> would for the dissolved polygons.
+Region 1 has its hole, and region 4 is one part with a notch.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/tri_structure.html">tri_structure</a></span><span class="op">(</span><span class="va">tri</span>, <span class="va">group</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   group n_parts n_holes n_rings</span></span>
+<span><span class="co">#&gt; 1     1       1       1       2</span></span>
+<span><span class="co">#&gt; 2     2       1       0       1</span></span>
+<span><span class="co">#&gt; 3     3       1       0       1</span></span>
+<span><span class="co">#&gt; 4     4       1       0       1</span></span></code></pre></div>
+</div>
+<div class="section level2">
 <h2 id="boundaries-clipping-and-hulls">Boundaries, clipping and hulls<a class="anchor" aria-label="anchor" href="#boundaries-clipping-and-hulls"></a>
 </h2>
 <p><code><a href="../reference/tri_boundary.html">tri_boundary()</a></code> gives each group’s boundary as segments
 on the same vertex pool, directed with the group on the left. With
 <code>once = TRUE</code> an edge between two groups is kept once, so
 each line is drawn once.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">bnd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tri_boundary.html">tri_boundary</a></span><span class="op">(</span><span class="va">tri</span>, <span class="va">group</span>, once <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">tri</span>, col <span class="op">=</span> <span class="cn">NA</span>, border <span class="op">=</span> <span class="st">"grey85"</span>, asp <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">bnd</span>, col <span class="op">=</span> <span class="st">"black"</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
@@ -267,7 +285,7 @@ each line is drawn once.</p>
 returns a mesh again, so all of the above still applies to the result.
 <code><a href="../reference/tri_convex_hull.html">tri_convex_hull()</a></code> gives the hull of each group as a
 polygon.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">clipped</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tri_clip_rect.html">tri_clip_rect</a></span><span class="op">(</span><span class="va">tri</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.5</span>, <span class="fl">1.5</span>, <span class="fl">4.5</span>, <span class="fl">4.5</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">clipped_group</span> <span class="op">&lt;-</span> <span class="va">group</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">clipped</span>, <span class="st">"source"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="fu"><a href="../reference/tri_measures.html">tri_measures</a></span><span class="op">(</span><span class="va">clipped</span>, <span class="va">clipped_group</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"group"</span>, <span class="st">"area"</span>, <span class="st">"perimeter"</span><span class="op">)</span><span class="op">]</span></span>
@@ -281,15 +299,159 @@ polygon.</p>
 <span><span class="co">#&gt; [1] POLYGON ((0 0, 3 0, 3.096479 1.996125, 3.112214 2.764766, 1.805934 3.176544, 0.8235847 3.10108...</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="preparing-a-mesh-for-many-questions">Preparing a mesh for many questions<a class="anchor" aria-label="anchor" href="#preparing-a-mesh-for-many-questions"></a>
+</h2>
+<p>Each function above derives what it needs from the pool: the
+triangles as rows of the vertex table, the edge table
+(<code><a href="../reference/tri_neighbours.html">tri_neighbours()</a></code>), the membership of triangles in groups
+and, for <code><a href="../reference/tri_dissolve.html">tri_dissolve()</a></code> and <code><a href="../reference/tri_structure.html">tri_structure()</a></code>,
+the boundary rings. <code><a href="../reference/tri_prepare.html">tri_prepare()</a></code> computes these once and
+keeps them with the pool, the mesh counterpart of a prepared geometry in
+GEOS. Later calls with the same <code>group</code> read the cache;
+another <code>group</code>, or a changed pool, is computed as usual, and
+subsetting drops the cache.</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ptri</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tri_prepare.html">tri_prepare</a></span><span class="op">(</span><span class="va">tri</span>, <span class="va">group</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/tri_prepare.html">tri_is_prepared</a></span><span class="op">(</span><span class="va">ptri</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="fu"><a href="../reference/tri_structure.html">tri_structure</a></span><span class="op">(</span><span class="va">ptri</span>, <span class="va">group</span><span class="op">)</span>, <span class="fu"><a href="../reference/tri_structure.html">tri_structure</a></span><span class="op">(</span><span class="va">tri</span>, <span class="va">group</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="relations-between-layers">Relations between layers<a class="anchor" aria-label="anchor" href="#relations-between-layers"></a>
+</h2>
+<p><code><a href="../reference/tri_relate.html">tri_relate()</a></code> compares groups of one mesh. To compare
+features of two layers that were not triangulated together,
+<code><a href="../reference/tri_overlay.html">tri_overlay()</a></code> puts both into one constrained triangulation
+(with the cdtr package), in which every place they meet is a shared
+vertex or edge. A layer can be a triangle mesh (polygons, as groups of
+triangles), lines, or points. Here the second layer is a coarser grid,
+turned and moved so that its edges cross the first.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fl">3L</span></span>
+<span><span class="va">gb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span>i <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="va">m</span>, j <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="va">m</span><span class="op">)</span></span>
+<span><span class="va">th</span> <span class="op">&lt;-</span> <span class="fl">0.3</span></span>
+<span><span class="va">vb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>.vx <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">gb</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                 x <span class="op">=</span> <span class="fl">1.8</span> <span class="op">*</span> <span class="op">(</span><span class="va">gb</span><span class="op">$</span><span class="va">i</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">th</span><span class="op">)</span> <span class="op">-</span> <span class="va">gb</span><span class="op">$</span><span class="va">j</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">th</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1.5</span>,</span>
+<span>                 y <span class="op">=</span> <span class="fl">1.8</span> <span class="op">*</span> <span class="op">(</span><span class="va">gb</span><span class="op">$</span><span class="va">i</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">th</span><span class="op">)</span> <span class="op">+</span> <span class="va">gb</span><span class="op">$</span><span class="va">j</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">th</span><span class="op">)</span><span class="op">)</span> <span class="op">-</span> <span class="fl">0.4</span><span class="op">)</span></span>
+<span><span class="va">idb</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">i</span>, <span class="va">j</span><span class="op">)</span> <span class="va">j</span> <span class="op">*</span> <span class="op">(</span><span class="va">m</span> <span class="op">+</span> <span class="fl">1L</span><span class="op">)</span> <span class="op">+</span> <span class="va">i</span> <span class="op">+</span> <span class="fl">1L</span></span>
+<span><span class="va">cb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span>i <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1L</span>, j <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1L</span><span class="op">)</span></span>
+<span><span class="va">tri_b</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/new_wkpool_tri.html">new_wkpool_tri</a></span><span class="op">(</span></span>
+<span>  <span class="va">vb</span>,</span>
+<span>  vx0 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu">idb</span><span class="op">(</span><span class="va">cb</span><span class="op">$</span><span class="va">i</span>, <span class="va">cb</span><span class="op">$</span><span class="va">j</span><span class="op">)</span>, <span class="fu">idb</span><span class="op">(</span><span class="va">cb</span><span class="op">$</span><span class="va">i</span>, <span class="va">cb</span><span class="op">$</span><span class="va">j</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  vx1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu">idb</span><span class="op">(</span><span class="va">cb</span><span class="op">$</span><span class="va">i</span> <span class="op">+</span> <span class="fl">1L</span>, <span class="va">cb</span><span class="op">$</span><span class="va">j</span><span class="op">)</span>, <span class="fu">idb</span><span class="op">(</span><span class="va">cb</span><span class="op">$</span><span class="va">i</span> <span class="op">+</span> <span class="fl">1L</span>, <span class="va">cb</span><span class="op">$</span><span class="va">j</span> <span class="op">+</span> <span class="fl">1L</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  vx2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu">idb</span><span class="op">(</span><span class="va">cb</span><span class="op">$</span><span class="va">i</span> <span class="op">+</span> <span class="fl">1L</span>, <span class="va">cb</span><span class="op">$</span><span class="va">j</span> <span class="op">+</span> <span class="fl">1L</span><span class="op">)</span>, <span class="fu">idb</span><span class="op">(</span><span class="va">cb</span><span class="op">$</span><span class="va">i</span>, <span class="va">cb</span><span class="op">$</span><span class="va">j</span> <span class="op">+</span> <span class="fl">1L</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">group_b</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1L</span>, <span class="fl">1L</span>, <span class="fl">2L</span>, <span class="fl">3L</span>, <span class="fl">3L</span>, <span class="fl">2L</span>, <span class="fl">3L</span>, <span class="cn">NA</span>, <span class="fl">2L</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="va">ov</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tri_overlay.html">tri_overlay</a></span><span class="op">(</span><span class="va">tri</span>, <span class="va">tri_b</span>, <span class="va">group</span>, <span class="va">group_b</span><span class="op">)</span></span>
+<span><span class="va">ov</span></span>
+<span><span class="co">#&gt; &lt;wkpool_overlay&gt; 130 triangles, 70 vertices</span></span>
+<span><span class="co">#&gt;   layer x: 4 polygon features</span></span>
+<span><span class="co">#&gt;   layer y: 3 polygon features</span></span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">ov</span><span class="op">$</span><span class="va">mesh</span>, col <span class="op">=</span> <span class="cn">NA</span>, border <span class="op">=</span> <span class="st">"grey80"</span>, asp <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/tri_dissolve.html">tri_dissolve</a></span><span class="op">(</span><span class="va">tri</span>, <span class="va">group</span><span class="op">)</span>, col <span class="op">=</span> <span class="cn">NA</span>, border <span class="op">=</span> <span class="st">"black"</span>, lwd <span class="op">=</span> <span class="fl">2</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="../reference/tri_dissolve.html">tri_dissolve</a></span><span class="op">(</span><span class="va">tri_b</span>, <span class="va">group_b</span><span class="op">)</span>, col <span class="op">=</span> <span class="cn">NA</span>, border <span class="op">=</span> <span class="st">"firebrick"</span>, lwd <span class="op">=</span> <span class="fl">2</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="mesh-questions_files/figure-html/plot-overlay-1.png" class="r-plt" alt="" width="672"></p>
+<p><code><a href="../reference/tri_overlay_relate.html">tri_overlay_relate()</a></code> then gives the DE-9IM matrix for
+every pair of a feature of <code>x</code> and a feature of
+<code>y</code> that are not disjoint.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/tri_overlay_relate.html">tri_overlay_relate</a></span><span class="op">(</span><span class="va">ov</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   x y    relate</span></span>
+<span><span class="co">#&gt; 1 1 1 212101212</span></span>
+<span><span class="co">#&gt; 2 1 3 212101212</span></span>
+<span><span class="co">#&gt; 3 2 3 212101212</span></span>
+<span><span class="co">#&gt; 4 3 1 212101212</span></span>
+<span><span class="co">#&gt; 5 3 2 212101212</span></span>
+<span><span class="co">#&gt; 6 3 3 212101212</span></span>
+<span><span class="co">#&gt; 7 4 2 212101212</span></span>
+<span><span class="co">#&gt; 8 4 3 212101212</span></span></code></pre></div>
+<p>The same works for lines and points, against a mesh or against each
+other. A line’s interior is its edges and the vertices inside it, and
+its boundary is its two ends (where an odd number of its edges end, the
+rule GEOS uses).</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">lines</span> <span class="op">&lt;-</span> <span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/wkt.html" class="external-link">wkt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"LINESTRING (-1 1.5, 7 1.5)"</span>, <span class="st">"LINESTRING (1 1, 2 2, 1 2, 1 1)"</span>,</span>
+<span>                   <span class="st">"LINESTRING (3 0, 3 6)"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">ovl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tri_overlay.html">tri_overlay</a></span><span class="op">(</span><span class="va">tri</span>, <span class="va">lines</span>, <span class="va">group</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="../reference/tri_overlay_relate.html">tri_overlay_relate</a></span><span class="op">(</span><span class="va">ovl</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   x y    relate</span></span>
+<span><span class="co">#&gt; 1 1 1 1F20F1102</span></span>
+<span><span class="co">#&gt; 2 1 2 1F20F11F2</span></span>
+<span><span class="co">#&gt; 3 1 3 1F2001102</span></span>
+<span><span class="co">#&gt; 4 2 3 1F2001102</span></span>
+<span><span class="co">#&gt; 5 3 1 1F20F1102</span></span>
+<span><span class="co">#&gt; 6 3 3 FF2F01102</span></span>
+<span><span class="va">ovp</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tri_overlay.html">tri_overlay</a></span><span class="op">(</span><span class="va">lines</span>, <span class="fu">wk</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/wk/reference/xy.html" class="external-link">xy</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">3</span>, <span class="fl">5</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.5</span>, <span class="fl">3</span>, <span class="fl">1.5</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/tri_overlay_relate.html">tri_overlay_relate</a></span><span class="op">(</span><span class="va">ovp</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   x y    relate</span></span>
+<span><span class="co">#&gt; 1 1 1 0F1FF0FF2</span></span>
+<span><span class="co">#&gt; 2 1 3 0F1FF0FF2</span></span>
+<span><span class="co">#&gt; 3 2 1 0F1FFFFF2</span></span>
+<span><span class="co">#&gt; 4 3 2 0F1FF0FF2</span></span></code></pre></div>
+<p>The overlay is a mesh with groups, so measures of the pieces follow
+too: the area of each feature of <code>x</code> inside each feature of
+<code>y</code> is the area of the triangles they share.</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">mem</span> <span class="op">&lt;-</span> <span class="va">ov</span><span class="op">$</span><span class="va">members</span></span>
+<span><span class="va">g</span> <span class="op">&lt;-</span> <span class="va">ov</span><span class="op">$</span><span class="va">groups</span></span>
+<span><span class="va">in_x</span> <span class="op">&lt;-</span> <span class="va">mem</span><span class="op">[</span><span class="va">g</span><span class="op">$</span><span class="va">layer</span><span class="op">[</span><span class="va">mem</span><span class="op">$</span><span class="va">group</span><span class="op">]</span> <span class="op">==</span> <span class="st">"x"</span>, <span class="op">]</span></span>
+<span><span class="va">in_y</span> <span class="op">&lt;-</span> <span class="va">mem</span><span class="op">[</span><span class="va">g</span><span class="op">$</span><span class="va">layer</span><span class="op">[</span><span class="va">mem</span><span class="op">$</span><span class="va">group</span><span class="op">]</span> <span class="op">==</span> <span class="st">"y"</span>, <span class="op">]</span></span>
+<span><span class="va">both</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">in_x</span>, <span class="va">in_y</span>, by <span class="op">=</span> <span class="st">"item"</span><span class="op">)</span></span>
+<span><span class="va">pieces</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>triangle <span class="op">=</span> <span class="va">both</span><span class="op">$</span><span class="va">item</span>,</span>
+<span>                     group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">both</span><span class="op">$</span><span class="va">group.x</span>, <span class="va">both</span><span class="op">$</span><span class="va">group.y</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">area</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tri_measures.html">tri_measures</a></span><span class="op">(</span><span class="va">ov</span><span class="op">$</span><span class="va">mesh</span>, <span class="va">pieces</span><span class="op">)</span><span class="op">$</span><span class="va">area</span></span>
+<span><span class="va">key</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/levels.html" class="external-link">levels</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="va">both</span><span class="op">$</span><span class="va">group.x</span>, <span class="va">both</span><span class="op">$</span><span class="va">group.y</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">g</span><span class="op">$</span><span class="va">id</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">sub</a></span><span class="op">(</span><span class="st">" .*"</span>, <span class="st">""</span>, <span class="va">key</span><span class="op">)</span><span class="op">)</span><span class="op">]</span>,</span>
+<span>           y <span class="op">=</span> <span class="va">g</span><span class="op">$</span><span class="va">id</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">sub</a></span><span class="op">(</span><span class="st">".* "</span>, <span class="st">""</span>, <span class="va">key</span><span class="op">)</span><span class="op">)</span><span class="op">]</span>, area <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">area</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   x y  area</span></span>
+<span><span class="co">#&gt; 1 1 1 2.422</span></span>
+<span><span class="co">#&gt; 2 1 3 2.922</span></span>
+<span><span class="co">#&gt; 3 2 3 4.391</span></span>
+<span><span class="co">#&gt; 4 3 1 3.061</span></span>
+<span><span class="co">#&gt; 5 3 2 3.145</span></span>
+<span><span class="co">#&gt; 6 3 3 0.995</span></span>
+<span><span class="co">#&gt; 7 4 2 5.230</span></span>
+<span><span class="co">#&gt; 8 4 3 0.868</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="triangles-in-arrow">Triangles in Arrow<a class="anchor" aria-label="anchor" href="#triangles-in-arrow"></a>
+</h2>
+<p><code><a href="../reference/tri_as_arrow.html">tri_as_arrow()</a></code> writes a pool as an Arrow array (with
+nanoarrow) in which every triangle is three indices into one shared
+vertex dictionary. By default each row is a group, the list of its
+triangles, so an engine that evaluates <code>ST_*</code> row by row sees
+one feature per row and the list offsets are the feature-to-triangle
+ranges. This is the layout of the draft <code>geoarrow.triangles</code>
+type, which is not part of GeoArrow.</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">arr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tri_as_arrow.html">tri_as_arrow</a></span><span class="op">(</span><span class="va">tri</span>, <span class="va">group</span><span class="op">)</span></span>
+<span><span class="va">arr</span><span class="op">$</span><span class="va">length</span></span>
+<span><span class="co">#&gt; [1] 4</span></span>
+<span><span class="va">back</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tri_from_arrow.html">tri_from_arrow</a></span><span class="op">(</span><span class="va">arr</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="fu"><a href="../reference/tri_measures.html">tri_measures</a></span><span class="op">(</span><span class="va">back</span><span class="op">$</span><span class="va">mesh</span>, <span class="va">back</span><span class="op">$</span><span class="va">group</span><span class="op">)</span>, <span class="fu"><a href="../reference/tri_measures.html">tri_measures</a></span><span class="op">(</span><span class="va">tri</span>, <span class="va">group</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+</div>
+<div class="section level2">
 <h2 id="checking-against-geos">Checking against GEOS<a class="anchor" aria-label="anchor" href="#checking-against-geos"></a>
 </h2>
 <p>The tests check every function against geos. The same check here, for
 area and the relation matrices:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">polys</span> <span class="op">&lt;-</span> <span class="fu">geos</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/geos/reference/as_geos_geometry.html" class="external-link">as_geos_geometry</a></span><span class="op">(</span><span class="fu"><a href="../reference/tri_dissolve.html">tri_dissolve</a></span><span class="op">(</span><span class="va">tri</span>, <span class="va">group</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="fu"><a href="../reference/tri_measures.html">tri_measures</a></span><span class="op">(</span><span class="va">tri</span>, <span class="va">group</span><span class="op">)</span><span class="op">$</span><span class="va">area</span>, <span class="fu">geos</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/geos/reference/geos_area.html" class="external-link">geos_area</a></span><span class="op">(</span><span class="va">polys</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="va">r</span><span class="op">$</span><span class="va">relate</span> <span class="op">==</span> <span class="fu">geos</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/geos/reference/geos_relate.html" class="external-link">geos_relate</a></span><span class="op">(</span><span class="va">polys</span><span class="op">[</span><span class="va">r</span><span class="op">$</span><span class="va">a</span><span class="op">]</span>, <span class="va">polys</span><span class="op">[</span><span class="va">r</span><span class="op">$</span><span class="va">b</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
+<p>And between the layers of the overlay:</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">polys_b</span> <span class="op">&lt;-</span> <span class="fu">geos</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/geos/reference/as_geos_geometry.html" class="external-link">as_geos_geometry</a></span><span class="op">(</span><span class="fu"><a href="../reference/tri_dissolve.html">tri_dissolve</a></span><span class="op">(</span><span class="va">tri_b</span>, <span class="va">group_b</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">ro</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tri_overlay_relate.html">tri_overlay_relate</a></span><span class="op">(</span><span class="va">ov</span>, <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, y <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="va">ro</span><span class="op">$</span><span class="va">relate</span> <span class="op">==</span> <span class="fu">geos</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/geos/reference/geos_relate.html" class="external-link">geos_relate</a></span><span class="op">(</span><span class="va">polys</span><span class="op">[</span><span class="va">ro</span><span class="op">$</span><span class="va">x</span><span class="op">]</span>, <span class="va">polys_b</span><span class="op">[</span><span class="va">ro</span><span class="op">$</span><span class="va">y</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] TRUE</span></span>
+<span><span class="va">rl</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tri_overlay_relate.html">tri_overlay_relate</a></span><span class="op">(</span><span class="va">ovl</span>, <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, y <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="va">rl</span><span class="op">$</span><span class="va">relate</span> <span class="op">==</span> <span class="fu">geos</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/geos/reference/geos_relate.html" class="external-link">geos_relate</a></span><span class="op">(</span><span class="va">polys</span><span class="op">[</span><span class="va">rl</span><span class="op">$</span><span class="va">x</span><span class="op">]</span>, <span class="fu">geos</span><span class="fu">::</span><span class="fu"><a href="https://paleolimbot.github.io/geos/reference/as_geos_geometry.html" class="external-link">as_geos_geometry</a></span><span class="op">(</span><span class="va">lines</span><span class="op">)</span><span class="op">[</span><span class="va">rl</span><span class="op">$</span><span class="va">y</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -301,10 +463,15 @@ which a constrained triangulation that resolves crossings ensures, and
 which a set of ear-cut polygons that already share their boundary
 vertices also gives (run <code><a href="../reference/merge_coincident.html">merge_coincident()</a></code> first so they
 share ids).</p>
+<p>Where two layers’ edges cross, <code><a href="../reference/tri_overlay.html">tri_overlay()</a></code> adds the
+crossing point in floating point, so a relation that hinges on that
+point is exact for the overlay rather than for the inputs; layers that
+already share their vertices where they meet are not affected.</p>
 <p>The relations come from ids alone, so they cost the same however
 detailed the boundaries are, and the edge table they use is built once
-for all pairs. Questions that need new geometry, such as buffers, are
-not here: dissolve to polygons and hand those to geos.</p>
+for all pairs (and kept by <code><a href="../reference/tri_prepare.html">tri_prepare()</a></code>). Questions that
+need new geometry, such as buffers, are not here: dissolve to polygons
+and hand those to geos.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

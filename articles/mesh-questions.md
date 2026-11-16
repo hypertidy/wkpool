@@ -8,8 +8,12 @@ and that is a question about integer ids, not coordinates. A point is in
 a region when it is in one of its triangles.
 
 The `tri_*()` functions answer these questions on a `wkpool_tri`, a
-triangle pool whose triangles share vertex ids. They are new in wkpool
-0.5.0, and like the triangle pool itself are **experimental**.
+triangle pool whose triangles share vertex ids. For two separate layers
+(two meshes, or a mesh and some lines or points),
+[`tri_overlay()`](https://hypertidy.github.io/wkpool/reference/tri_overlay.md)
+first puts them into one mesh, and then the relation between any two
+features is read in the same way. They are new in wkpool 0.5.0, and like
+the triangle pool itself are **experimental**.
 
 ``` r
 
@@ -196,6 +200,23 @@ data.frame(x = round(wk::wk_coords(pts)$x, 2), y = round(wk::wk_coords(pts)$y, 2
 #> 10 3.35 0.02        4      3
 ```
 
+## Parts and holes
+
+[`tri_structure()`](https://hypertidy.github.io/wkpool/reference/tri_structure.md)
+counts the parts, holes and rings of each group, as `ST_NumGeometries()`
+and `ST_NumInteriorRings()` would for the dissolved polygons. Region 1
+has its hole, and region 4 is one part with a notch.
+
+``` r
+
+tri_structure(tri, group)
+#>   group n_parts n_holes n_rings
+#> 1     1       1       1       2
+#> 2     2       1       0       1
+#> 3     3       1       0       1
+#> 4     4       1       0       1
+```
+
 ## Boundaries, clipping and hulls
 
 [`tri_boundary()`](https://hypertidy.github.io/wkpool/reference/tri_boundary.md)
@@ -233,6 +254,169 @@ wk::as_wkt(tri_convex_hull(tri, group))[1]
 #> [1] POLYGON ((0 0, 3 0, 3.096479 1.996125, 3.112214 2.764766, 1.805934 3.176544, 0.8235847 3.10108...
 ```
 
+## Preparing a mesh for many questions
+
+Each function above derives what it needs from the pool: the triangles
+as rows of the vertex table, the edge table
+([`tri_neighbours()`](https://hypertidy.github.io/wkpool/reference/tri_neighbours.md)),
+the membership of triangles in groups and, for
+[`tri_dissolve()`](https://hypertidy.github.io/wkpool/reference/tri_dissolve.md)
+and
+[`tri_structure()`](https://hypertidy.github.io/wkpool/reference/tri_structure.md),
+the boundary rings.
+[`tri_prepare()`](https://hypertidy.github.io/wkpool/reference/tri_prepare.md)
+computes these once and keeps them with the pool, the mesh counterpart
+of a prepared geometry in GEOS. Later calls with the same `group` read
+the cache; another `group`, or a changed pool, is computed as usual, and
+subsetting drops the cache.
+
+``` r
+
+ptri <- tri_prepare(tri, group)
+tri_is_prepared(ptri)
+#> [1] TRUE
+identical(tri_structure(ptri, group), tri_structure(tri, group))
+#> [1] TRUE
+```
+
+## Relations between layers
+
+[`tri_relate()`](https://hypertidy.github.io/wkpool/reference/tri_relate.md)
+compares groups of one mesh. To compare features of two layers that were
+not triangulated together,
+[`tri_overlay()`](https://hypertidy.github.io/wkpool/reference/tri_overlay.md)
+puts both into one constrained triangulation (with the cdtr package), in
+which every place they meet is a shared vertex or edge. A layer can be a
+triangle mesh (polygons, as groups of triangles), lines, or points. Here
+the second layer is a coarser grid, turned and moved so that its edges
+cross the first.
+
+``` r
+
+m <- 3L
+gb <- expand.grid(i = 0:m, j = 0:m)
+th <- 0.3
+vb <- data.frame(.vx = seq_len(nrow(gb)),
+                 x = 1.8 * (gb$i * cos(th) - gb$j * sin(th)) + 1.5,
+                 y = 1.8 * (gb$i * sin(th) + gb$j * cos(th)) - 0.4)
+idb <- function(i, j) j * (m + 1L) + i + 1L
+cb <- expand.grid(i = seq_len(m) - 1L, j = seq_len(m) - 1L)
+tri_b <- new_wkpool_tri(
+  vb,
+  vx0 = c(idb(cb$i, cb$j), idb(cb$i, cb$j)),
+  vx1 = c(idb(cb$i + 1L, cb$j), idb(cb$i + 1L, cb$j + 1L)),
+  vx2 = c(idb(cb$i + 1L, cb$j + 1L), idb(cb$i, cb$j + 1L))
+)
+group_b <- rep(c(1L, 1L, 2L, 3L, 3L, 2L, 3L, NA, 2L), 2)
+ov <- tri_overlay(tri, tri_b, group, group_b)
+ov
+#> <wkpool_overlay> 130 triangles, 70 vertices
+#>   layer x: 4 polygon features
+#>   layer y: 3 polygon features
+```
+
+``` r
+
+plot(ov$mesh, col = NA, border = "grey80", asp = 1)
+plot(tri_dissolve(tri, group), col = NA, border = "black", lwd = 2, add = TRUE)
+plot(tri_dissolve(tri_b, group_b), col = NA, border = "firebrick", lwd = 2, add = TRUE)
+```
+
+![](mesh-questions_files/figure-html/plot-overlay-1.png)
+
+[`tri_overlay_relate()`](https://hypertidy.github.io/wkpool/reference/tri_overlay_relate.md)
+then gives the DE-9IM matrix for every pair of a feature of `x` and a
+feature of `y` that are not disjoint.
+
+``` r
+
+tri_overlay_relate(ov)
+#>   x y    relate
+#> 1 1 1 212101212
+#> 2 1 3 212101212
+#> 3 2 3 212101212
+#> 4 3 1 212101212
+#> 5 3 2 212101212
+#> 6 3 3 212101212
+#> 7 4 2 212101212
+#> 8 4 3 212101212
+```
+
+The same works for lines and points, against a mesh or against each
+other. A line’s interior is its edges and the vertices inside it, and
+its boundary is its two ends (where an odd number of its edges end, the
+rule GEOS uses).
+
+``` r
+
+lines <- wk::wkt(c("LINESTRING (-1 1.5, 7 1.5)", "LINESTRING (1 1, 2 2, 1 2, 1 1)",
+                   "LINESTRING (3 0, 3 6)"))
+ovl <- tri_overlay(tri, lines, group)
+head(tri_overlay_relate(ovl))
+#>   x y    relate
+#> 1 1 1 1F20F1102
+#> 2 1 2 1F20F11F2
+#> 3 1 3 1F2001102
+#> 4 2 3 1F2001102
+#> 5 3 1 1F20F1102
+#> 6 3 3 FF2F01102
+ovp <- tri_overlay(lines, wk::xy(c(1, 3, 5), c(1.5, 3, 1.5)))
+tri_overlay_relate(ovp)
+#>   x y    relate
+#> 1 1 1 0F1FF0FF2
+#> 2 1 3 0F1FF0FF2
+#> 3 2 1 0F1FFFFF2
+#> 4 3 2 0F1FF0FF2
+```
+
+The overlay is a mesh with groups, so measures of the pieces follow too:
+the area of each feature of `x` inside each feature of `y` is the area
+of the triangles they share.
+
+``` r
+
+mem <- ov$members
+g <- ov$groups
+in_x <- mem[g$layer[mem$group] == "x", ]
+in_y <- mem[g$layer[mem$group] == "y", ]
+both <- merge(in_x, in_y, by = "item")
+pieces <- data.frame(triangle = both$item,
+                     group = as.integer(factor(paste(both$group.x, both$group.y))))
+area <- tri_measures(ov$mesh, pieces)$area
+key <- levels(factor(paste(both$group.x, both$group.y)))
+data.frame(x = g$id[as.integer(sub(" .*", "", key))],
+           y = g$id[as.integer(sub(".* ", "", key))], area = round(area, 3))
+#>   x y  area
+#> 1 1 1 2.422
+#> 2 1 3 2.922
+#> 3 2 3 4.391
+#> 4 3 1 3.061
+#> 5 3 2 3.145
+#> 6 3 3 0.995
+#> 7 4 2 5.230
+#> 8 4 3 0.868
+```
+
+## Triangles in Arrow
+
+[`tri_as_arrow()`](https://hypertidy.github.io/wkpool/reference/tri_as_arrow.md)
+writes a pool as an Arrow array (with nanoarrow) in which every triangle
+is three indices into one shared vertex dictionary. By default each row
+is a group, the list of its triangles, so an engine that evaluates
+`ST_*` row by row sees one feature per row and the list offsets are the
+feature-to-triangle ranges. This is the layout of the draft
+`geoarrow.triangles` type, which is not part of GeoArrow.
+
+``` r
+
+arr <- tri_as_arrow(tri, group)
+arr$length
+#> [1] 4
+back <- tri_from_arrow(arr)
+all.equal(tri_measures(back$mesh, back$group), tri_measures(tri, group))
+#> [1] TRUE
+```
+
 ## Checking against GEOS
 
 The tests check every function against geos. The same check here, for
@@ -247,6 +431,19 @@ all(r$relate == geos::geos_relate(polys[r$a], polys[r$b]))
 #> [1] TRUE
 ```
 
+And between the layers of the overlay:
+
+``` r
+
+polys_b <- geos::as_geos_geometry(tri_dissolve(tri_b, group_b))
+ro <- tri_overlay_relate(ov, expand.grid(x = 1:4, y = 1:3))
+all(ro$relate == geos::geos_relate(polys[ro$x], polys_b[ro$y]))
+#> [1] TRUE
+rl <- tri_overlay_relate(ovl, expand.grid(x = 1:4, y = 1:3))
+all(rl$relate == geos::geos_relate(polys[rl$x], geos::as_geos_geometry(lines)[rl$y]))
+#> [1] TRUE
+```
+
 ## When it applies
 
 The answers are exact for the mesh as given. They are the answers for
@@ -257,7 +454,15 @@ vertices also gives (run
 [`merge_coincident()`](https://hypertidy.github.io/wkpool/reference/merge_coincident.md)
 first so they share ids).
 
+Where two layers’ edges cross,
+[`tri_overlay()`](https://hypertidy.github.io/wkpool/reference/tri_overlay.md)
+adds the crossing point in floating point, so a relation that hinges on
+that point is exact for the overlay rather than for the inputs; layers
+that already share their vertices where they meet are not affected.
+
 The relations come from ids alone, so they cost the same however
 detailed the boundaries are, and the edge table they use is built once
-for all pairs. Questions that need new geometry, such as buffers, are
-not here: dissolve to polygons and hand those to geos.
+for all pairs (and kept by
+[`tri_prepare()`](https://hypertidy.github.io/wkpool/reference/tri_prepare.md)).
+Questions that need new geometry, such as buffers, are not here:
+dissolve to polygons and hand those to geos.
