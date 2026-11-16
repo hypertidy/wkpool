@@ -28,6 +28,7 @@ Suggests:
     decido,
     geos,
     knitr,
+    nanoarrow,
     rmarkdown,
     RTriangle,
     silicate,

@@ -94,6 +94,7 @@ tri_overlay <- function(x, y = NULL, x_group = NULL, y_group = NULL) {
   if (cdt$n_crossing > 0) origin[cdt$n_input + seq_len(cdt$n_crossing)] <- "crossing"
   verts <- data.frame(.vx = seq_len(nv), x = P[, 1], y = P[, 2], origin = origin)
   mesh <- new_wkpool_tri(verts, Tr[, 1], Tr[, 2], Tr[, 3], crs = crs)
+  mesh <- tri_prepare(mesh, rings = FALSE)
   ## each overlay triangle takes the polygon groups of its region, read
   ## from the centroid of the region's largest triangle
   rep_tri <- overlay_regions_cpp(P[, 1], P[, 2], Tr[, 1], Tr[, 2], Tr[, 3],
@@ -305,11 +306,10 @@ overlay_touching <- function(x, in_x, in_y) {
               data.frame(group = rep(pt$group, 3L),
                          vertex = c(corner[pt$item, 1], corner[pt$item, 2],
                                     corner[pt$item, 3])))
-  vg <- unique(vg)
-  ax <- vg[vg$group %in% in_x, ]
-  ay <- vg[vg$group %in% in_y, ]
-  j <- merge(ax, ay, by = "vertex")
-  p <- unique(cbind(j$group.x, j$group.y))
-  p <- p[order(p[, 1], p[, 2]), , drop = FALSE]
-  p
+  nv <- length(m$x)
+  key <- unique((vg$group - 1) * nv + vg$vertex)
+  grp <- as.integer((key - 1) %/% nv) + 1L
+  vtx <- as.integer((key - 1) %% nv) + 1L
+  ng <- nrow(x$groups)
+  overlay_pairs_cpp(vtx, grp, nv, seq_len(ng) %in% in_x, seq_len(ng) %in% in_y)
 }

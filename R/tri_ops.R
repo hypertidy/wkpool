@@ -361,6 +361,12 @@ tri_locate <- function(x, at) {
 
 ## triangle corners as rows of the vertex table, coordinates, edge table
 tri_mesh <- function(x) {
+  cache <- tri_cache(x)
+  if (!is.null(cache)) return(cache$mesh)
+  tri_mesh_build(x)
+}
+
+tri_mesh_build <- function(x) {
   check_wkpool_tri(x)
   v <- pool_vertices(x)
   t <- pool_triangles(x)
@@ -373,6 +379,12 @@ tri_mesh <- function(x) {
 
 ## membership of triangles in groups, both ways, as offsets
 tri_groups <- function(x, group = NULL) {
+  cache <- tri_cache(x)
+  if (!is.null(cache) && identical(group, cache$group)) return(cache$groups)
+  tri_groups_build(x, group)
+}
+
+tri_groups_build <- function(x, group = NULL) {
   nt <- length(x)
   if (is.null(group)) {
     group <- pool_feature(x) %||% rep(1L, nt)

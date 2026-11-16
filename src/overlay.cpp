@@ -160,6 +160,40 @@ integers overlay_regions_cpp(doubles x, doubles y, integers t0, integers t1,
   return out;
 }
 
+// Pairs (a, b) of groups that share a vertex, a from the groups flagged in
+// is_a and b from those flagged in is_b, given (vertex, group) incidences
+// (1-based, no repeats). Sorted, no repeats.
+[[cpp11::register]]
+integers_matrix<> overlay_pairs_cpp(integers vertex, integers group, int n_vertex,
+                                    logicals is_a, logicals is_b) {
+  const int n = vertex.size();
+  std::vector<int> start(n_vertex + 1, 0), gs(n);
+  for (int i = 0; i < n; i++) start[vertex[i]]++;
+  for (int v = 0; v < n_vertex; v++) start[v + 1] += start[v];
+  {
+    std::vector<int> fill(start.begin(), start.end() - 1);
+    for (int i = 0; i < n; i++) gs[fill[vertex[i] - 1]++] = group[i];
+  }
+  std::vector<long long> key;
+  const long long ng = is_a.size() + 1;
+  for (int v = 0; v < n_vertex; v++) {
+    for (int i = start[v]; i < start[v + 1]; i++) {
+      if (!is_a[gs[i] - 1]) continue;
+      for (int j = start[v]; j < start[v + 1]; j++) {
+        if (is_b[gs[j] - 1]) key.push_back((long long) gs[i] * ng + gs[j]);
+      }
+    }
+  }
+  std::sort(key.begin(), key.end());
+  key.erase(std::unique(key.begin(), key.end()), key.end());
+  writable::integers_matrix<> out(key.size(), 2);
+  for (size_t k = 0; k < key.size(); k++) {
+    out(k, 0) = (int) (key[k] / ng);
+    out(k, 1) = (int) (key[k] % ng);
+  }
+  return out;
+}
+
 // DE-9IM between groups of dimension 0, 1 or 2 on one triangle mesh.
 //
 // Every point of the plane is in exactly one open triangle, open edge or
