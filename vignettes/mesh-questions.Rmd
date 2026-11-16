@@ -15,6 +15,8 @@ knitr::opts_chunk$set(
   fig.height = 4.5
 )
 has_geos <- requireNamespace("geos", quietly = TRUE)
+has_cdtr <- requireNamespace("cdtr", quietly = TRUE)
+has_nanoarrow <- requireNamespace("nanoarrow", quietly = TRUE)
 ```
 
 Many of the questions asked of polygons, the `ST_*` functions of SQL
@@ -25,8 +27,11 @@ and that is a question about integer ids, not coordinates. A point is in
 a region when it is in one of its triangles.
 
 The `tri_*()` functions answer these questions on a `wkpool_tri`, a
-triangle pool whose triangles share vertex ids. They are new in wkpool
-0.5.0, and like the triangle pool itself are **experimental**.
+triangle pool whose triangles share vertex ids. For two separate layers
+(two meshes, or a mesh and some lines or points), `tri_overlay()` first
+puts them into one mesh, and then the relation between any two features
+is read in the same way. They are new in wkpool 0.5.0, and like the
+triangle pool itself are **experimental**.
 
 ```{r setup}
 library(wkpool)
@@ -137,6 +142,16 @@ data.frame(x = round(wk::wk_coords(pts)$x, 2), y = round(wk::wk_coords(pts)$y, 2
            triangle = i, region = group[i])
 ```
 
+## Parts and holes
+
+`tri_structure()` counts the parts, holes and rings of each group, as
+`ST_NumGeometries()` and `ST_NumInteriorRings()` would for the dissolved
+polygons. Region 1 has its hole, and region 4 is one part with a notch.
+
+```{r structure}
+tri_structure(tri, group)
+```
+
 ## Boundaries, clipping and hulls
 
 `tri_boundary()` gives each group's boundary as segments on the same
@@ -160,6 +175,114 @@ tri_measures(clipped, clipped_group)[, c("group", "area", "perimeter")]
 wk::as_wkt(tri_convex_hull(tri, group))[1]
 ```
 
+## Preparing a mesh for many questions
+
+Each function above derives what it needs from the pool: the triangles
+as rows of the vertex table, the edge table (`tri_neighbours()`), the
+membership of triangles in groups and, for `tri_dissolve()` and
+`tri_structure()`, the boundary rings. `tri_prepare()` computes these
+once and keeps them with the pool, the mesh counterpart of a prepared
+geometry in GEOS. Later calls with the same `group` read the cache;
+another `group`, or a changed pool, is computed as usual, and
+subsetting drops the cache.
+
+```{r prepare}
+ptri <- tri_prepare(tri, group)
+tri_is_prepared(ptri)
+identical(tri_structure(ptri, group), tri_structure(tri, group))
+```
+
+## Relations between layers
+
+`tri_relate()` compares groups of one mesh. To compare features of two
+layers that were not triangulated together, `tri_overlay()` puts both
+into one constrained triangulation (with the cdtr package), in which
+every place they meet is a shared vertex or edge. A layer can be a
+triangle mesh (polygons, as groups of triangles), lines, or points.
+Here the second layer is a coarser grid, turned and moved so that its
+edges cross the first.
+
+```{r layer-b, eval = has_cdtr}
+m <- 3L
+gb <- expand.grid(i = 0:m, j = 0:m)
+th <- 0.3
+vb <- data.frame(.vx = seq_len(nrow(gb)),
+                 x = 1.8 * (gb$i * cos(th) - gb$j * sin(th)) + 1.5,
+                 y = 1.8 * (gb$i * sin(th) + gb$j * cos(th)) - 0.4)
+idb <- function(i, j) j * (m + 1L) + i + 1L
+cb <- expand.grid(i = seq_len(m) - 1L, j = seq_len(m) - 1L)
+tri_b <- new_wkpool_tri(
+  vb,
+  vx0 = c(idb(cb$i, cb$j), idb(cb$i, cb$j)),
+  vx1 = c(idb(cb$i + 1L, cb$j), idb(cb$i + 1L, cb$j + 1L)),
+  vx2 = c(idb(cb$i + 1L, cb$j + 1L), idb(cb$i, cb$j + 1L))
+)
+group_b <- rep(c(1L, 1L, 2L, 3L, 3L, 2L, 3L, NA, 2L), 2)
+ov <- tri_overlay(tri, tri_b, group, group_b)
+ov
+```
+
+```{r plot-overlay, eval = has_cdtr}
+plot(ov$mesh, col = NA, border = "grey80", asp = 1)
+plot(tri_dissolve(tri, group), col = NA, border = "black", lwd = 2, add = TRUE)
+plot(tri_dissolve(tri_b, group_b), col = NA, border = "firebrick", lwd = 2, add = TRUE)
+```
+
+`tri_overlay_relate()` then gives the DE-9IM matrix for every pair of a
+feature of `x` and a feature of `y` that are not disjoint.
+
+```{r overlay-relate, eval = has_cdtr}
+tri_overlay_relate(ov)
+```
+
+The same works for lines and points, against a mesh or against each
+other. A line's interior is its edges and the vertices inside it, and
+its boundary is its two ends (where an odd number of its edges end, the
+rule GEOS uses).
+
+```{r overlay-lines, eval = has_cdtr}
+lines <- wk::wkt(c("LINESTRING (-1 1.5, 7 1.5)", "LINESTRING (1 1, 2 2, 1 2, 1 1)",
+                   "LINESTRING (3 0, 3 6)"))
+ovl <- tri_overlay(tri, lines, group)
+head(tri_overlay_relate(ovl))
+ovp <- tri_overlay(lines, wk::xy(c(1, 3, 5), c(1.5, 3, 1.5)))
+tri_overlay_relate(ovp)
+```
+
+The overlay is a mesh with groups, so measures of the pieces follow
+too: the area of each feature of `x` inside each feature of `y` is the
+area of the triangles they share.
+
+```{r overlay-area, eval = has_cdtr}
+mem <- ov$members
+g <- ov$groups
+in_x <- mem[g$layer[mem$group] == "x", ]
+in_y <- mem[g$layer[mem$group] == "y", ]
+both <- merge(in_x, in_y, by = "item")
+pieces <- data.frame(triangle = both$item,
+                     group = as.integer(factor(paste(both$group.x, both$group.y))))
+area <- tri_measures(ov$mesh, pieces)$area
+key <- levels(factor(paste(both$group.x, both$group.y)))
+data.frame(x = g$id[as.integer(sub(" .*", "", key))],
+           y = g$id[as.integer(sub(".* ", "", key))], area = round(area, 3))
+```
+
+## Triangles in Arrow
+
+`tri_as_arrow()` writes a pool as an Arrow array (with nanoarrow) in
+which every triangle is three indices into one shared vertex dictionary.
+By default each row is a group, the list of its triangles, so an engine
+that evaluates `ST_*` row by row sees one feature per row and the list
+offsets are the feature-to-triangle ranges. This is the layout of the
+draft `geoarrow.triangles` type, which is not part of GeoArrow.
+
+```{r arrow, eval = has_nanoarrow}
+arr <- tri_as_arrow(tri, group)
+arr$length
+back <- tri_from_arrow(arr)
+all.equal(tri_measures(back$mesh, back$group), tri_measures(tri, group))
+```
+
 ## Checking against GEOS
 
 The tests check every function against geos. The same check here, for
@@ -171,6 +294,16 @@ all.equal(tri_measures(tri, group)$area, geos::geos_area(polys))
 all(r$relate == geos::geos_relate(polys[r$a], polys[r$b]))
 ```
 
+And between the layers of the overlay:
+
+```{r geos-overlay, eval = has_geos && has_cdtr}
+polys_b <- geos::as_geos_geometry(tri_dissolve(tri_b, group_b))
+ro <- tri_overlay_relate(ov, expand.grid(x = 1:4, y = 1:3))
+all(ro$relate == geos::geos_relate(polys[ro$x], polys_b[ro$y]))
+rl <- tri_overlay_relate(ovl, expand.grid(x = 1:4, y = 1:3))
+all(rl$relate == geos::geos_relate(polys[rl$x], geos::as_geos_geometry(lines)[rl$y]))
+```
+
 ## When it applies
 
 The answers are exact for the mesh as given. They are the answers for the
@@ -179,7 +312,13 @@ which a constrained triangulation that resolves crossings ensures, and
 which a set of ear-cut polygons that already share their boundary
 vertices also gives (run `merge_coincident()` first so they share ids).
 
+Where two layers' edges cross, `tri_overlay()` adds the crossing point
+in floating point, so a relation that hinges on that point is exact for
+the overlay rather than for the inputs; layers that already share their
+vertices where they meet are not affected.
+
 The relations come from ids alone, so they cost the same however
 detailed the boundaries are, and the edge table they use is built once
-for all pairs. Questions that need new geometry, such as buffers, are
-not here: dissolve to polygons and hand those to geos.
+for all pairs (and kept by `tri_prepare()`). Questions that need new
+geometry, such as buffers, are not here: dissolve to polygons and hand
+those to geos.
