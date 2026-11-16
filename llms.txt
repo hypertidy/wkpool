@@ -378,6 +378,10 @@ triangulators need (holes, PSLG). This interface may change.
   : Convex hulls of groups of triangles
 - [`tri_locate()`](https://hypertidy.github.io/wkpool/reference/tri_locate.md)
   : Locate points in a triangle pool
+- [`tri_overlay()`](https://hypertidy.github.io/wkpool/reference/tri_overlay.md)
+  : Overlay two layers in one mesh
+- [`tri_overlay_relate()`](https://hypertidy.github.io/wkpool/reference/tri_overlay_relate.md)
+  : Relations between the layers of an overlay
 - [`pool_holes()`](https://hypertidy.github.io/wkpool/reference/pool_holes.md)
   [`hole_points()`](https://hypertidy.github.io/wkpool/reference/pool_holes.md)
   : Get hole points for constrained triangulation
