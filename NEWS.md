@@ -1,5 +1,15 @@
 # wkpool 0.5.0
 
+* New `tri_as_arrow()` and `tri_from_arrow()`: a triangle pool as an Arrow
+  array (built with nanoarrow, now in Suggests) of triangles that index
+  one shared vertex dictionary, in the layout of the draft
+  `geoarrow.triangles` type. By default each row is a feature, the list of
+  its triangles (`List<FixedSizeList<Dictionary<int32, Coordinate>>[3]>`),
+  so the list offsets are the feature-to-triangle ranges; a triangle in
+  several features is written in each of their rows and read back as one
+  triangle in several groups. `layout = "triangle"` writes one row per
+  triangle.
+
 * New `tri_prepare()`: compute the triangle rows, the edge table, the group
   membership and the boundary rings of a triangle pool once and keep them
   with it, as a prepared geometry in GEOS. The `tri_*()` functions and

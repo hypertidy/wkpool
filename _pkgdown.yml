@@ -105,6 +105,8 @@ reference:
   - tri_overlay_relate
   - tri_prepare
   - tri_structure
+  - tri_as_arrow
+  - tri_from_arrow
   - pool_holes
   - as_pslg
 
