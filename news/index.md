@@ -3,6 +3,38 @@
 ## wkpool 0.5.0
 
 - New
+  [`tri_as_arrow()`](https://hypertidy.github.io/wkpool/reference/tri_as_arrow.md)
+  and
+  [`tri_from_arrow()`](https://hypertidy.github.io/wkpool/reference/tri_from_arrow.md):
+  a triangle pool as an Arrow array (built with nanoarrow, now in
+  Suggests) of triangles that index one shared vertex dictionary, in the
+  layout of the draft `geoarrow.triangles` type. By default each row is
+  a feature, the list of its triangles
+  (`List<FixedSizeList<Dictionary<int32, Coordinate>>[3]>`), so the list
+  offsets are the feature-to-triangle ranges; a triangle in several
+  features is written in each of their rows and read back as one
+  triangle in several groups. `layout = "triangle"` writes one row per
+  triangle.
+
+- New
+  [`tri_prepare()`](https://hypertidy.github.io/wkpool/reference/tri_prepare.md):
+  compute the triangle rows, the edge table, the group membership and
+  the boundary rings of a triangle pool once and keep them with it, as a
+  prepared geometry in GEOS. The `tri_*()` functions and
+  [`tri_dissolve()`](https://hypertidy.github.io/wkpool/reference/tri_dissolve.md)
+  read the cache while the pool and `group` are unchanged (checked on
+  every use).
+  [`tri_is_prepared()`](https://hypertidy.github.io/wkpool/reference/tri_prepare.md)
+  says whether a pool has a valid cache.
+  [`tri_overlay()`](https://hypertidy.github.io/wkpool/reference/tri_overlay.md)
+  returns a prepared mesh.
+
+- New
+  [`tri_structure()`](https://hypertidy.github.io/wkpool/reference/tri_structure.md):
+  number of parts, holes and rings per group (`ST_NumGeometries()`,
+  `ST_NumInteriorRings()`), a read on a prepared pool.
+
+- New
   [`tri_overlay()`](https://hypertidy.github.io/wkpool/reference/tri_overlay.md)
   and
   [`tri_overlay_relate()`](https://hypertidy.github.io/wkpool/reference/tri_overlay_relate.md):

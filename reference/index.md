@@ -135,6 +135,15 @@ triangulators need (holes, PSLG). This interface may change.
   : Overlay two layers in one mesh
 - [`tri_overlay_relate()`](https://hypertidy.github.io/wkpool/reference/tri_overlay_relate.md)
   : Relations between the layers of an overlay
+- [`tri_prepare()`](https://hypertidy.github.io/wkpool/reference/tri_prepare.md)
+  [`tri_is_prepared()`](https://hypertidy.github.io/wkpool/reference/tri_prepare.md)
+  : Prepare a triangle pool for repeated questions
+- [`tri_structure()`](https://hypertidy.github.io/wkpool/reference/tri_structure.md)
+  : Parts and holes of groups of triangles
+- [`tri_as_arrow()`](https://hypertidy.github.io/wkpool/reference/tri_as_arrow.md)
+  : Triangles as an Arrow array
+- [`tri_from_arrow()`](https://hypertidy.github.io/wkpool/reference/tri_from_arrow.md)
+  : Read triangles from an Arrow array
 - [`pool_holes()`](https://hypertidy.github.io/wkpool/reference/pool_holes.md)
   [`hole_points()`](https://hypertidy.github.io/wkpool/reference/pool_holes.md)
   : Get hole points for constrained triangulation
